@@ -5326,6 +5326,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $listData->form = $this->exportCloneForm($formModel->getTable(), $listId, $is_suggest);
         $listData->list = $this->exportCloneList($listModel->getTable(), $listId, $is_suggest);
         $listData->groups = $this->exportCloneGroupsAndElements($formModel->getGroupsHiarachy(), $listId);
+        $listData->groups_repeat = $this->exportCreateGroupsRepeat($listData->groups, $listId);             // Adicionado Renan
         $listData->table = $this->exportCreateTable($listId);
         $listData->tables_repeat = $this->exportCreateTablesRepeat($listId);
         $listData->clones_info = $this->clones_info;
@@ -5622,6 +5623,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         foreach ($listsToImport as $list) {
             $this->importClone_process($list);
         }
+        // die(); DIE PARA TESTES
 
         $this->checkDatabaseJoins();
 
@@ -5638,6 +5640,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $this->importCloneForm($list->form, $list->oldListId);
         $this->importCloneList($list->list, $list->oldListId);
         $this->importCloneGroupsAndElements($list->groups, $list->oldListId);
+        $this->importCreateGroupsRepeat($list->groups_repeat,$list); // Adicionado Renan
         $this->importCreateTable($list->oldListId, $list->table);
         $this->importCreateTablesRepeat($list->oldListId, $list->tables_repeat);
 
@@ -5806,15 +5809,16 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
         }
         else if ($type === 'list_join') {
-            $cloneData->list_id = $this->clones_info[$listId]->listId;
-            $cloneData->element_id = 0;
-            $cloneData->join_from_table = $this->clones_info[$listId]->db_table_name;
-            $cloneData->table_join = $this->clones_info[$listId]->listParams->table_join[$element_id];
-            $cloneData->table_key = $this->clones_info[$listId]->listParams->table_key[$element_id];
-            $cloneData->table_join_key = $this->clones_info[$listId]->listParams->table_join_key[$element_id];
-            $cloneData->join_type = $this->clones_info[$listId]->listParams->join_type[$element_id];
-            $cloneData->group_id = $group_id;
-            $cloneData->params = $data;
+            // COMENTADO RENAN
+            // $cloneData->list_id = $this->clones_info[$listId]->listId;
+            // $cloneData->element_id = 0;
+            // $cloneData->join_from_table = $this->clones_info[$listId]->db_table_name;
+            // $cloneData->table_join = $this->clones_info[$listId]->listParams->table_join[$element_id];
+            // $cloneData->table_key = $this->clones_info[$listId]->listParams->table_key[$element_id];
+            // $cloneData->table_join_key = $this->clones_info[$listId]->listParams->table_join_key[$element_id];
+            // $cloneData->join_type = $this->clones_info[$listId]->listParams->join_type[$element_id];
+            // $cloneData->group_id = $group_id;
+            // $cloneData->params = $data;
         }
         else if ($type === 'dbjoin_single') {
             $cloneData->list_id = 0;
@@ -6119,6 +6123,63 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
             return false;
         }
 
+        return true;
+    }
+
+    /// FUNÇÃO ADICIONADA RENAN
+    protected function exportCreateGroupsRepeat($groups, $listId) {
+        $db = JFactory::getDbo();
+        $groupsRepeat = array();
+        $oldTableName = $this->clones_info[$listId]->old_db_table_name;
+        foreach ($groups as $groupModel) {         
+            if ($groupModel->group->is_join == 1){
+                $groupName = $oldTableName.'_'.$groupModel->group->id.'_repeat';
+                $db->setQuery("SHOW CREATE TABLE {$groupName}");
+                $res = $db->loadAssoc()["Create Table"];
+                $groupsRepeat[] = $res;
+            }
+        }    
+        
+        return $groupsRepeat;        
+    }
+
+    protected function importCreateGroupsRepeat($groups_repeat,$list) {
+        $db = JFactory::getDbo();
+        
+        // Create Table Grupo Repetitivel
+        foreach($groups_repeat as $groupRepeat) {
+            $sql = 'SELECT * FROM `#__fabrik_groups` ORDER BY id DESC LIMIT 1';
+            $db->setQuery($sql);
+            $lastIdGroup = $db->loadResult();
+
+            $idList = ($list->oldListId);
+            $listname = $list->clones_info->$idList->old_db_table_name;
+            $newTableNameSql = $listname.'_'.($lastIdGroup).'_repeat';
+            $oldTableNameSql = explode('`',$groupRepeat)[1];
+            $newSql = str_replace($oldTableNameSql,$newTableNameSql,$groupRepeat);
+            $db->setQuery($newSql);
+            try {
+                $db->execute();            
+            } catch (RuntimeException $e) {
+                $err = new stdClass;
+                $err->error = $e->getMessage();
+                echo json_encode($err);
+                exit;
+            }
+
+            // Adicionar Join na tabela __fabrik_joins
+            $cloneData = new stdClass();
+            $cloneData->id = 0;
+            $cloneData->list_id = $this->clones_info[$idList]->listId;
+            $cloneData->element_id = 0;
+            $cloneData->join_from_table = $listname;
+            $cloneData->table_join = $newTableNameSql;
+            $cloneData->table_key = 'id';
+            $cloneData->table_join_key = 'parent_id';
+            $cloneData->join_type = 'left';
+            $cloneData->group_id = $lastIdGroup;
+            $insert = $db->insertObject('#__fabrik_joins', $cloneData, 'id');
+        }
         return true;
     }
 }
