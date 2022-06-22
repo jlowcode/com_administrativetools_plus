@@ -35,8 +35,8 @@ class JFormFieldCreatedby extends \Joomla\CMS\Form\FormField
 	 *
 	 * @since    1.6
 	 */
-	protected function getInput()
-	{
+	protected function getInput(): string
+    {
 		// Initialize variables.
 		$html = array();
 

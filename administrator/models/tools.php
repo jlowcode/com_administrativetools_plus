@@ -25,10 +25,9 @@ class AdministrativetoolsModelTools extends \Joomla\CMS\MVC\Model\ListModel {
      *
      * @param   string  $ordering   Elements order
      * @param   string  $direction  Order direction
-     *
      * @return void
-     *
      * @throws Exception
+     * @since  1.6
      */
     protected function populateState($ordering = null, $direction = null) {
         // List state information.
@@ -59,7 +58,8 @@ class AdministrativetoolsModelTools extends \Joomla\CMS\MVC\Model\ListModel {
      *
      * @since    1.6
      */
-    protected function getStoreId($id = '') {
+    protected function getStoreId($id = ''): string
+    {
         // Compile the store id.
         $id .= ':' . $this->getState('filter.search');
         $id .= ':' . $this->getState('filter.state');
@@ -74,7 +74,8 @@ class AdministrativetoolsModelTools extends \Joomla\CMS\MVC\Model\ListModel {
      *
      * @since    1.6
      */
-    protected function getListQuery() {
+    protected function getListQuery(): JDatabaseQuery
+    {
         $db = $this->getDbo();
         $query = $db->getQuery(true);
 
@@ -85,6 +86,8 @@ class AdministrativetoolsModelTools extends \Joomla\CMS\MVC\Model\ListModel {
      * Get an array of data items
      *
      * @return mixed Array of data items on success, false on failure.
+     * Other declarations of class 'AdministrativetoolsModelTools' exist at components\…\tools.php
+     * @since    1.6
      */
     public function getItems() {
         $items = parent::getItems();
@@ -108,6 +111,7 @@ class AdministrativetoolsModelTools extends \Joomla\CMS\MVC\Model\ListModel {
      * Method that lists the information, the database, the packages created.
      *
      * @return mixed
+     * @since    1.6
      */
     public function getListPackages() {
         $db = $this->getDbo();
@@ -177,6 +181,7 @@ class AdministrativetoolsModelTools extends \Joomla\CMS\MVC\Model\ListModel {
      * Method that searches the database and brings an object with all lists of the PITT project.
      *
      * @return mixed
+     * @since    1.6
      */
     public function getListsProjectPITT() {
         $db = $this->getDbo();
@@ -216,6 +221,7 @@ class AdministrativetoolsModelTools extends \Joomla\CMS\MVC\Model\ListModel {
      * Method that creates the table in the database when it does not exist.
      *
      * @return mixed
+     * @since    1.6
      */
     public function getCreateTableHarvesting(){
         $db = $this->getDbo();
@@ -254,6 +260,7 @@ class AdministrativetoolsModelTools extends \Joomla\CMS\MVC\Model\ListModel {
      * Method that brings up a list of data from the main table of the harvesting tab.
      *
      * @return mixed
+     * @since    1.6
      */
     public function getListTableHarvesting(){
         $db = $this->getDbo();

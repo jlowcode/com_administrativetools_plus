@@ -38,6 +38,7 @@ class AdministrativetoolsViewTools extends \Joomla\CMS\MVC\View\HtmlView
 	 * @return void
 	 *
 	 * @throws Exception
+     * @since    1.6
 	 */
 	public function display($tpl = null)
 	{
@@ -63,6 +64,7 @@ class AdministrativetoolsViewTools extends \Joomla\CMS\MVC\View\HtmlView
 	 * @return void
 	 *
 	 * @throws Exception
+     * @since    1.6
 	 */
 	protected function _prepareDocument()
 	{
@@ -122,6 +124,7 @@ class AdministrativetoolsViewTools extends \Joomla\CMS\MVC\View\HtmlView
 	 * @param   mixed  $state  State
 	 *
 	 * @return bool
+     * @since    1.6
 	 */
 	public function getState($state)
 	{

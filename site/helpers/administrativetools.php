@@ -27,6 +27,7 @@ class AdministrativetoolsHelpersAdministrativetools
 	 * @param   string  $name  Model name
 	 *
 	 * @return null|object
+     * @since    1.6
 	 */
 	public static function getModel($name)
 	{
@@ -52,6 +53,7 @@ class AdministrativetoolsHelpersAdministrativetools
 	 * @param   string  $field  The field's name
 	 *
 	 * @return  array  The files
+     * @since    1.6
 	 */
 	public static function getFiles($pk, $table, $field)
 	{
@@ -74,6 +76,7 @@ class AdministrativetoolsHelpersAdministrativetools
      * @param   mixed  $item  The item
      *
      * @return  bool
+     * @since    1.6
      */
     public static function canUserEdit($item)
     {

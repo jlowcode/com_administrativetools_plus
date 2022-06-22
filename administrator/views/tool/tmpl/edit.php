@@ -23,7 +23,7 @@ HTMLHelper::_('formbehavior.chosen', 'select');
 HTMLHelper::_('behavior.keepalive');
 
 // Import CSS
-$document = Factory::getDocument();
+$document = JFactory::getDocument();
 $document->addStyleSheet(Uri::root() . 'media/com_administrativetools/css/form.css');
 ?>
 <script type="text/javascript">
@@ -39,7 +39,6 @@ $document->addStyleSheet(Uri::root() . 'media/com_administrativetools/css/form.c
 		else {
 			
 			if (task != 'tool.cancel' && document.formvalidator.isValid(document.id('tool-form'))) {
-				
 				Joomla.submitform(task, document.getElementById('tool-form'));
 			}
 			else {
@@ -52,13 +51,7 @@ $document->addStyleSheet(Uri::root() . 'media/com_administrativetools/css/form.c
 <form
 	action="<?php echo JRoute::_('index.php?option=com_administrativetools&layout=edit&id=' . (int) $this->item->id); ?>"
 	method="post" enctype="multipart/form-data" name="adminForm" id="tool-form" class="form-validate form-horizontal">
-
-	
-
-	
 	<?php echo JHtml::_('bootstrap.endTabSet'); ?>
-
 	<input type="hidden" name="task" value=""/>
 	<?php echo JHtml::_('form.token'); ?>
-
 </form>

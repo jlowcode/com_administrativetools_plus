@@ -23,6 +23,7 @@ class AdministrativetoolsControllerTool extends \Joomla\CMS\MVC\Controller\FormC
 	 * Constructor
 	 *
 	 * @throws Exception
+     * @since  1.6
 	 */
 	public function __construct()
 	{
