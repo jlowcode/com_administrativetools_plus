@@ -45,8 +45,8 @@ class JFormFieldForeignKey extends \Joomla\CMS\Form\FormField
 	 *
 	 * @since    1.6
 	 */
-	protected function getInput()
-	{
+	protected function getInput(): string
+    {
 		// Type of input the field shows
 		$this->input_type = $this->getAttribute('input_type');
 
@@ -120,8 +120,6 @@ class JFormFieldForeignKey extends \Joomla\CMS\Form\FormField
             $query->order('ordering ASC');
         }
 
-		
-
 		$db->setQuery($query);
 		$results = $db->loadObjectList();
 
@@ -182,6 +180,7 @@ class JFormFieldForeignKey extends \Joomla\CMS\Form\FormField
 	 * @param   mixed   $default    Optional value to return if attribute not found
 	 *
 	 * @return mixed The value of the attribute if it exists, null otherwise
+     * @since    1.6
 	 */
 	public function getAttribute($attr_name, $default = null)
 	{

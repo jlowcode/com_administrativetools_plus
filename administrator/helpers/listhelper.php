@@ -20,8 +20,8 @@ use \Joomla\CMS\Language\Text;
  */
 abstract class JHtmlListhelper
 {
-	static function toggle($value = 0, $view, $field, $i)
-	{
+	static function toggle($value = 0, $view, $field, $i): string
+    {
 		$states = array(
 			0 => array('icon-remove', Text::_('Toggle'), 'inactive btn-danger'),
 			1 => array('icon-checkmark', Text::_('Toggle'), 'active btn-success')

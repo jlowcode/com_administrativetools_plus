@@ -29,8 +29,8 @@ defined('_JEXEC') or die('Restricted access');
         <h3 class="panel-title"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_PACKAGES_CREATE_TITLE'); ?></h3>
     </div>
     <div class="panel-body">
-        <form action="<?php echo JRoute::_('index.php?option=com_administrativetools&task=tools.generatePackage');
-?>" method="post" class="" id="formPackage" name="formPackage" enctype="multipart/form-data">
+        <form action="<?php echo JRoute::_('index.php?option=com_administrativetools&task=tools.generatePackage'); ?>" method="post" class="" id="formPackage"
+              name="formPackage" enctype="multipart/form-data">
 
             <div class="form-group">
                 <label for="exampleInputEmail1"><strong><?php echo FText::_('COM_ADMINISTRATIVETOOLS_PACKAGES_CREATE_NAME_FORM_LABEL'); ?></strong></label>
@@ -122,14 +122,14 @@ defined('_JEXEC') or die('Restricted access');
     <div class="panel-body">
         <table class="table">
             <thead>
-                <tr>
-                    <th width="22%"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_PACKAGES_LIST_TABLE_COL_NAME'); ?></th>
-                    <th width="30%"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_PACKAGES_LIST_TABLE_COL_FILE'); ?></th>
-                    <th width="3%"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_PACKAGES_LIST_TABLE_COL_RECORD'); ?></th>
-                    <th width="8%"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_PACKAGES_LIST_TABLE_COL_DATETIME'); ?></th>
-                    <th width="20%"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_PACKAGES_LIST_TABLE_COL_USER'); ?></th>
-                    <th width="7%"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_PACKAGES_LIST_TABLE_COL_OPTION'); ?></th>
-                </tr>
+            <tr>
+                <th width="22%"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_PACKAGES_LIST_TABLE_COL_NAME'); ?></th>
+                <th width="30%"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_PACKAGES_LIST_TABLE_COL_FILE'); ?></th>
+                <th width="3%"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_PACKAGES_LIST_TABLE_COL_RECORD'); ?></th>
+                <th width="8%"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_PACKAGES_LIST_TABLE_COL_DATETIME'); ?></th>
+                <th width="20%"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_PACKAGES_LIST_TABLE_COL_USER'); ?></th>
+                <th width="7%"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_PACKAGES_LIST_TABLE_COL_OPTION'); ?></th>
+            </tr>
             </thead>
         </table>
         <?php
@@ -154,7 +154,7 @@ defined('_JEXEC') or die('Restricted access');
                                     <td width="30%">
                                         <a class="accordion-toggle linktd" data-toggle="collapse" data-parent="#accordionList"
                                            href="#collapse<?php echo $value->id; ?>">
-                                               <?php echo $value->file; ?>
+                                            <?php echo $value->file; ?>
                                         </a>
                                     </td>
                                     <td width="3%" class="center">
@@ -167,7 +167,8 @@ defined('_JEXEC') or die('Restricted access');
                                     <td width="7%">
                                         <a href="<?php echo JRoute::_('components/com_administrativetools/generatepackages/' . $value->file, false); ?>"
                                            class="btn btn-small" title="Download"><i class="icon icon-download"></i></a>
-                                        <button onclick="deletePackage(<?php echo $value->id; ?>, '<?php echo $value->file; ?>', '<?php echo $this->text_message; ?>');" class="btn btn-danger btn-small"
+                                        <button onclick="deletePackage(<?php echo $value->id; ?>, '<?php echo $value->file; ?>', '<?php echo $this->text_message; ?>');"
+                                                class="btn btn-danger btn-small"
                                                 title="<?php echo FText::_('COM_ADMINISTRATIVETOOLS_PACKAGES_CREATE_FILE_FORM_DELETE_TITLE_BTN'); ?>">
                                             <i class="icon icon-trash"></i>
                                         </button>

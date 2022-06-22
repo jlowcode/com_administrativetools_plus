@@ -28,8 +28,8 @@ class AdministrativetoolsControllerTools extends AdministrativetoolsController
 	 *
 	 * @since	1.6
 	 */
-	public function &getModel($name = 'Tools', $prefix = 'AdministrativetoolsModel', $config = array())
-	{
+	public function &getModel($name = 'Tools', $prefix = 'AdministrativetoolsModel', $config = array()): object
+    {
 		$model = parent::getModel($name, $prefix, array('ignore_request' => true));
 
 		return $model;

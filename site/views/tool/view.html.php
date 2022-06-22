@@ -38,6 +38,7 @@ class AdministrativetoolsViewTool extends \Joomla\CMS\MVC\View\HtmlView
 	 * @return void
 	 *
 	 * @throws Exception
+     * @since    1.6
 	 */
 	public function display($tpl = null)
 	{
@@ -48,18 +49,11 @@ class AdministrativetoolsViewTool extends \Joomla\CMS\MVC\View\HtmlView
 		$this->item   = $this->get('Item');
 		$this->params = $app->getParams('com_administrativetools');
 
-		if (!empty($this->item))
-		{
-			
-		}
-
 		// Check for errors.
 		if (count($errors = $this->get('Errors')))
 		{
 			throw new Exception(implode("\n", $errors));
 		}
-
-		
 
 		if ($this->_layout == 'edit')
 		{
@@ -82,6 +76,7 @@ class AdministrativetoolsViewTool extends \Joomla\CMS\MVC\View\HtmlView
 	 * @return void
 	 *
 	 * @throws Exception
+     * @since    1.6
 	 */
 	protected function _prepareDocument()
 	{

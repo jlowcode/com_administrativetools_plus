@@ -27,10 +27,6 @@ class AdministrativetoolsModelToolForm extends \Joomla\CMS\MVC\Model\FormModel
 {
     private $item = null;
 
-    
-
-    
-
     /**
      * Method to auto-populate the model state.
      *
@@ -74,13 +70,14 @@ class AdministrativetoolsModelToolForm extends \Joomla\CMS\MVC\Model\FormModel
     /**
      * Method to get an ojbect.
      *
-     * @param   integer $id The id of the object to get.
+     * @param integer|null $id The id of the object to get.
      *
      * @return Object|boolean Object on success, false on failure.
      *
      * @throws Exception
+     * @since    1.6
      */
-    public function getItem($id = null)
+    public function getItem(int $id = null)
     {
         if ($this->item === null)
         {
@@ -141,6 +138,7 @@ class AdministrativetoolsModelToolForm extends \Joomla\CMS\MVC\Model\FormModel
      * @param   array  $config Optional configuration array for JTable object
      *
      * @return  JTable|boolean JTable if found, boolean false on failure
+     * @since    1.6
      */
     public function getTable($type = 'Tool', $prefix = 'AdministrativetoolsTable', $config = array())
     {
@@ -152,11 +150,12 @@ class AdministrativetoolsModelToolForm extends \Joomla\CMS\MVC\Model\FormModel
     /**
      * Get an item by alias
      *
-     * @param   string $alias Alias string
+     * @param string $alias Alias string
      *
      * @return int Element id
+     * @since    1.6
      */
-    public function getItemIdByAlias($alias)
+    public function getItemIdByAlias(string $alias)
     {
         $table      = $this->getTable();
         $properties = $table->getProperties();
@@ -167,11 +166,7 @@ class AdministrativetoolsModelToolForm extends \Joomla\CMS\MVC\Model\FormModel
         }
 
         $table->load(array('alias' => $alias));
-        $id = $table->id;
-
-        
-            return $id;
-        
+        return $table->id;
     }
 
     /**
@@ -183,7 +178,7 @@ class AdministrativetoolsModelToolForm extends \Joomla\CMS\MVC\Model\FormModel
      *
      * @since    1.6
      */
-    public function checkin($id = null)
+    public function checkin($id = null): bool
     {
         // Get the id.
         $id = (!empty($id)) ? $id : (int) $this->getState('tool.id');
@@ -216,7 +211,7 @@ class AdministrativetoolsModelToolForm extends \Joomla\CMS\MVC\Model\FormModel
      *
      * @since    1.6
      */
-    public function checkout($id = null)
+    public function checkout($id = null): bool
     {
         // Get the user id.
         $id = (!empty($id)) ? $id : (int) $this->getState('tool.id');
@@ -275,7 +270,8 @@ class AdministrativetoolsModelToolForm extends \Joomla\CMS\MVC\Model\FormModel
     /**
      * Method to get the data that should be injected in the form.
      *
-     * @return    array  The default data is an empty array.
+     * @return array|bool|mixed|Object
+     * @throws Exception
      * @since    1.6
      */
     protected function loadFormData()
@@ -289,8 +285,6 @@ class AdministrativetoolsModelToolForm extends \Joomla\CMS\MVC\Model\FormModel
 
         if ($data)
         {
-            
-
             return $data;
         }
 
@@ -389,6 +383,7 @@ class AdministrativetoolsModelToolForm extends \Joomla\CMS\MVC\Model\FormModel
      * Check if data can be saved
      *
      * @return bool
+     * @since    1.6
      */
     public function getCanSave()
     {

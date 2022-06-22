@@ -21,6 +21,10 @@ defined('_JEXEC') or die('Restricted access');
                                                                               aria-controls="messages" role="tab"
                                                                               data-toggle="tab">
                         <?php echo FText::_('COM_ADMINISTRATIVETOOLS_TITLE_NAV_TABS_HAVERSTING'); ?></a></li>
+                <li role="presentation" class="<?php echo $this->tab5; ?>"><a href="#chargelist"
+                                                                              aria-controls="messages" role="tab"
+                                                                              data-toggle="tab">
+                        <?php echo FText::_('COM_ADMINISTRATIVETOOLS_TITLE_NAV_TABS_CHANGE_LIST'); ?></a></li>
             </ul>
 
             <!-- Tab panes -->
@@ -36,6 +40,9 @@ defined('_JEXEC') or die('Restricted access');
                 </div>
                 <div role="tabpanel" class="tab-pane <?php echo $this->tab3; ?>" id="haversting">
                     <?php echo $this->loadTemplate('haversting'); ?>
+                </div>
+                <div role="tabpanel" class="tab-pane <?php echo $this->tab5; ?>" id="chargelist">
+                    <?php echo $this->loadTemplate('change_list'); ?>
                 </div>
             </div>
         </div>

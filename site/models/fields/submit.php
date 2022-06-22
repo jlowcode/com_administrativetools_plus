@@ -33,8 +33,8 @@ class JFormFieldSubmit extends \Joomla\CMS\Form\FormField
 	 *
 	 * @return string
 	 */
-	public function getInput()
-	{
+	public function getInput(): string
+    {
 		$this->value = $this->getAttribute('value');
 
 		return '<button id="' . $this->id . '"'

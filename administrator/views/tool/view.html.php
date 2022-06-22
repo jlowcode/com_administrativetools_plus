@@ -36,6 +36,7 @@ class AdministrativetoolsViewTool extends \Joomla\CMS\MVC\View\HtmlView
 	 * @return void
 	 *
 	 * @throws Exception
+     * @since  1.6
 	 */
 	public function display($tpl = null)
 	{
@@ -59,6 +60,7 @@ class AdministrativetoolsViewTool extends \Joomla\CMS\MVC\View\HtmlView
 	 * @return void
 	 *
 	 * @throws Exception
+     * @since  1.6
 	 */
 	protected function addToolbar()
 	{

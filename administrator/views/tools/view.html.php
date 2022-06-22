@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @version    CVS: 1.0.0
  * @package    Com_Administrativetools
@@ -9,7 +8,6 @@
  */
 // No direct access
 defined('_JEXEC') or die;
-
 jimport('joomla.application.component.view');
 
 use \Joomla\CMS\Language\Text;
@@ -21,7 +19,6 @@ use \Joomla\CMS\Language\Text;
  */
 class AdministrativetoolsViewTools extends \Joomla\CMS\MVC\View\HtmlView
 {
-
     protected $items;
     protected $pagination;
     protected $state;
@@ -34,11 +31,11 @@ class AdministrativetoolsViewTools extends \Joomla\CMS\MVC\View\HtmlView
      * @return void
      *
      * @throws Exception
+     * @since    1.6
      */
     public function display($tpl = null)
     {
         $this->state = $this->get('State');
-
         $db = JFactory::getDbo();
         $config = JFactory::getConfig();
         $app = JFactory::getApplication();
@@ -46,7 +43,6 @@ class AdministrativetoolsViewTools extends \Joomla\CMS\MVC\View\HtmlView
         $input = $app->input;
 
         $this->list = $this->get('ListsProjectPITT');
-
         $exist_table = $this->get('ExistTablePkgs');
 
         if ($exist_table === NULL) {
@@ -69,19 +65,19 @@ class AdministrativetoolsViewTools extends \Joomla\CMS\MVC\View\HtmlView
         $db->setQuery($sql_show);
         $allTables = $db->loadColumn();
         $joomlaTables = array();
+
         foreach ($allTables as $table) {
             if (strpos($table, 'fabrik') === false) {
                 $joomlaTables[] = $table;
             }
         }
+
         $this->joomlaTables = $joomlaTables;
 
         $sql_show = "SELECT DISTINCT list.db_table_name, list.id, list.label
-                FROM
-                #__fabrik_lists AS list ;";
+                FROM #__fabrik_lists AS list ;";
         $db->setQuery($sql_show);
         $fabrikLists = $db->loadObjectList();
-        //$this->fabrikLists = $fabrikLists;
         $this->fabrikLists = $this->sortLists($fabrikLists);
 
         $this->list_packages = $this->get('ListPackages');
@@ -119,26 +115,24 @@ class AdministrativetoolsViewTools extends \Joomla\CMS\MVC\View\HtmlView
         parent::display($tpl);
     }
 
-    private function sortLists($lists) {
-	    usort(
+    private function sortLists($lists)
+    {
+        usort(
+            $lists,
+            function ($a, $b) {
+                if ($a->label == $b->label) return 0;
+                return (($a->label < $b->label) ? -1 : 1);
+            }
+        );
 
-		    $lists,
-
-		    function ($a, $b) {
-
-			    if($a->label == $b->label ) return 0;
-
-			    return (($a->label < $b->label) ? -1 : 1 );
-		    }
-	    );
-
-	    return $lists;
+        return $lists;
     }
 
     /**
      * Function that groups all link links with css and js in the system.
      *
      * @param $doc
+     * @since    1.6
      */
     function linksCssJs($doc)
     {
@@ -242,6 +236,7 @@ class AdministrativetoolsViewTools extends \Joomla\CMS\MVC\View\HtmlView
         $this->tab2 = "";
         $this->tab3 = "";
         $this->tab4 = "";
+        $this->tab5 = "";
 
         if ($id === 1) {
             $this->tab1 = "active";
@@ -251,6 +246,8 @@ class AdministrativetoolsViewTools extends \Joomla\CMS\MVC\View\HtmlView
             $this->tab3 = "active";
         } elseif ($id === 4) {
             $this->tab4 = "active";
+        } elseif ($id === 5) {
+            $this->tab5 = "active";
         }
     }
 
@@ -283,6 +280,7 @@ class AdministrativetoolsViewTools extends \Joomla\CMS\MVC\View\HtmlView
      * Method to order fields
      *
      * @return void
+     * @since    1.6
      */
     protected function getSortFields()
     {
@@ -295,10 +293,10 @@ class AdministrativetoolsViewTools extends \Joomla\CMS\MVC\View\HtmlView
      * @param mixed $state State
      *
      * @return bool
+     * @since    1.6
      */
     public function getState($state)
     {
         return isset($this->state->{$state}) ? $this->state->{$state} : false;
     }
-
 }

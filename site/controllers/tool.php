@@ -126,6 +126,7 @@ class AdministrativetoolsControllerTool extends \Joomla\CMS\MVC\Controller\BaseC
 	 * @return void
 	 *
 	 * @throws Exception
+     * @since    1.6
 	 */
 	public function remove()
 	{

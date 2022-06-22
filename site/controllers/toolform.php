@@ -165,6 +165,7 @@ class AdministrativetoolsControllerToolForm extends \Joomla\CMS\MVC\Controller\F
 	 * @return void
 	 *
 	 * @throws Exception
+     * @since    1.6
 	 */
 	public function cancel($key = NULL)
 	{

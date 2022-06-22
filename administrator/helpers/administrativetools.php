@@ -22,11 +22,11 @@ class AdministrativetoolsHelper {
     /**
      * Configure the Linkbar.
      *
-     * @param   string  $vName  string
-     *
+     * @param string $vName  string
      * @return void
+     * @since  1.6
      */
-    public static function addSubmenu($vName = '') {
+    public static function addSubmenu(string $vName = '') {
         JHtmlSidebar::addEntry(
                 JText::_('COM_ADMINISTRATIVETOOLS_TITLE_TOOLS'),
                 'index.php?option=com_administrativetools&view=tools', $vName == 'tools');
@@ -35,15 +35,14 @@ class AdministrativetoolsHelper {
     /**
      * Gets the files attached to an item
      *
-     * @param   int     $pk     The item's id
-     *
-     * @param   string  $table  The table's name
-     *
-     * @param   string  $field  The field's name
-     *
+     * @param int $pk     The item's id
+     * @param string $table  The table's name
+     * @param string $field  The field's name
      * @return  array  The files
+     * @since  1.6
      */
-    public static function getFiles($pk, $table, $field) {
+    public static function getFiles(int $pk, string $table, string $field): array
+    {
         $db = Factory::getDbo();
         $query = $db->getQuery(true);
 
@@ -61,10 +60,10 @@ class AdministrativetoolsHelper {
      * Gets a list of the actions that can be performed.
      *
      * @return    JObject
-     *
      * @since    1.6
      */
-    public static function getActions() {
+    public static function getActions()
+    {
         $user = Factory::getUser();
         $result = new JObject;
 
