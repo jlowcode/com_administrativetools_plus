@@ -1,25 +1,25 @@
 <h1 style="text-align: center"> Ferramentas Administrativas </h1>
 <p style="text-align: justify">
-É um componente joomla para uso pelo Fabrik, que tem várias guias cada uma com as suas funções:
+Ã‰ um componente joomla para uso pelo Fabrik, que tem vÃ¡rias guias cada uma com as suas funÃ§Ãµes:
 </p>
 <ol>
 <li><strong>Pacotes</strong></li>
 <li><strong>Importar e exportar listas</strong></li>
-<li><strong>Transformação de elementos</strong></li>
-<li><strong>Extração do dados OAI PMH</strong></li>
+<li><strong>TransformaÃ§Ã£o de elementos</strong></li>
+<li><strong>ExtraÃ§Ã£o do dados OAI PMH</strong></li>
 <li><strong>Mudar lista</strong></li>
 <p style="text-align: justify">
-Ferramenta que muda/altera/renomeia o nome da tabela/lista do fabrik e as suas relações criadas
-com as imagens e joins com algumas seguranças:
+Ferramenta que muda/altera/renomeia o nome da tabela/lista do fabrik e as suas relaÃ§Ãµes criadas
+com as imagens e joins com algumas seguranÃ§as:
 </p>
 <ul>
-<li>Faça o ?backup? do banco de dados antes por segurança.</li>
-<li>Coloque o site em manutenção/fora do ar.</li>
+<li>FaÃ§a o backup do banco de dados antes por seguranÃ§a.</li>
+<li>Coloque o site em manutenÃ§Ã£o/fora do ar.</li>
 </ul>
 <p style="text-align: justify">
-Seguindo estas instruções não vão ter problema com as alterações.
+Seguindo estas instruÃ§Ãµes nÃ£o vÃ£o ter problema com as alteraÃ§Ãµes.
 </p>
 </ol>
 <p style="text-align: justify">
-© Universidade Federal de Goiás - UFG. Todos os direitos reservados.
+Â© Universidade Federal de GoiÃ¡s - UFG. Todos os direitos reservados.
 </p>
