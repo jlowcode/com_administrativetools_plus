@@ -15,11 +15,11 @@ com as imagens e joins com algumas seguranças:
 <ul>
 <li>Faça o backup do banco de dados antes por segurança.</li>
 <li>Coloque o site em manutenção/fora do ar.</li>
-</ul>
+</ul><br />
 <p style="text-align: justify">
 Seguindo estas instruções não vão ter problema com as alterações.
 </p>
 </ol>
 <p style="text-align: justify">
-© Universidade Federal de Goiás - UFG. Todos os direitos reservados.
+© Universidade Federal de Goiás — UFG. Todos os direitos reservados.
 </p>
