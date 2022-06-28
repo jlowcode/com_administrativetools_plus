@@ -5,7 +5,7 @@
  * @package    Com_Administrativetools
  * @author     Hirlei Carlos Pereira de Araújo <prof.hirleicarlos@gmail.com>
  * @copyright  2020 Hirlei Carlos Pereira de Araújo
- * @license    GNU General Public License versão 2 ou posterior; consulte o arquivo License. txt
+ * @license    GNU General Public. License versão 2 ou posterior; consulte o arquivo License. Txt
  */
 
 defined('_JEXEC') or die;
@@ -47,10 +47,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function duplicate()
     {
-        // Check for request forgeries
         session::checkToken() or jexit(Text::_('JINVALID_TOKEN'));
-
-        // Get id(s)
         $pks = $this->input->post->get('cid', array(), 'array');
 
         try {
@@ -75,7 +72,6 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      * @param string $name Optional. Model name
      * @param string $prefix Optional. Class prefix
      * @param array $config Optional. Configuration array for model
-     *
      * @return  object    The Model
      * @since    1.6
      */
@@ -88,33 +84,23 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      * Method to save the submitted ordering values for records via AJAX.
      *
      * @return  void
-     *
      * @throws Exception
      * @since   3.0
-     *
      */
     public function saveOrderAjax()
     {
-        // Get the input
         $input = Factory::getApplication()->input;
         $pks = $input->post->get('cid', array(), 'array');
         $order = $input->post->get('order', array(), 'array');
-
-        // Sanitize the input
         ArrayHelper::toInteger($pks);
         ArrayHelper::toInteger($order);
-
-        // Get the model
         $model = $this->getModel();
-
-        // Save the ordering
         $return = $model->saveorder($pks, $order);
 
         if ($return) {
             echo "1";
         }
 
-        // Close the application
         Factory::getApplication()->close();
     }
 
@@ -124,14 +110,11 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      * @return void
      * @throws Exception
      * @since  1.6
-     *
      */
     public function uploadFile()
     {
         $app = JFactory::getApplication();
-
         $folder_path = pathinfo($_SERVER['SCRIPT_FILENAME']);
-
         $folder = $folder_path['dirname'] . '/components/com_administrativetools/packagesupload';
 
         if (!is_dir($folder)) {
@@ -181,12 +164,15 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     /**
      * Management method for creating package files (zip, php, xml and sql).
      *
-     * @throws Exception
+     * @return void
+     * @throws DOMException
+     * @since  1.6
      */
     public function generatePackage()
     {
         date_default_timezone_set('America/Sao_Paulo');
         $app = JFactory::getApplication();
+        $files = array();
 
         $nm_text = str_replace(' ', '', strtolower($app->input->getString('name', 'pitt')));
         $data['name'] = $this->utf8_strtr($nm_text);
@@ -242,7 +228,8 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      * Method that removes all special characters and accentuation.
      *
      * @param $str
-     * @return mixed
+     * @return array|string|string[]
+     * @since  1.6
      */
     public function utf8_strtr($str)
     {
@@ -263,6 +250,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      * @param $folder
      * @return void
      * @throws DOMException
+     * @since  1.6
      */
     private function createXML($data, $folder)
     {
@@ -300,7 +288,6 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
         foreach ($data['file'] as $value) {
             $ar_file = explode('_', $value);
-
             $file = $xml->createElement('file', $value);
 
             $file_type = $xml->createAttribute('type');
@@ -352,7 +339,6 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
             }
 
             $file->appendChild($file_id);
-
             $files->appendChild($file);
         }
 
@@ -394,6 +380,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      * @param $file
      * @param $record
      * @param $params
+     * @since  1.6
      */
     private function insertPackagesDB($name, $file, $record, $params)
     {
@@ -418,6 +405,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      * Ajax method that will delete the file from the generatepackage folder and the fabrik_pkgs database information.
      *
      * @throws Exception
+     * @since  1.6
      */
     public function deletePackage()
     {
@@ -460,6 +448,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      *
      * @param $nm_sql
      * @param $folder
+     * @since  1.6
      */
     private function createFileSqlDefault($nm_sql, $folder)
     {
@@ -511,6 +500,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      * Method to take the names of Fabrik's default tables and string them so you can create the SQL file of those tables.
      *
      * @return string
+     * @since  1.6
      */
     private function tableBDFabrikDefault()
     {
@@ -547,6 +537,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      * @param $nm_sql
      * @param $record
      * @param $folder
+     * @since  1.6
      */
     private function createFileSqlListJoin($nm_sql, $record, $folder)
     {
@@ -592,14 +583,14 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      * Method for taking Fabrik list and join names and sequencing them so you can create the SQL file for those tables.
      *
      * @return string
+     * @since  1.6
      */
-    private function tableBDFabrikListJoin()
+    private function tableBDFabrikListJoin(): string
     {
         $db = JFactory::getDbo();
 
         $sql = "SELECT DISTINCT list.db_table_name
-                FROM
-                #__fabrik_lists AS list ;";
+                FROM #__fabrik_lists AS list ;";
 
         $db->setQuery($sql);
 
@@ -625,12 +616,10 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
             }
 
             $sql1 = "SELECT DISTINCT joins.table_join
-                    FROM
-                    #__fabrik_joins AS joins
-                    WHERE
-                    joins.list_id <> 0 AND
+                    FROM #__fabrik_joins AS joins
+                    WHERE joins.list_id <> 0 AND
                     joins.list_id IS NOT NULL AND
-                    joins.table_join NOT IN ({$arTable}) ;";
+                    joins.table_join NOT IN ($arTable) ;";
 
             $db->setQuery($sql1);
 
@@ -638,7 +627,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
             if (count($result1) > 0) {
                 foreach ($result1 as $value1) {
-                    $query = "SHOW TABLES LIKE '{$value1->table_join}'";
+                    $query = "SHOW TABLES LIKE '$value1->table_join'";
                     $db->setQuery($query);
                     $exist = $db->loadRowList();
                     if (!empty($exist)) {
@@ -657,6 +646,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      * @param $name
      * @param $folder
      * @return string
+     * @since  1.6
      */
     private function createFileScriptPhp($name, $folder)
     {
@@ -745,13 +735,12 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                 element.`plugin`,
                 element.params,
                 list.params as paramList
-                FROM
-                #__fabrik_elements AS element
+                FROM #__fabrik_elements AS element
                 LEFT JOIN #__fabrik_formgroup AS fgroup ON element.group_id = fgroup.group_id
                 LEFT JOIN #__fabrik_lists AS list ON fgroup.form_id = list.form_id
                 WHERE
                 list.published = 1 AND
-                fgroup.form_id = {$id}
+                fgroup.form_id = $id
                 ORDER BY
                 element.label ASC;";
 
@@ -764,6 +753,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                 $list[$key]->params = json_decode($value->params);
                 $list[$key]->paramList = json_decode($value->paramList);
             }
+
             echo json_encode($list);
         } else {
             echo '0';
@@ -1070,7 +1060,6 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
                         if ($join_type_bool) {
                             $fk_exist1 = $this->checkIfForeignKeyExists($this->join_source->table_join, $tableSource->db_table_name, $this->join_source->table_join_key);
-
                             $fk_exist2 = $this->checkIfForeignKeyExists($this->join_source->table_join, $source['params']->join_db_name, $this->join_source->table_key);
 
                             if (($fk_exist1->forkey === '0') && ($fk_exist2->forkey === '0')) {
@@ -1120,9 +1109,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
                         if ($join_type_bool & $type_bool) {
                             $fk_exist = $this->checkIfForeignKeyExists($tableSource->db_table_name, $source['params']->join_db_name, $source['data']->name);
-
                             $fk_exist1 = $this->checkIfForeignKeyExists($this->join_target->table_join, $tableSource->db_table_name, $this->join_target->table_join_key);
-
                             $fk_exist2 = $this->checkIfForeignKeyExists($this->join_target->table_join, $source['params']->join_db_name, $this->join_target->table_key);
 
                             if (($fk_exist->forkey === '0') && ($fk_exist1->forkey === '0') && ($fk_exist2->forkey === '0')) {
@@ -1154,9 +1141,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
                         if ($join_type_bool && $type_bool) {
                             $fk_exist1 = $this->checkIfForeignKeyExists($this->join_source->table_join, $tableSource->db_table_name, $this->join_source->table_join_key);
-
                             $fk_exist2 = $this->checkIfForeignKeyExists($this->join_source->table_join, $source['params']->join_db_name, $this->join_source->table_key);
-
                             $fk_exist3 = $this->checkIfForeignKeyExists($source['params']->join_db_name, $tableSource->db_table_name, $source['params']->join_val_col_synchronism);
 
                             if (($fk_exist1->forkey === '0') && ($fk_exist2->forkey === '0') && ($fk_exist3->forkey === '0')) {
@@ -1192,25 +1177,21 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
                         if ($join_type_source_bool && $join_type_target_bool) {
                             $fk_exist1 = $this->checkIfForeignKeyExists($this->join_source->table_join, $tableSource->db_table_name, $this->join_source->table_join_key);
-
                             $fk_exist2 = $this->checkIfForeignKeyExists($this->join_source->table_join, $source['params']->join_db_name, $this->join_source->table_key);
-
                             $fk_exist3 = $this->checkIfForeignKeyExists($this->join_target->table_join, $tableSource->db_table_name, $this->join_target->table_join_key);
-
                             $fk_exist4 = $this->checkIfForeignKeyExists($this->join_target->table_join, $source['params']->join_db_name, $this->join_target->table_key);
 
                             if (($fk_exist1->forkey === '0') && ($fk_exist2->forkey === '0') && ($fk_exist3->forkey === '0') && ($fk_exist4->forkey === '0')) {
                                 $result_sql = $this->alterTableCreateForeignKeyRelatedFields4($this->join_source->table_join, $this->join_target->table_join, $tableSource->db_table_name, $source['params']->join_db_name, $this->join_target->table_key, $this->join_source->table_key, $update, $delete);
-
                                 $message = $this->displayMessages($result_sql, 'COM_ADMINISTRATIVETOOLS_MESSAGE_CONTROLLER_2', 'COM_ADMINISTRATIVETOOLS_MESSAGE_CONTROLLER_1');
                             } else {
                                 $result_sql = true;
-
                                 $message = $this->displayMessages($result_sql, 'COM_ADMINISTRATIVETOOLS_MESSAGE_CONTROLLER_3', 'COM_ADMINISTRATIVETOOLS_MESSAGE_CONTROLLER_1');
                             }
                         }
                     }
                 }
+
                 break;
             case 6:
                 $table_repeat = $app->input->getInt("tableRepeat", 0);
@@ -1247,6 +1228,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                             $this->performChangeThumbsCrops($source['params'], $value[$source['data']->name], $key);
                         }
                     }
+
                     $message = $this->displayMessages(true, 'COM_ADMINISTRATIVETOOLS_MESSAGE_CONTROLLER_4', 'COM_ADMINISTRATIVETOOLS_MESSAGE_CONTROLLER_5');
                 } elseif (($table_repeat === 1) && ($thumbs_crops === 1)) {
                     if ($source['params']->ajax_upload === '1') {
@@ -1267,8 +1249,8 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                 }
                 break;
         }
-        $site_message = JUri::base() . 'index.php?option=com_administrativetools&view=tools&tab=2';
 
+        $site_message = JUri::base() . 'index.php?option=com_administrativetools&view=tools&tab=2';
         $this->setRedirect($site_message, $message['message'], $message['type']);
     }
 
@@ -1277,9 +1259,8 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      *
      * @param $sourse
      * @param $target
-     *
+     * @param $type
      * @return string
-     *
      * @since version
      */
     public function validateErro($sourse, $target, $type)
@@ -2093,9 +2074,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      *
      * @param $table
      * @param $field
-     *
      * @return bool
-     *
      * @since version
      */
     public function alterTableColummDataType($table, $field)
@@ -3012,9 +2991,9 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                                         $date = date("Y-m-d H:i:s", strtotime($db->escape($metas->item(0)->nodeValue)));
 
                                         if ($i !== 0) {
-                                            $fieldsContent .= ", '{$date}'";
+                                            $fieldsContent .= ", '$date'";
                                         } else {
-                                            $fieldsContent .= "'{$date}'";
+                                            $fieldsContent .= "'$date'";
                                         }
 
                                         if ($data['sync'] === 1) {
@@ -3828,12 +3807,11 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     /**
      * Ajax method that will check if the link (address) of the repository is valid if it is really a repository.
      *
-     * @throws Exception
+     * @return void
      */
     public function repositoryValidation()
     {
         $app = JFactory::getApplication();
-
         $db = JFactory::getDbo();
 
         $link = $db->escape($app->input->getString("link"));
@@ -3845,6 +3823,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
             $app->close();
         }
+
         $url = $link . "?verb=ListMetadataFormats";
 
         if (!simplexml_load_file($url)) {
@@ -3852,6 +3831,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
             $app->close();
         }
+
         $url = $link . "?verb=ListSets";
 
         if (!simplexml_load_file($url)) {
@@ -3859,6 +3839,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
             $app->close();
         }
+
         $url = $link . '?verb=ListRecords&metadataPrefix=oai_dc';
 
         if (!simplexml_load_file($url)) {
@@ -3866,6 +3847,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
             $app->close();
         }
+
         $url = $link . '?verb=ListRecords&metadataPrefix=ore';
 
         if (!simplexml_load_file($url)) {
@@ -3873,6 +3855,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
             $app->close();
         }
+
         echo "1";
 
         $app->close();
@@ -3883,7 +3866,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      *
      * @param $id_form
      * @param $arIdElementMap
-     * @return mixed
+     * @return void
      */
     public function mappedElementsData($id_form, $arIdElementMap)
     {
@@ -3896,7 +3879,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                     LEFT JOIN #__fabrik_lists AS list ON fg.form_id = list.form_id
                 WHERE
                     list.published = 1 AND
-                    list.form_id = {$id_form}  AND
+                    list.form_id = $id_form  AND
                     element.id IN ($arIdElementMap)";
 
             $db->setQuery($sql);
@@ -4120,7 +4103,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     /**
      * Ajax method that retrieves the data to be edited.
      *
-     * @throws Exception
+     * @return void
      */
     public function editHarvesting()
     {
@@ -4837,17 +4820,17 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                                             if (strlen($fields) !== 0) {
                                                 if ($j === 0) {
                                                     if (($objParams->database_join_display_type !== "checkbox") && ($objParams->database_join_display_type !== "multilist") && ($element->plugin !== 'tags')) {
-                                                        $fields .= ", {$element->name}";
+                                                        $fields .= ", $element->name";
                                                         $itemFieldElement = 1;
                                                     } else {
                                                         $itemFieldElement = 0;
                                                     }
                                                 } elseif (($arLength[$value] === 1) && ($objParams->database_join_display_type !== "checkbox") && ($objParams->database_join_display_type !== "multilist") && ($element->plugin !== 'tags')) {
-                                                    $fields .= ", {$element->name}";
+                                                    $fields .= ", $element->name";
                                                     $itemFieldElement = 1;
                                                 }
                                             } else {
-                                                $fields .= "{$element->name}";
+                                                $fields .= "$element->name";
                                                 $itemFieldElement = 1;
                                             }
 
@@ -4860,9 +4843,9 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                                                     $date = date("Y-m-d H:i:s", strtotime($db->escape($metas->item($index)->nodeValue)));
 
                                                     if (strlen($fieldsContent) !== 0) {
-                                                        $fieldsContent .= ", '{$date}'";
+                                                        $fieldsContent .= ", '$date'";
                                                     } else {
-                                                        $fieldsContent .= "'{$date}'";
+                                                        $fieldsContent .= "'$date'";
                                                     }
 
                                                     if ($harvesting->syncronism === '1') {
@@ -4911,9 +4894,9 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                                                         }
 
                                                         if ((strlen($fieldsContent) !== 0) && ($result !== false)) {
-                                                            $fieldsContent .= ", '{$result}'";
+                                                            $fieldsContent .= ", '$result'";
                                                         } elseif ((strlen($fieldsContent) === 0) && ($result !== false)) {
-                                                            $fieldsContent .= "'{$result}'";
+                                                            $fieldsContent .= "'$result'";
                                                         } elseif ((strlen($fieldsContent) === 0) && ($result === false)) {
                                                             $fieldsContent .= ",''";
                                                         } elseif ((strlen($fieldsContent) !== 0) && ($result === false)) {
@@ -4970,7 +4953,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                                                             $tagInsertField = "`parent_id`, `level`, `path`, `title`, `alias`, `published`, `checked_out_time`, `access`, `created_user_id`,
 										 `created_time`, `modified_time`, `publish_up`, `publish_down`";
 
-                                                            $tagInsertData = "'1','1','{$tagTextExtra}','{$tagText}','{$tagTextExtra}','1','{$data['registerDate']}','1','{$data['users']}',
+                                                            $tagInsertData = "'1','1','$tagTextExtra','$tagText','$tagTextExtra','1','{$data['registerDate']}','1','{$data['users']}',
 										'{$data['registerDate']}','{$data['registerDate']}','{$data['registerDate']}','{$data['registerDate']}'";
                                                         }
 
@@ -4995,13 +4978,13 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                                                         }
 
                                                         if (($num === $arLength[$value]) || ($arLength[$value] === 1)) {
-                                                            $fieldsContent .= ", '{$fieldExtra}'";
+                                                            $fieldsContent .= ", '$fieldExtra'";
                                                         }
                                                     } else {
                                                         $fieldExtra .= $db->escape($metas->item($index)->nodeValue);
 
                                                         if ($num === $arLength[$value]) {
-                                                            $fieldsContent .= "'{$fieldExtra}'";
+                                                            $fieldsContent .= "'$fieldExtra'";
                                                         }
                                                     }
 
@@ -5049,10 +5032,10 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                                             $dir = $path . $urlDirectory . $nameIdentifier . '_' . basename($linkFileXML);
 
                                             if ($objParamsFile->ajax_upload === '0') {
-                                                $fields .= ", {$elementFile->name}";
+                                                $fields .= ", $elementFile->name";
 
                                                 $dirName = $urlDirectory . $nameIdentifier . '_' . basename($linkFileXML);
-                                                $fieldsContent .= ", '{$dirName}'";
+                                                $fieldsContent .= ", '$dirName'";
 
                                                 if ($harvesting->syncronism === '1') {
                                                     $arFieldsElement[] = $elementFile->name;
@@ -5131,8 +5114,8 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
                                         $elementFile = $this->mappedElementsData($harvesting->list, $harvesting->extract);
 
-                                        $fields .= ", {$elementFile->name}";
-                                        $fieldsContent .= ", '{$textFile}'";
+                                        $fields .= ", $elementFile->name";
+                                        $fieldsContent .= ", '$textFile'";
 
                                         if ($harvesting->syncronism === '1') {
                                             $arFieldsElement[] = $elementFile->name;
@@ -5210,7 +5193,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      *
      * @param $link
      * @param $identifier
-     * @return bool|DOMNodeList
+     * @return false
      */
     public function searchFileRepositoryOER($link, $identifier)
     {
@@ -5272,7 +5255,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $flag = 1;
 
         while ($continue === false) {
-            $db->setQuery("SHOW TABLES LIKE '{$name}_{$flag}'");
+            $db->setQuery("SHOW TABLES LIKE '{$name}_$flag'");
             $result = $db->loadResult();
             if ($result) {
                 $flag++;
@@ -5281,7 +5264,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
             }
         }
 
-        return $name . "_{$flag}";
+        return $name . "_$flag";
     }
 
     public function checkDatabaseJoins()
@@ -5290,7 +5273,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
         foreach ($this->elementsId as $elementId) {
             $query = $db->getQuery(true);
-            $query->select('params')->from('#__fabrik_elements')->where("id = '{$elementId}'");
+            $query->select('params')->from('#__fabrik_elements')->where("id = '$elementId'");
             $db->setQuery($query);
             $result = $db->loadResult();
             $params = json_decode($result);
@@ -5610,7 +5593,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     {
         $db = JFactory::getDbo();
         $oldTableName = $this->clones_info[$listId]->old_db_table_name;
-        $db->setQuery("SHOW CREATE TABLE {$oldTableName}");
+        $db->setQuery("SHOW CREATE TABLE $oldTableName");
         return $db->loadAssoc()["Create Table"];
     }
 
@@ -5624,7 +5607,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
         foreach ($elementsRepeat as $element) {
             $table = $oldTableName . '_repeat_' . $element;
-            $db->setQuery("SHOW CREATE TABLE {$table}");
+            $db->setQuery("SHOW CREATE TABLE $table");
             $res = $db->loadAssoc()["Create Table"];
             $tablesRepeat[] = $res;
         }
@@ -5886,7 +5869,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $tableName = $this->clones_info[$listId]->db_table_name;
         $oldTableName = $this->clones_info[$listId]->old_db_table_name;
 
-        $tableSql = str_replace("CREATE TABLE `{$oldTableName}", "CREATE TABLE `{$tableName}", $tableSql);
+        $tableSql = str_replace("CREATE TABLE $oldTableName", "CREATE TABLE $tableName", $tableSql);
         $db->setQuery($tableSql);
 
         try {
@@ -5908,7 +5891,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $oldTableName = $this->clones_info[$listId]->old_db_table_name;
 
         foreach ($tablesRepeatSql as $tableRepeat) {
-            $sql = str_replace("CREATE TABLE `{$oldTableName}", "CREATE TABLE `{$tableName}", $tableRepeat);
+            $sql = str_replace("CREATE TABLE $oldTableName", "CREATE TABLE $tableName", $tableRepeat);
             $db->setQuery($sql);
 
             try {
@@ -6152,7 +6135,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         foreach ($groups as $groupModel) {
             if ($groupModel->group->is_join == 1) {
                 $groupName = $oldTableName . '_' . $groupModel->group->id . '_repeat';
-                $db->setQuery("SHOW CREATE TABLE {$groupName}");
+                $db->setQuery("SHOW CREATE TABLE $groupName");
                 $res = $db->loadAssoc()["Create Table"];
                 $groupsRepeat[] = $res;
             }
@@ -6222,55 +6205,59 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         if (!empty($new_name) && ($id_list != 0)) {
             $new_name_treated = strtolower(str_replace(" ", "_", $this->removeAccentsSpecialCharacters($new_name)));
 
-            try {
-                $db->transactionStart();
+            $select = "SELECT * FROM #__fabrik_lists AS `table` WHERE `table`.id = $id_list;";
+            $db->setQuery($select);
+            $list = $db->loadObject();
 
-                $select = "SELECT * FROM #__fabrik_lists AS `table` WHERE `table`.id = {$id_list};";
+            if (!empty($list)) {
+                $name_list = $list->db_table_name;
+                $fabrik = $this->tableFabrikParams('params', 'fabrik', $name_list, $new_name_treated, $id_list);
 
-                $db->setQuery($select);
-                $list = $db->loadObject();
-
-                if (!empty($list)) {
-                    $name_list = $list->db_table_name;
-                    $this->tableFabrikParams('params', 'fabrik', $name_list, $new_name_treated, $id_list);
-
+                if ($fabrik) {
                     $select = "SELECT table_name FROM INFORMATION_SCHEMA.TABLES
                                 WHERE table_schema in (SELECT DATABASE())
-                                and (table_name = '{$name_list}' or table_name like '{$name_list}_%');";
+                                and (table_name = '$name_list' or table_name like '{$name_list}_%');";
                     $db->setQuery($select);
                     $obj_tables = $db->loadObjectList();
 
                     $update = "";
 
-                    if (!empty($obj_tables)) {
-                        $update = "RENAME TABLE ";
+                    try {
+                        $db->transactionStart();
 
-                        foreach ($obj_tables as $key => $obj_table) {
-                            $new_table = str_replace($name_list, $new_name_treated, $obj_table->table_name);
+                        if (!empty($obj_tables)) {
+                            $update = "RENAME TABLE ";
 
-                            if ($key == 0) {
-                                $update .= "{$obj_table->table_name} TO {$new_table}";
-                            } else {
-                                $update .= ", {$obj_table->table_name} TO {$new_table}";
+                            foreach ($obj_tables as $key => $obj_table) {
+                                $new_table = str_replace($name_list, $new_name_treated, $obj_table->table_name);
+
+                                if ($key == 0) {
+                                    $update .= "$obj_table->table_name TO $new_table";
+                                } else {
+                                    $update .= ", $obj_table->table_name TO $new_table";
+                                }
                             }
+
+                            $update .= ";";
                         }
 
-                        $update .= ";";
+                        $db->setQuery($update);
+                        $db->execute();
+
+                        $db->transactionCommit();
+                        $message = JText::_("COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_SUCCESS5");
+                        $type_message = JText::_("COM_ADMINISTRATIVETOOLS_SUCCESS");
+                    } catch (Exception $exc) {
+                        $db->transactionRollback();
+                        $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
+                        $type_message = JText::_("COM_ADMINISTRATIVETOOLS_ERROR");
                     }
-
-                    $db->setQuery($update);
-                    $db->execute();
-
-                    $db->transactionCommit();
-                    $message = JText::_("COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_SUCCESS5");
-                    $type_message = JText::_("COM_ADMINISTRATIVETOOLS_SUCCESS");
                 } else {
-                    $message = JText::_("COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR6");
-                    $type_message = JText::_("COM_ADMINISTRATIVETOOLS_WARNING");
+                    $message = JText::_("COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR7");
+                    $type_message = JText::_("COM_ADMINISTRATIVETOOLS_ERROR");
                 }
-            } catch (Exception $exc) {
-                $db->transactionRollback();
-                $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
+            } else {
+                $message = JText::_("COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR6");
                 $type_message = JText::_("COM_ADMINISTRATIVETOOLS_WARNING");
             }
         } else {
@@ -6290,11 +6277,10 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      * @param $name_list
      * @param $new_name_treated
      * @param $list_id
-     * @return void
+     * @return bool
      * @author Hirlei Carlos
      * @version V0.2
      * @since V0.1
-     *
      */
     public function tableFabrikParams($col_name, $fabrik, $name_list, $new_name_treated, $list_id)
     {
@@ -6306,21 +6292,23 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
             $select = "SELECT table_name FROM INFORMATION_SCHEMA.COLUMNS
                         WHERE table_schema in (SELECT DATABASE()) 
-                        and COLUMN_NAME='{$col_name}' 
-                        and table_name like '%{$fabrik}%';";
+                        and COLUMN_NAME='$col_name' 
+                        and table_name like '%$fabrik%';";
             $db->setQuery($select);
             $obj_tables = $db->loadObjectList();
 
             foreach ($obj_tables as $obj_table) {
                 $table = str_replace($config->get("dbprefix"), "", $obj_table->table_name);
-                $select1 = "SELECT * FROM {$obj_table->table_name} AS `table` WHERE ";
+                $select1 = "SELECT DISTINCT * FROM $obj_table->table_name AS `table` WHERE ";
 
                 if ($table === "fabrik_lists") {
-                    $select1 .= "`table`.id = {$list_id};";
+                    $select1 .= "`table`.db_table_name LIKE '%$name_list%' or `table`.params LIKE '%$name_list%';";
                 } elseif ($table === "fabrik_joins") {
-                    $select1 .= "`table`.list_id = {$list_id} or `table`.params LIKE '%{$name_list}%';";
+                    $select1 .= "`table`.table_join LIKE '%$name_list%' or `table`.params LIKE '%$name_list%';";
+                } elseif ($table === "fabrik_elements") {
+                    $select1 .= "`table`.default LIKE '%$name_list%' or `table`.params LIKE '%$name_list%';";
                 } else {
-                    $select1 .= "`table`.params LIKE '%{$name_list}%';";
+                    $select1 .= "`table`.params LIKE '%$name_list%';";
                 }
 
                 $db->setQuery($select1);
@@ -6329,22 +6317,26 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                 if (!empty($obj_lists)) {
                     foreach ($obj_lists as $item) {
                         $params = str_replace($name_list, $new_name_treated, $item->params);
-                        $update = "UPDATE {$obj_table->table_name} SET ";
+                        $update = "UPDATE $obj_table->table_name SET ";
 
                         if ($table === "fabrik_lists") {
                             $db_primary_key = str_replace($name_list, $new_name_treated, $item->db_primary_key);
-                            $update .= "db_table_name = '{$new_name_treated}', db_primary_key = '{$db_primary_key}', ";
+                            $update .= "db_table_name = '$new_name_treated', db_primary_key = '$db_primary_key', ";
                         } elseif ($table === "fabrik_joins") {
                             if (!empty($item->join_from_table)) {
                                 $table_join = str_replace($name_list, $new_name_treated, $item->table_join);
-                                $update .= "join_from_table = '{$new_name_treated}', table_join = '{$table_join}', ";
+                                $update .= "join_from_table = '$new_name_treated', table_join = '$table_join', ";
                             } else {
-                                $update .= "table_join = '{$new_name_treated}', ";
+                                $update .= "table_join = '$new_name_treated', ";
+                            }
+                        } elseif ($table === "fabrik_elements") {
+                            if (!empty($item->default)) {
+                                $default = str_replace($name_list, $new_name_treated, $item->default);
+                                $update .= "`default` = '{$db->escape($default)}', ";
                             }
                         }
 
-                        $update .= "params = '{$db->escape($params)}' WHERE id = {$item->id}";
-
+                        $update .= "params = '{$db->escape($params)}' WHERE id = $item->id";
                         $db->setQuery($update);
                         $db->execute();
                     }
@@ -6352,12 +6344,10 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
             }
 
             $db->transactionCommit();
+            return true;
         } catch (Exception $exc) {
             $db->transactionRollback();
-            $message = JText::_("COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR7");
-            $type_message = JText::_("COM_ADMINISTRATIVETOOLS_ERROR");
-            $site_message = JUri::base() . "index.php?option=com_administrativetools&view=tools&tab=5";
-            $this->setRedirect($site_message, $message, $type_message);
+            return false;
         }
     }
 }
