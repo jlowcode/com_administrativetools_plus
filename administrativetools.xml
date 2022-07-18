@@ -39,12 +39,6 @@
         <folder>helpers</folder>
     </files>
 
-     <languages>
-            <language tag="en-GB" client="site">administrator/language/en-GB/en-GB.com_administrativetools.ini</language>
-            <language tag="en-GB" client="site">administrator/language/en-GB/en-GB.com_administrativetools.sys.ini</language>
-            <language tag="pt-BR" client="site">administrator/language/pt-BR/pt-BR.com_administrativetools.ini</language>
-            <language tag="pt-BR" client="site">administrator/language/pt-BR/pt-BR.com_administrativetools.sys.ini</language>
-    </languages>    
 
     <administration>
         <menu>COM_ADMINISTRATIVETOOLS</menu>
