@@ -61,7 +61,8 @@ class AdministrativetoolsViewTools extends \Joomla\CMS\MVC\View\HtmlView
 
         $dbprefix = $config->get('dbprefix');
         $database = $config->get('db');
-        $sql_show = "SHOW TABLES FROM {$database} LIKE '{$dbprefix}%'";
+        $sql_show = "SHOW TABLES FROM {$database}"; // TODAS AS TABELAS INDEPENDENTE DE PREFIXO
+        // $sql_show = "SHOW TABLES FROM {$database} LIKE '{$dbprefix}%'";
         $db->setQuery($sql_show);
         $allTables = $db->loadColumn();
         $joomlaTables = array();
