@@ -5239,7 +5239,6 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     {
         $comAcentos = array('à', 'á', 'â', 'ã', 'ä', 'å', 'ç', 'è', 'é', 'ê', 'ë', 'ì', 'í', 'î', 'ï', 'ñ', 'ò', 'ó', 'ô', 'õ', 'ö', 'ù', 'ü', 'ú',
             'ÿ', 'À', 'Á', 'Â', 'Ã', 'Ä', 'Å', 'Ç', 'È', 'É', 'Ê', 'Ë', 'Ì', 'Í', 'Î', 'Ï', 'Ñ', 'Ò', 'Ó', 'Ô', 'Õ', 'Ö', 'O', 'Ù', 'Ü', 'Ú');
-
         $semAcentos = array('a', 'a', 'a', 'a', 'a', 'a', 'c', 'e', 'e', 'e', 'e', 'i', 'i', 'i', 'i', 'n', 'o', 'o', 'o', 'o', 'o', 'u', 'u', 'u',
             'y', 'A', 'A', 'A', 'A', 'A', 'A', 'C', 'E', 'E', 'E', 'E', 'I', 'I', 'I', 'I', 'N', 'O', 'O', 'O', 'O', 'O', '0', 'U', 'U', 'U');
 
@@ -5655,8 +5654,8 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
         $this->importCloneForm($list->form, $list->oldListId);
         $this->importCloneList($list->list, $list->oldListId);
-        $this->importCloneGroupsAndElements($list->groups, $list->oldListId);
-        $this->importCreateGroupsRepeat($list->groups_repeat, $list); // Adicionado Renan
+        //$this->importCreateGroupsRepeat($list->groups_repeat, $list); // Adicionado Renan
+        $this->importCloneGroupsAndElements($list->groups, $list->oldListId,$list->groups_repeat);
         $this->importCreateTable($list->oldListId, $list->table);
         $this->importCreateTablesRepeat($list->oldListId, $list->tables_repeat);
 
@@ -5702,12 +5701,15 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         return true;
     }
 
-    protected function importCloneGroupsAndElements($groups, $listId)
+    protected function importCloneGroupsAndElements($groups, $listId, $groups_repeat = null)
     {
         $db = JFactory::getDbo();
         $ordering = 1;
 
         foreach ($groups as $group) {
+            $repeat = $group->group->params;
+            $repeat = json_decode($repeat);
+            
             $cloneData = $group->group;
             unset($cloneData->join_id);
             $cloneData = (object)$cloneData;
@@ -5723,15 +5725,51 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
             $obj->group_id = $db->insertid();
             $obj->ordering = $ordering;
             $insert2 = $db->insertObject('#__fabrik_formgroup', $obj, 'id');
-
-            foreach ($group->joins as $key => $join) {
-                $this->importCloneJoin($join, $key, '', $listId, $obj->group_id, 'list_join');
-            }
-
+            
             $ordering++;
 
             $elementsModel = $group->elements;
-            $cloneElementsFromThisGroup = $this->importCloneElements($elementsModel, $obj->group_id, $listId);
+            if ($repeat->repeat_group_button == "1" ){
+                foreach ($elementsModel as $element){
+                    if(preg_match("/{$element->name}/", (string)$groups_repeat[0])){
+                        echo 'existe no array.';
+                    } else {
+                        echo 'Elemento Não Existe no grupo.';
+                        // return false;
+                    }
+                }
+                $listname = $this->clones_info[$listId]->old_db_table_name;
+                $newTableNameSql = $listname . '_' . ($obj->group_id) . '_repeat';
+                $oldTableNameSql = explode('`', $groups_repeat[0])[1];
+                $newSql = str_replace($oldTableNameSql, $newTableNameSql, $groups_repeat[0]);
+                $db->setQuery($newSql);
+                try {
+                    $db->execute();
+                } catch (RuntimeException $e) {
+                    $err = new stdClass;
+                    $err->error = $e->getMessage();
+                    echo json_encode($err);
+                    exit;
+                }
+
+                $cloneData = new stdClass();
+                $cloneData->id = 0;
+                $cloneData->list_id = $this->clones_info[$listId]->listId;
+                $cloneData->element_id = 0;
+                $cloneData->join_from_table = $listname;
+                $cloneData->table_join = $newTableNameSql;
+                $cloneData->table_key = 'id';
+                $cloneData->table_join_key = 'parent_id';
+                $cloneData->join_type = 'left';
+                $cloneData->group_id = $obj->group_id;
+                $insert = $db->insertObject('#__fabrik_joins', $cloneData, 'id');
+                $cloneElementsFromThisGroup = $this->importCloneElements($elementsModel, $obj->group_id, $listId, $repeat->repeat_group_button);
+            } else {
+                foreach ($group->joins as $key => $join) {
+                    $this->importCloneJoin($join, $key, '', $listId, $obj->group_id, 'list_join');
+                }
+                $cloneElementsFromThisGroup = $this->importCloneElements($elementsModel, $obj->group_id, $listId);
+            }
 
             if ((!$insert1) || (!$insert2) || (!$cloneElementsFromThisGroup)) {
                 return false;
@@ -5822,6 +5860,16 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
             $params = (object)$params;
             $cloneData->params = json_encode($params);
 
+        } else if ($type === 'list_join') {
+            $cloneData->list_id = $this->clones_info[$listId]->listId;
+            $cloneData->element_id = 0;
+            $cloneData->join_from_table = $this->clones_info[$listId]->db_table_name;
+            $cloneData->table_join = $this->clones_info[$listId]->listParams->table_join[$element_id];
+            $cloneData->table_key = $this->clones_info[$listId]->listParams->table_key[$element_id];
+            $cloneData->table_join_key = $this->clones_info[$listId]->listParams->table_join_key[$element_id];
+            $cloneData->join_type = $this->clones_info[$listId]->listParams->join_type[$element_id];
+            $cloneData->group_id = $group_id;
+            $cloneData->params = $data;
         } else if ($type === 'dbjoin_single') {
             $cloneData->list_id = 0;
             $cloneData->element_id = $element_id;
@@ -6125,7 +6173,14 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         return true;
     }
 
-    /// FUNÇÃO ADICIONADA RENAN
+    /**
+     * Criar grupo repetitivel.
+     *
+     * @since V0.1
+     *
+     * @author Renan Aquino
+     * @version V0.2
+     */
     protected function exportCreateGroupsRepeat($groups, $listId)
     {
         $db = JFactory::getDbo();
@@ -6152,6 +6207,9 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
             $sql = 'SELECT * FROM `#__fabrik_groups` ORDER BY id DESC LIMIT 1';
             $db->setQuery($sql);
             $lastIdGroup = $db->loadResult();
+            if (!$lastIdGroup){
+                $lastIdGroup = 1;
+            } 
 
             $idList = ($list->oldListId);
             $listname = $list->clones_info->$idList->old_db_table_name;
