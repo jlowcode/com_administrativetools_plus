@@ -5351,7 +5351,8 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $listData->groups_repeat = $this->exportCreateGroupsRepeat($listData->groups, $listId);
         $listData->table = $this->exportCreateTable($listId);
         $listData->tables_repeat = $this->exportCreateTablesRepeat($listId);
-
+        $listData->menu = $this->exportMenuFabrik($listId,$formModel->getTable());
+       
         if ($data == 1){
             $listData->table_data = $this->exportTableData($listId);
             $listData->groups_repeat_data = $this->exportGroupRepeatData($listData->groups_repeat);
@@ -5673,6 +5674,41 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         return $data_table_repeat;
     }
 
+    protected function exportMenuFabrik($listId,$data)
+    {   
+        $menu = array();
+        $db = JFactory::getDbo();
+        $query = $db->getQuery(true);
+        
+        $query = "SELECT * FROM `#__menu` WHERE link = 'index.php?option=com_fabrik&view=list&listid=". (int)$listId."'";
+        $db->setQuery($query);
+        $lists['lists'] = $db->loadAssocList();
+        $menu['lists'] = $lists;
+
+        $query = "SELECT * FROM `#__menu` WHERE link = 'index.php?option=com_fabrik&view=form&formid=". (int)$data->id."'";
+        $db->setQuery($query);
+        $forms['forms'] = $db->loadAssocList();
+        $menu['forms'] = $forms;
+
+        
+        $query = "SELECT * FROM `#__menu` WHERE link = 'index.php?option=com_fabrik&view=details&formid=". (int)$data->id."'";
+        $db->setQuery($query);
+        $details['details'] = $db->loadAssocList();
+        $menu['details'] = $details;
+
+        $query = "SELECT * FROM `#__menu` WHERE link = 'index.php?option=com_fabrik&view=csv&listid=". (int)$listId."'";
+        $db->setQuery($query);
+        $csv['csvs'] = $db->loadAssocList();
+        $menu['csvs'] = $csv;
+
+        $query = "SELECT * FROM `#__menu` WHERE link = 'index.php?option=com_fabrik&view=visualization&id=". (int)$listId."'";
+        $db->setQuery($query);
+        $visualization['visualizations'] = $db->loadAssocList();
+        $menu['visualizations'] = $visualization;
+        
+        return $menu;
+    }
+
     public function importList()
     {
         $app = JFactory::getApplication();
@@ -5718,6 +5754,8 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $this->importCreateTablesRepeat($list->oldListId, $list->tables_repeat);
         $this->importCreateTableData($list->oldListId, $list->table_data);
         $this->importCreateTablesRepeatData($list->oldListId, $list->tables_repeat_data);
+        $this->importCreateMenuFabrik($list->oldListId,$list->menu);
+
         $this->replaceElementsIdFormParams($list->oldListId);
         $this->replaceElementsIdListParams($list->oldListId);
     }
@@ -6067,6 +6105,53 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                     $err->error = $e->getMessage();
                     echo json_encode($err);
                     exit;
+                }
+            }
+        }
+        return true;
+    }
+
+    protected function importCreateMenuFabrik($listId, $menus){
+        $db = JFactory::getDbo();
+        
+        foreach ($menus as $menu){
+            $cloneData = new stdClass();
+            $cloneData = $menu;
+            $cloneData = (object)$cloneData;
+            $cloneData->id = 0;
+            $list_id = $this->clones_info[$listId]->listId;
+            $form_id = $this->clones_info[$listId]->listId;
+
+            if ($menu->lists){
+                foreach ($menu->lists as $list){
+                    $list->id = 0;
+                    $new_link = explode("listid=",$list->link)[0];
+                    $list->link = $new_link . 'listid='.$list_id;
+                    $insert = $db->insertObject('#__menu', $list, 'id');
+                }
+            } elseif ($menu->forms){
+                foreach ($menu->forms as $form){
+                    $new_link = explode("formid=",$form->link)[0];
+                    $form->link = $new_link . 'formid='.$form_id;
+                    $insert = $db->insertObject('#__menu', $form, 'id');
+                }       
+            } elseif ($menu->details){
+                foreach ($menu->details as $detail){
+                    $new_link = explode("formid=",$detail->link)[0];
+                    $detail->link = $new_link . 'formid='.$form_id;
+                    $insert = $db->insertObject('#__menu', $detail, 'id');
+                }
+            } elseif ($menu->csvs){
+                foreach ($menu->csvs as $csv){
+                    $new_link = explode("listid=",$csv->link)[0];
+                    $csv->link = $new_link . 'listid='.$list_id;
+                    $insert = $db->insertObject('#__menu', $csv, 'id');
+                }
+            } elseif ($menu->visualizations){
+                foreach ($menu->visualizations as $visualization){
+                    $new_link = explode("listid=",$visualization->link)[0];
+                    $visualization->link = $new_link . 'listid='.$list_id;
+                    $insert = $db->insertObject('#__menu', $visualization, 'id');
                 }
             }
         }
