@@ -5283,6 +5283,17 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                 $update->id = $elementId;
                 $update->params = $params;
                 $db->updateObject('#__fabrik_elements', $update, 'id');
+            } else {
+                $published = 0;
+                $update = new stdClass();
+                $update->id = $elementId;
+                $update->published = $published;
+                $db->updateObject('#__fabrik_elements', $update, 'id');
+
+                $query = $db->getQuery(true);
+                $query = 'DELETE FROM `#__fabrik_joins` WHERE table_join = '."'$params->join_db_name'". ' and element_id = '.$elementId;
+                $db->setQuery($query);
+                $db->query($query);
             }
         }
     }
