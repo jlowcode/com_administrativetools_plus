@@ -6125,6 +6125,11 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     protected function importCreateMenuFabrik($listId, $menus){
         $db = JFactory::getDbo();
         
+        $query = $db->getQuery(true);
+        $query = "SELECT extension_id FROM `#__extensions` WHERE element = 'com_fabrik'";
+        $db->setQuery($query);
+        $com_fabrik_id = $db->loadResult();
+
         foreach ($menus as $menu){
             $cloneData = new stdClass();
             $cloneData = $menu;
@@ -6132,34 +6137,39 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
             $cloneData->id = 0;
             $list_id = $this->clones_info[$listId]->listId;
             $form_id = $this->clones_info[$listId]->listId;
-
+           
             if ($menu->lists){
                 foreach ($menu->lists as $list){
                     $list->id = 0;
+                    $list->component_id = $com_fabrik_id;
                     $new_link = explode("listid=",$list->link)[0];
                     $list->link = $new_link . 'listid='.$list_id;
                     $insert = $db->insertObject('#__menu', $list, 'id');
                 }
             } elseif ($menu->forms){
                 foreach ($menu->forms as $form){
+                    $form->component_id = $com_fabrik_id;
                     $new_link = explode("formid=",$form->link)[0];
                     $form->link = $new_link . 'formid='.$form_id;
                     $insert = $db->insertObject('#__menu', $form, 'id');
                 }       
             } elseif ($menu->details){
                 foreach ($menu->details as $detail){
+                    $detail->component_id = $com_fabrik_id;
                     $new_link = explode("formid=",$detail->link)[0];
                     $detail->link = $new_link . 'formid='.$form_id;
                     $insert = $db->insertObject('#__menu', $detail, 'id');
                 }
             } elseif ($menu->csvs){
                 foreach ($menu->csvs as $csv){
+                    $csv->component_id = $com_fabrik_id;
                     $new_link = explode("listid=",$csv->link)[0];
                     $csv->link = $new_link . 'listid='.$list_id;
                     $insert = $db->insertObject('#__menu', $csv, 'id');
                 }
             } elseif ($menu->visualizations){
                 foreach ($menu->visualizations as $visualization){
+                    $visualization->component_id = $com_fabrik_id;
                     $new_link = explode("listid=",$visualization->link)[0];
                     $visualization->link = $new_link . 'listid='.$list_id;
                     $insert = $db->insertObject('#__menu', $visualization, 'id');
