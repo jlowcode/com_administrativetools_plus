@@ -288,4 +288,23 @@ class AdministrativetoolsModelTools extends \Joomla\CMS\MVC\Model\ListModel {
 
         return $db->loadObjectList();
     }
+
+    /**
+     * Fabrik sync lists 1.0
+     * 
+     * Method that process the submit of sync list
+     *
+     */
+    public function getConnectionSyncLists()
+    {
+        $db = JFactory::getDbo();
+		$query = $db->getQuery(true)
+			->select('*')
+			->from($db->quoteName('#__fabrik_sync_lists_connections'))
+            ->order('id DESC LIMIT 1');
+
+        $db->setQuery($query);
+
+        return $db->loadObject();
+    }
 }

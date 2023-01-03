@@ -94,3 +94,58 @@ Css structure for transforming elements.
 .formListRarvest {
     margin: 0 !important;
 }
+
+
+
+/**
+    Fabrik sync lists 1.0
+*/
+
+#div_buttons {
+    display: flex;
+}
+
+#subtitle {
+    font-size: 15px;
+}
+
+#div_sync {
+    display: flex;
+    flex-direction: column;
+}
+
+#div_sync strong {
+    margin-bottom: 5px;
+}
+
+.type_sync {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.first_type {
+    margin-right: 10px;
+}
+
+.type_sync p {
+    margin: 0px 20px 0px 0px;
+}
+
+.type_sync input {
+    margin: 0px 5px 0px 0px !important;
+}
+
+.type_sync div {
+    display: flex;
+    flex-direction: row;
+}
+
+.type_sync div label {
+    margin: 0px;
+}
+
+#div_button_sync {
+    margin-top: 10px !important;
+}
