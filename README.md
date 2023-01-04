@@ -19,7 +19,12 @@ com as imagens e joins com algumas seguranças:
 <p style="text-align: justify">
 Seguindo estas instruções não vão ter problema com as alterações.
 </p>
+<li><strong>Sincronizar lista</strong></li>
+<p style="text-align: justify">
+Ferramenta que sincroniza tabelas com base em outro sistema de desenvolvimento, atualizando tanto tabelas de modelos dos dados quanto tabelas de dados.
+</p>
 </ol>
+
 <h2>Instalação</h2>
 <p>Para isso, em sua tela de administrador do Joomla vá em Extensions->Manage->Install e clique na aba Upload Package File como na imagem abaixo.</p>
 
