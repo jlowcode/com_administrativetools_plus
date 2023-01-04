@@ -176,31 +176,24 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
                     $createTable = $dbExternal->loadColumn(1)[0];
                     $sqlFile .= $createTable . ";<ql>\n\n";
 
-                    $dbExternal->setQuery(
-                        "SELECT column_name, column_type from INFORMATION_SCHEMA.COLUMNS WHERE table_schema = (SELECT DATABASE()) AND table_name = '$table';"
-                    );
-                    $columnsExternal = $dbExternal->loadAssocList('column_name', 'column_type');
+                    if(in_array($table, $arrModelTables['internal'])) {
+                        $dbExternal->setQuery(
+                            "SELECT column_name, column_type from INFORMATION_SCHEMA.COLUMNS WHERE table_schema = (SELECT DATABASE()) AND table_name = '$table';"
+                        );
+                        $columnsExternal = $dbExternal->loadAssocList('column_name', 'column_type');
 
-                    $db->setQuery(
-                        "SELECT column_name, column_type from INFORMATION_SCHEMA.COLUMNS WHERE table_schema = (SELECT DATABASE()) AND table_name = '$table';"
-                    );
-                    $columnsInternal = $db->loadAssocList('COLUMN_NAME', 'COLUMN_TYPE');
-                    
-                    $samesColumns = array_intersect($columnsInternal, $columnsExternal);
+                        $db->setQuery(
+                            "SELECT column_name, column_type from INFORMATION_SCHEMA.COLUMNS WHERE table_schema = (SELECT DATABASE()) AND table_name = '$table';"
+                        );
+                        $columnsInternal = $db->loadAssocList('column_name', 'column_type');
 
-                    //Additional treatment - if int(11) contains int from diffs
-                    $diffs = array_diff($columnsInternal, $columnsExternal);
-                    foreach($diffs as $key => $diff) {
-                        if(strpos($columnsExternal[$key], $diff) !== false) {
-                            $samesColumns[$key] = $columnsExternal[$key];
-                        }
+                        $samesColumns = array_intersect_assoc($columnsExternal, $columnsInternal);
+                        $columns = array_keys($samesColumns);
+
+                        $sqlFile .= "INSERT INTO " . $db->qn($table) . " (`" . implode("`,`", $columns) . "`)\n";
+                        $sqlFile .= "SELECT `" . implode("`,`", $columns) . "`\n";
+                        $sqlFile .= "FROM " . $db->qn($tempTable) . ";<ql>\n\n";
                     }
-
-                    $columns = array_keys($samesColumns);
-
-                    $sqlFile .= "INSERT INTO " . $db->qn($table) . " (`" . implode("`,`", $columns) . "`)\n";
-                    $sqlFile .= "SELECT `" . implode("`,`", $columns) . "`\n";
-                    $sqlFile .= "FROM " . $db->qn($tempTable) . ";<ql>\n\n";
 
                     fwrite($handle, $sqlFile);
                     $sqlFile = "";
@@ -424,7 +417,7 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
             ->from($dbExternal->qn('#__fabrik_lists'));
 
         $dbExternal->setQuery($query);
-        $tables['external'] = $dbExternal->loadColumn();
+        $tables['external'] = array_unique($dbExternal->loadColumn(), SORT_STRING);
 
         foreach($tables['external'] as $table) {
             $query = $dbExternal->getQuery(true)
