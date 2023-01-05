@@ -6040,7 +6040,8 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $tableName = $this->clones_info[$listId]->db_table_name;
         $oldTableName = $this->clones_info[$listId]->old_db_table_name;
 
-        $tableSql = str_replace("CREATE TABLE $oldTableName", "CREATE TABLE $tableName", $tableSql);
+        $tableSql = str_replace("CREATE TABLE `$oldTableName`", "CREATE TABLE `$tableName`", $tableSql);
+        $tableSql = str_replace("CREATE TABLE", "CREATE TABLE IF NOT EXISTS", $tableSql);
         $db->setQuery($tableSql);
 
         try {
@@ -6083,7 +6084,8 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $oldTableName = $this->clones_info[$listId]->old_db_table_name;
 
         foreach ($tablesRepeatSql as $tableRepeat) {
-            $sql = str_replace("CREATE TABLE $oldTableName", "CREATE TABLE $tableName", $tableRepeat);
+            $sql = str_replace("CREATE TABLE `$oldTableName`", "CREATE TABLE `$tableName`", $tableRepeat);
+            $sql = str_replace("CREATE TABLE", "CREATE TABLE IF NOT EXISTS", $tableRepeat);
             $db->setQuery($sql);
 
             try {
@@ -6140,39 +6142,94 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
            
             if ($menu->lists){
                 foreach ($menu->lists as $list){
-                    $list->id = 0;
                     $list->component_id = $com_fabrik_id;
-                    $new_link = explode("listid=",$list->link)[0];
-                    $list->link = $new_link . 'listid='.$list_id;
-                    $insert = $db->insertObject('#__menu', $list, 'id');
+                    $query = $db->getQuery(true)->select('MAX(id)')->from($db->quoteName('#__menu'));
+                    $db->setQuery($query);
+                    $last_id = $db->loadResult();
+
+                    $query = $db->getQuery(true)->select('COUNT(*)')->from($db->quoteName('#__menu'))->where($db->quoteName('alias') . " = " . $db->quote($list->alias));
+                    $db->setQuery($query);
+                    $count = $db->loadResult();
+
+                    if ($count == 0){
+                        $list->id = $last_id + 1;
+                        $new_link = explode("listid=",$list->link)[0];
+                        $list->link = $new_link . 'listid='.$list_id;
+                        $insert = $db->insertObject('#__menu', $list, 'id');
+                    }
+                    
                 }
             } elseif ($menu->forms){
                 foreach ($menu->forms as $form){
                     $form->component_id = $com_fabrik_id;
-                    $new_link = explode("formid=",$form->link)[0];
-                    $form->link = $new_link . 'formid='.$form_id;
-                    $insert = $db->insertObject('#__menu', $form, 'id');
+                    $query = $db->getQuery(true)->select('MAX(id)')->from($db->quoteName('#__menu'));
+                    $db->setQuery($query);
+                    $last_id = $db->loadResult();
+
+                    $query = $db->getQuery(true)->select('COUNT(*)')->from($db->quoteName('#__menu'))->where($db->quoteName('alias') . " = " . $db->quote($form->alias));
+                    $db->setQuery($query);
+                    $count = $db->loadResult();
+                    if ($count == 0){
+                        $form->id = $last_id + 1;
+                        $new_link = explode("formid=",$form->link)[0];
+                        $form->link = $new_link . 'formid='.$form_id;
+                        $insert = $db->insertObject('#__menu', $form, 'id');
+                    }
                 }       
             } elseif ($menu->details){
                 foreach ($menu->details as $detail){
                     $detail->component_id = $com_fabrik_id;
-                    $new_link = explode("formid=",$detail->link)[0];
-                    $detail->link = $new_link . 'formid='.$form_id;
-                    $insert = $db->insertObject('#__menu', $detail, 'id');
+                    $query = $db->getQuery(true)->select('MAX(id)')->from($db->quoteName('#__menu'));
+                    $db->setQuery($query);
+                    $last_id = $db->loadResult();
+
+                    $query = $db->getQuery(true)->select('COUNT(*)')->from($db->quoteName('#__menu'))->where($db->quoteName('alias') . " = " . $db->quote($detail->alias));
+                    $db->setQuery($query);
+                    $count = $db->loadResult();
+
+                    if ($count == 0){
+                        $detail->id = $last_id + 1;
+                        $new_link = explode("formid=",$detail->link)[0];
+                        $detail->link = $new_link . 'formid='.$form_id;
+                        $insert = $db->insertObject('#__menu', $detail, 'id');
+                    }
+
                 }
             } elseif ($menu->csvs){
                 foreach ($menu->csvs as $csv){
                     $csv->component_id = $com_fabrik_id;
-                    $new_link = explode("listid=",$csv->link)[0];
-                    $csv->link = $new_link . 'listid='.$list_id;
-                    $insert = $db->insertObject('#__menu', $csv, 'id');
+                    $query = $db->getQuery(true)->select('MAX(id)')->from($db->quoteName('#__menu'));
+                    $db->setQuery($query);
+                    $last_id = $db->loadResult();
+
+                    $query = $db->getQuery(true)->select('COUNT(*)')->from($db->quoteName('#__menu'))->where($db->quoteName('alias') . " = " . $db->quote($csv->alias));
+                    $db->setQuery($query);
+                    $count = $db->loadResult();
+
+                    if ($count == 0){
+                        $csv->id = $last_id + 1;
+                        $new_link = explode("listid=",$csv->link)[0];
+                        $csv->link = $new_link . 'listid='.$list_id;
+                        $insert = $db->insertObject('#__menu', $csv, 'id');
+                    }
                 }
             } elseif ($menu->visualizations){
                 foreach ($menu->visualizations as $visualization){
                     $visualization->component_id = $com_fabrik_id;
-                    $new_link = explode("listid=",$visualization->link)[0];
-                    $visualization->link = $new_link . 'listid='.$list_id;
-                    $insert = $db->insertObject('#__menu', $visualization, 'id');
+                    $query = $db->getQuery(true)->select('MAX(id)')->from($db->quoteName('#__menu'));
+                    $db->setQuery($query);
+                    $last_id = $db->loadResult();
+
+                    $query = $db->getQuery(true)->select('COUNT(*)')->from($db->quoteName('#__menu'))->where($db->quoteName('alias') . " = " . $db->quote($visualization->alias));
+                    $db->setQuery($query);
+                    $count = $db->loadResult();
+                    
+                    if ($count == 0){
+                        $visualization->id = $last_id + 1;
+                        $new_link = explode("listid=",$visualization->link)[0];
+                        $visualization->link = $new_link . 'listid='.$list_id;
+                        $insert = $db->insertObject('#__menu', $visualization, 'id');
+                    }
                 }
             }
         }
