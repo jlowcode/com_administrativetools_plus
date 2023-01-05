@@ -25,6 +25,11 @@ defined('_JEXEC') or die('Restricted access');
                                                                               aria-controls="messages" role="tab"
                                                                               data-toggle="tab">
                         <?php echo FText::_('COM_ADMINISTRATIVETOOLS_TITLE_NAV_TABS_CHANGE_LIST'); ?></a></li>
+                <!-- Fabrik sync lists 1.0 -->
+                <li role="presentation" class="<?php echo $this->tab6; ?>"><a href="#synclist"
+                                                                              aria-controls="messages" role="tab"
+                                                                              data-toggle="tab">
+                        <?php echo FText::_('COM_ADMINISTRATIVETOOLS_TITLE_NAV_TABS_SYNC_LIST'); ?></a></li>
             </ul>
 
             <!-- Tab panes -->
@@ -43,6 +48,10 @@ defined('_JEXEC') or die('Restricted access');
                 </div>
                 <div role="tabpanel" class="tab-pane <?php echo $this->tab5; ?>" id="chargelist">
                     <?php echo $this->loadTemplate('change_list'); ?>
+                </div>
+                <!-- Fabrik sync lists 1.0 -->
+                <div role="tabpanel" class="tab-pane <?php echo $this->tab6; ?>" id="synclist">
+                    <?php echo $this->loadTemplate('sync_list'); ?>
                 </div>
             </div>
         </div>

@@ -6689,4 +6689,133 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
             return false;
         }
     }
+
+    /**
+     * Fabrik sync lists 1.0
+     * 
+     * Method that process the submit of sync list
+     *
+     */
+    public function submitSyncLists()
+    {
+        $app = JFactory::getApplication();
+        $model = $this->getModel();
+        $input = $app->input;
+
+        $data = new stdClass();
+        $data->host = $input->getString('host');
+        $data->port = $input->getString('port');
+        $data->name = $input->getString('name');
+        $data->prefix = $input->getString('prefix');
+        $data->user = $input->getString('user');
+        $data->password = $input->getString('password');
+        $data->model_type = $input->getString('model_type');
+        $data->data_type = $input->getString('data_type');
+        $data->connectSync = $input->getString('connectSync', false);
+        $data->saveConfiguration = $input->getString('saveConfiguration', false);
+        $data->syncLists = $input->getString('syncLists', false);
+        $data->joomla_menus = $input->getBool('joomla_menus', false);
+        $data->joomla_modules = $input->getBool('joomla_modules', false);
+        $data->joomla_themes = $input->getBool('joomla_themes', false);
+        $data->joomla_extensions = $input->getBool('joomla_extensions', false);
+
+        foreach($data as $key => $value) {
+            if($key == 'saveConfiguration' || $key == 'connectSync' || $key == 'syncLists') {
+                if($value) {
+                    $method = $key;    
+                } else {
+                    unset($data->$key);
+                }
+            }
+        }
+
+        $result = $this->$method($data);
+
+        $site_message = JUri::base() . 'index.php?option=com_administrativetools&tab=6';
+        $this->setRedirect($site_message, $result->message, $result->type_message);
+    }
+
+    /**
+     * Fabrik sync lists 1.0
+     * 
+     * Method that process the submit of sync list
+     *
+     */
+    private function syncLists($data)
+    {
+        $model = $this->getModel();
+        $resultSync = new stdClass();
+
+        if(!$data->syncLists) {
+            return false;
+        }
+
+        $sync = $model->syncLists($data);
+
+        if (!$sync) {
+            $resultSync->message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR_SYNC_LISTS');
+            $resultSync->type_message = 'error';
+        } else {
+            $resultSync->message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_SUCCESS_SYNC_LISTS');
+            $resultSync->type_message = 'success';
+        }
+
+        return $resultSync;
+    }
+
+    /**
+     * Fabrik sync lists 1.0
+     * 
+     * Method that save the configuration of sync list
+     *
+     */
+    private function saveConfiguration($data)
+    {
+        $model = $this->getModel();
+        $resultSave = new stdClass();
+
+        if(!$data->saveConfiguration) {
+            return false;
+        }
+
+        $saved = $model->saveConfiguration($data);
+
+        if (!$saved) {
+            $resultSave->message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR_SAVE_CONFIGURATION');
+            $resultSave->type_message = 'error';
+        } else {
+            $resultSave->message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_SUCCESS_SAVE_CONFIGURATION');
+            $resultSave->type_message = 'success';
+        }
+
+        return $resultSave;
+    }
+
+    /**
+     * Fabrik sync lists 1.0
+     * 
+     * Method that test the connection of the configuration of sync list
+     *
+     */
+    private function connectSync($data)
+    {
+        $model = $this->getModel();
+        $resultConnection = new stdClass();
+
+        if(!$data->connectSync) {
+            return false;
+        }
+
+        $connection = $model->connectSync($data);
+
+        if (!$connection) {
+            $resultConnection->message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR_CONNECT_SYNC');
+            $resultConnection->type_message = 'error';
+        } else {
+            $resultConnection->message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_SUCCESS_CONNECT_SYNC');
+            $resultConnection->type_message = 'success';
+        }
+
+        return $resultConnection;
+    }
 }

@@ -45,6 +45,9 @@ class AdministrativetoolsViewTools extends \Joomla\CMS\MVC\View\HtmlView
         $this->list = $this->get('ListsProjectPITT');
         $exist_table = $this->get('ExistTablePkgs');
 
+        // Fabrik sync lists 1.0
+        $this->connection = $this->get('connectionSyncLists');
+
         if ($exist_table === NULL) {
             $this->get('CreateTablePackages');
         }
@@ -238,6 +241,8 @@ class AdministrativetoolsViewTools extends \Joomla\CMS\MVC\View\HtmlView
         $this->tab3 = "";
         $this->tab4 = "";
         $this->tab5 = "";
+        //Fabrik sync lists 1.0
+        $this->tab6 = "";
 
         if ($id === 1) {
             $this->tab1 = "active";
@@ -249,6 +254,9 @@ class AdministrativetoolsViewTools extends \Joomla\CMS\MVC\View\HtmlView
             $this->tab4 = "active";
         } elseif ($id === 5) {
             $this->tab5 = "active";
+        } elseif ($id === 6) {
+            //Fabrik sync lists 1.0
+            $this->tab6 = "active";
         }
     }
 
