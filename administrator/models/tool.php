@@ -54,7 +54,7 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
         }
 
         //Calling the fabrik version control
-        $nameVersion = FabrikAdminModelAdministrativetools::generateSql(array_merge($arrOthersTables, $arrModelTables['internal']));
+        $nameVersion = FabrikAdminModelAdministrativetools::generateSql();
         $idVersion = substr($nameVersion, strpos($nameVersion, '_')+1, strpos($nameVersion, '.sql')-strpos($nameVersion, '_')-1);
         $newVersion = $this->newVersion($idVersion, $nameVersion);
         $arrTables = array_merge($arrFabrikTables, $arrModelTables['external'], $arrOthersTables);
@@ -156,7 +156,7 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
 
                 //If the tables are only_model execute drop temps, rename table, create table and insert into
                 if(substr($table, 0, strlen('#__')) != '#__') {
-                    $tempTable = 'ZTMP_' . $table;
+                    $tempTable = 'ztmp_' . $table;
                     $query = $db->getQuery(true)
                         ->clear()
                         ->select($db->qn('table_name'))
