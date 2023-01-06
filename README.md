@@ -62,6 +62,36 @@ Alguns repositórios online expõem seus metadados por meio do OAI-PMH. Este plu
 Atualmente, o plugin é capaz de importar metadados Dublin Core , CDWA Lite e METS . Dublin Core é um padrão reconhecido internacionalmente para descrever qualquer recurso.
 ![Extração de dados OAI PMH](img/6.png)
 
+<h3>Sincronização de listas</h3>
+
+<p style="text-align: justify">A funcionalidade de sincronizar lista tem o objetivo de realizar a atualização do modelo de dados do banco e de seus dados com base em outro ambiente de desenvolvimento, dessa forma, possibilitando uma atualização mais ágil entre ambiente de produção e de desenvolvimento. Para isso, o sync lists, como mostrado abaixo, necessita de alguns parâmetros do banco de dados de busca para que realize a atualização com base nele, ou seja, os campos de IP, Porta, Nome do banco, Prefixo, Usuário e Senha são de extrema importância para o funcionamento correto da funcionalidade.</p>
+
+![Sincronização Lista](img/7.png)
+
+<p style="text-align: justify">Além disso, como visto acima há também o espaço para selecionar o modo de sincronização que se dividem entre:</p>
+
+<ol>
+<li><strong>Modelo</strong></li>
+    <p style="text-align: justify">O modo de sincronização de Modelo irá sincronizar apenas as tabelas do banco de dados que o mais importante é o modelo dos dados e não os próprios dados, isso significa que as tabelas modelos são as tabelas adicionadas e gerenciadas pelo fabrik lists, dessa forma, esta função funciona selecionando os dados de todas as tabelas modelos da tabela joomla_fabrik_lists e puxando para o banco local os modelos de dados delas, como por exemplo, colunas adicionadas (elementos criados), tabelas reapet (elementos databasejoin), alteração no tipo da coluna (mudança de elemento), entre outros casos.</p>
+
+<ul>
+<li><p style="text-align: justify">Idêntico - Exercerá a função acima em todas as listas encontradas e atualizará com todas as alterações encontradas.</p></li>
+<li><p style="text-align: justify">Nenhum - Não exercerá a função acima em nenhuma lista encontrada, ou seja, não atualizará o modelo de dados em nenhum alteração encontrada.</p></li>
+</ul>
+
+<li><strong>Dados</strong></li>
+    <p style="text-align: justify">O modo de sincronização de Dados irá sincronizar os dados referentes às tabelas principais do joomla como, #__fabrik_lists, #__fabrik_forms, #__fabrik_groups, entre outras, para que com o modelo de dados atualizado na etapa anterior o core do fabrik também se mantenha atualizado, dessa forma, o modelo de dados do fabrik se mantém inalterado mas seus dados da tabelas irão se atualizar com elementos criados, criação de listas, alteração de elementos, entre outras coisas.</p>
+
+<ul>
+<li><p style="text-align: justify">Idêntico - Exercerá a função acima em todas as listas encontradas e atualizará com todas as alterações encontradas.</p></li>
+<li><p style="text-align: justify">Nenhum - Não exercerá a função acima em nenhuma lista encontrada, ou seja, não atualizará o modelo de dados em nenhum alteração encontrada.</p></li>
+</ul>
+
+<li><strong>Joomla</strong></li>
+    <p style="text-align: justify">Além dos dois modos de sincronização acima, também é possível atualizar tabelas do próprio joomla. Nas opções disponíveis hoje é possível atualizar as tabelas dos menus, dos módulos, dos temas e das extensões, podendo assim capturar qualquer alteração nessas funcionalidades. É importante ressaltar que a atualização das tabelas acima são apenas de dados e não de modelo, ou seja, alteração em colunas feitas diretamento no banco nelas (altamente não recomendado) não serão atualizadas. Além disso, é importante ressaltar que esta funcionalidade não captura alteração de arquivos apenas alterações em banco de dados, ou seja, caso seja instalado uma nova extensão a tabela referente a ela será atualizada com uma linha a mais com a extensão instalada, porém ela não estará de fato instalada no sistema pois faltaram os arquivos da mesma, dito isso, recomenda-se atualização de arquivos via GitHub.</p>
+<ol>
+
+
 <p style="text-align: justify">
 © Universidade Federal de Goiás — UFG. Todos os direitos reservados.
 </p>
