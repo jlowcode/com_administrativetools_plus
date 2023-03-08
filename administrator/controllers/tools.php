@@ -6062,10 +6062,13 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
             $db = JFactory::getDbo();
             $tableName = $this->clones_info[$listId]->db_table_name;
             $oldTableName = $this->clones_info[$listId]->old_db_table_name;
-            $tableSql = str_replace("INSERT INTO $oldTableName", "INSERT INTO $tableName", $tableSql);
+            $tableSql = str_replace("INSERT INTO `$oldTableName`", "INSERT INTO `$tableName`", $tableSql);
             $tableSql = str_replace("\\\\", "\\", $tableSql);
-            $db->setQuery($tableSql);
+            $sqlTruncate = "TRUNCATE TABLE `" . $tableName . "`;";
             try {
+                $db->setQuery($sqlTruncate);
+                $db->execute();
+                $db->setQuery($tableSql);
                 $db->execute();
             } catch (RuntimeException $e) {
                 $err = new stdClass;
@@ -6108,10 +6111,13 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
             $tableName = $this->clones_info[$listId]->db_table_name;
             $oldTableName = $this->clones_info[$listId]->old_db_table_name;
             foreach ($tablesRepeatSql as $tableRepeat) {
-                $sql = str_replace("INSERT INTO $oldTableName", "INSERT INTO $tableName", $tableRepeat);
+                $sql = str_replace("INSERT INTO `$oldTableName`", "INSERT INTO `$tableName`", $tableRepeat);
                 $sql = str_replace("\\\\", "\\", $sql);
-                $db->setQuery($sql);
+                $sqlTruncate = "TRUNCATE TABLE `" . $tableName . "`;";
                 try {
+                    $db->setQuery($sqlTruncate);
+                    $db->execute();
+                    $db->setQuery($sql);
                     $db->execute();
                 } catch (RuntimeException $e) {
                     $err = new stdClass;
