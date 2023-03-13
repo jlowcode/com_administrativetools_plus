@@ -5778,13 +5778,23 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $data->created_by = $this->user->id;
         $data->created_by_alias = $this->user->username;
 
-        $insert = $db->insertObject('#__fabrik_forms', $data, 'id');
+        $query = $db->getQuery(true);
+        $query = "SELECT id FROM `#__fabrik_forms` WHERE label = '$data->label'";
+        $db->setQuery($query);
+        $existId = $db->loadResult();
+
+        if($existId) {
+            $data->id = $existId;
+            $insert = $db->updateObject('#__fabrik_forms', $data, 'id');
+        } else {
+            $insert = $db->insertObject('#__fabrik_forms', $data, 'id');
+        }
 
         if (!$insert) {
             return false;
         }
 
-        $this->clones_info[$listId]->formId = $db->insertid();
+        $existId ? $this->clones_info[$listId]->formId = $existId : $this->clones_info[$listId]->formId = $db->insertid();
 
         return true;
     }
@@ -5798,13 +5808,23 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $data->db_primary_key = $this->clones_info[$listId]->db_table_name . '.id';
         $data->modified_by = $this->user->id;
 
-        $insert = $db->insertObject('#__fabrik_lists', $data, 'id');
+        $query = $db->getQuery(true);
+        $query = "SELECT id FROM `#__fabrik_lists` WHERE label = '$data->label'";
+        $db->setQuery($query);
+        $existId = $db->loadResult();
+
+        if($existId) {
+            $data->id = $existId;
+            $insert = $db->updateObject('#__fabrik_lists', $data, 'id');
+        } else {
+            $insert = $db->insertObject('#__fabrik_lists', $data, 'id');
+        }
 
         if (!$insert) {
             return false;
         }
 
-        $this->clones_info[$listId]->listId = $db->insertid();
+        $existId ? $this->clones_info[$listId]->listId = $existId : $this->clones_info[$listId]->listId = $db->insertid();
 
         return true;
     }
@@ -5825,14 +5845,27 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
             $cloneData->id = 0;
             $cloneData->created_by = $this->user->id;
             $cloneData->created_by_alias = $this->user->username;
-            $insert1 = $db->insertObject('#__fabrik_groups', $cloneData, 'id');
+
+            $query = $db->getQuery(true);
+            $query = "SELECT id FROM `#__fabrik_groups` WHERE `name` = '$cloneData->name'";
+            $db->setQuery($query);
+            $existId = $db->loadResult();
+
+            if($existId) {
+                $cloneData->id = $existId;
+                $insert1 = $db->updateObject('#__fabrik_groups', $cloneData, 'id');
+                $groupId = $existId;
+            } else {
+                $insert1 = $db->insertObject('#__fabrik_groups', $cloneData, 'id');
+                $groupId = $db->insertId();
+            }
 
             $obj = new stdClass();
             $obj->id = 0;
             $obj->form_id = $this->clones_info[$listId]->formId;
-            $obj->group_id = $db->insertid();
+            $obj->group_id = $groupId;
             $obj->ordering = $ordering;
-            $insert2 = $db->insertObject('#__fabrik_formgroup', $obj, 'id');
+            $existId ? $insert2 = true : $insert2 = $db->insertObject('#__fabrik_formgroup', $obj, 'id');
             
             $ordering++;
             $elementsModel = $group->elements;
@@ -5848,7 +5881,24 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                 $listname = $this->clones_info[$listId]->old_db_table_name;
                 $newTableNameSql = $listname . '_' . ($obj->group_id) . '_repeat';
                 $oldTableNameSql = explode('`', $groups_repeat[0])[1];
+                    
                 $newSql = str_replace($oldTableNameSql, $newTableNameSql, $groups_repeat[0]);
+
+                $query = $db->getQuery(true);
+                $query->clear()->select($db->qn('table_name'))
+                    ->from($db->qn('information_schema.tables'))
+                    ->where($db->qn('table_name') . ' = ' . $db->q($newTableNameSql));
+                $db->setQuery($query);
+                if($db->loadResult()) {
+                    $db->setQuery("SHOW CREATE TABLE $newTableNameSql");
+                    $actualTable = $db->loadAssoc()["Create Table"];
+                    if($newSql != $actualTable) {
+                        $db->setQuery("RENAME TABLE $newTableNameSql TO " . $this->checkTableName($newTableNameSql));
+                        $db->execute();
+                    }
+                }
+
+                $newSql = str_replace('CREATE TABLE', 'CREATE TABLE IF NOT EXISTS', $newSql);
                 $db->setQuery($newSql);
                 try {
                     $db->execute();
@@ -5869,7 +5919,19 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                 $cloneData->table_join_key = 'parent_id';
                 $cloneData->join_type = 'left';
                 $cloneData->group_id = $obj->group_id;
-                $insert = $db->insertObject('#__fabrik_joins', $cloneData, 'id');
+
+                $query = $db->getQuery(true);
+                $query = "SELECT id FROM `#__fabrik_joins` WHERE `list_id` = '$cloneData->list_id' AND `join_from_table` = '$cloneData->join_from_table' AND `table_join` = '$cloneData->table_join'";
+                $db->setQuery($query);
+                $existId = $db->loadResult();
+
+                if($existId) {
+                    $cloneData->id = $existId;
+                    $insert = $db->updateObject('#__fabrik_joins', $cloneData, 'id');
+                } else {
+                    $insert = $db->insertObject('#__fabrik_joins', $cloneData, 'id');
+                }
+                
                 $cloneElementsFromThisGroup = $this->importCloneElements($elementsModel, $obj->group_id, $listId, $repeat->repeat_group_button);
                 
                 if ($groups_repeat_data){
@@ -5923,8 +5985,20 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                 unset($cloneData->joinOfElement);
             }
 
-            $insert = $db->insertObject('#__fabrik_elements', $cloneData, 'id');
-            $element_id = $db->insertid();
+            $query = $db->getQuery(true);
+            $query = "SELECT id FROM `#__fabrik_elements` WHERE `name` = '$cloneData->name' AND `group_id` = '$group_id'";
+            $db->setQuery($query);
+            $existId = $db->loadResult();
+
+            if($existId) {
+                $cloneData->id = $existId;
+                $insert = $db->updateObject('#__fabrik_elements', $cloneData, 'id');
+                $element_id = $existId;
+            } else {
+                $insert = $db->insertObject('#__fabrik_elements', $cloneData, 'id');
+                $element_id = $db->insertId();
+            }
+
             $this->clones_info[$listId]->mappedElements[(string)$oldId] = $element_id;
 
             if ($cloneData->plugin === 'databasejoin') {
@@ -6040,6 +6114,19 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $tableName = $this->clones_info[$listId]->db_table_name;
         $oldTableName = $this->clones_info[$listId]->old_db_table_name;
 
+        $query = $db->getQuery(true);
+        $query->clear()->select($db->qn('table_name'))
+            ->from($db->qn('information_schema.tables'))
+            ->where($db->qn('table_name') . ' = ' . $db->q($tableName));
+        $db->setQuery($query);
+        if($db->loadResult()) {
+            $db->setQuery("SHOW CREATE TABLE $tableName");
+            $actualTable = $db->loadAssoc()["Create Table"];
+            if($tableSql != $actualTable) {
+                $db->setQuery("RENAME TABLE $tableName TO " . $this->checkTableName($tableName));
+                $db->execute();
+            }
+        }
         $tableSql = str_replace("CREATE TABLE `$oldTableName`", "CREATE TABLE `$tableName`", $tableSql);
         $tableSql = str_replace("CREATE TABLE", "CREATE TABLE IF NOT EXISTS", $tableSql);
         $db->setQuery($tableSql);
@@ -6087,6 +6174,20 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $oldTableName = $this->clones_info[$listId]->old_db_table_name;
 
         foreach ($tablesRepeatSql as $tableRepeat) {
+            $query = $db->getQuery(true);
+            $query->clear()->select($db->qn('table_name'))
+                ->from($db->qn('information_schema.tables'))
+                ->where($db->qn('table_name') . ' = ' . $db->q($tableName));
+            $db->setQuery($query);
+            if($db->loadResult()) {
+                $db->setQuery("SHOW CREATE TABLE $tableName");
+                $actualTable = $db->loadAssoc()["Create Table"];
+                if($tableRepeat != $actualTable) {
+                    $db->setQuery("RENAME TABLE $tableName TO " . $this->checkTableName($tableName));
+                    $db->execute();
+                }
+            }
+            
             $sql = str_replace("CREATE TABLE `$oldTableName`", "CREATE TABLE `$tableName`", $tableRepeat);
             $sql = str_replace("CREATE TABLE", "CREATE TABLE IF NOT EXISTS", $tableRepeat);
             $db->setQuery($sql);
@@ -6111,7 +6212,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
             $tableName = $this->clones_info[$listId]->db_table_name;
             $oldTableName = $this->clones_info[$listId]->old_db_table_name;
             foreach ($tablesRepeatSql as $tableRepeat) {
-                $sql = str_replace("INSERT INTO `$oldTableName`", "INSERT INTO `$tableName`", $tableRepeat);
+                $sql = str_replace("INSERT INTO $oldTableName", "INSERT INTO $tableName", $tableRepeat);
                 $sql = str_replace("\\\\", "\\", $sql);
                 $sqlTruncate = "TRUNCATE TABLE `" . $tableName . "`;";
                 try {
