@@ -243,6 +243,7 @@ class AdministrativetoolsViewTools extends \Joomla\CMS\MVC\View\HtmlView
         $this->tab5 = "";
         //Fabrik sync lists 1.0
         $this->tab6 = "";
+        $this->tab7 = "";
 
         if ($id === 1) {
             $this->tab1 = "active";
@@ -257,6 +258,8 @@ class AdministrativetoolsViewTools extends \Joomla\CMS\MVC\View\HtmlView
         } elseif ($id === 6) {
             //Fabrik sync lists 1.0
             $this->tab6 = "active";
+        } elseif ($id === 7) {
+            $this->tab7 = "active";
         }
     }
 

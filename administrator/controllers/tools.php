@@ -6062,13 +6062,10 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
             $db = JFactory::getDbo();
             $tableName = $this->clones_info[$listId]->db_table_name;
             $oldTableName = $this->clones_info[$listId]->old_db_table_name;
-            $tableSql = str_replace("INSERT INTO `$oldTableName`", "INSERT INTO `$tableName`", $tableSql);
+            $tableSql = str_replace("INSERT INTO $oldTableName", "INSERT INTO $tableName", $tableSql);
             $tableSql = str_replace("\\\\", "\\", $tableSql);
-            $sqlTruncate = "TRUNCATE TABLE `" . $tableName . "`;";
+            $db->setQuery($tableSql);
             try {
-                $db->setQuery($sqlTruncate);
-                $db->execute();
-                $db->setQuery($tableSql);
                 $db->execute();
             } catch (RuntimeException $e) {
                 $err = new stdClass;
@@ -6111,13 +6108,10 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
             $tableName = $this->clones_info[$listId]->db_table_name;
             $oldTableName = $this->clones_info[$listId]->old_db_table_name;
             foreach ($tablesRepeatSql as $tableRepeat) {
-                $sql = str_replace("INSERT INTO `$oldTableName`", "INSERT INTO `$tableName`", $tableRepeat);
+                $sql = str_replace("INSERT INTO $oldTableName", "INSERT INTO $tableName", $tableRepeat);
                 $sql = str_replace("\\\\", "\\", $sql);
-                $sqlTruncate = "TRUNCATE TABLE `" . $tableName . "`;";
+                $db->setQuery($sql);
                 try {
-                    $db->setQuery($sqlTruncate);
-                    $db->execute();
-                    $db->setQuery($sql);
                     $db->execute();
                 } catch (RuntimeException $e) {
                     $err = new stdClass;
@@ -6824,4 +6818,528 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
         return $resultConnection;
     }
+
+    /**
+     * Method that performs database detection and cleaning.
+     *
+     * @author Marcelo Miranda
+     * 2023-02
+     */
+    public function showDifferentTablesInDatabase()
+    {
+        $app    = JFactory::getApplication();
+        $db     = JFactory::getDbo();
+        $config = JFactory::getConfig();
+        
+        $sql = "SELECT TABLE_NAME AS nome_tabela FROM INFORMATION_SCHEMA.TABLES 
+                WHERE TABLE_SCHEMA = 'devcett' 
+                AND table_name NOT IN (SELECT db_table_name FROM joomla_fabrik_lists) 
+                AND table_name NOT like 'joomla_%' 
+                ORDER BY 1";
+        
+        $db->setQuery($sql);
+        $lista = $db->loadObjectList();
+
+        echo json_encode($lista);
+        $app->close();
+    }
+
+    /**
+     * Method that performs database detection and cleaning.
+     *
+     * @author Marcelo Miranda
+     * 2023-02
+     */
+    public function showDifferentFiledsInTables()
+    {
+        $app    = JFactory::getApplication();
+        $db     = JFactory::getDbo();
+        $config = JFactory::getConfig();
+        
+        /* recupera os nomes de tabela no BANCO DE DADOS */
+        $sql = " SELECT  d1.TABLE_NAME nome_tabela  
+                FROM INFORMATION_SCHEMA.TABLES d1  
+                WHERE TABLE_schema ='devcett'  
+                AND table_name NOT like 'joomla_%' 
+                and d1.table_name != ''  
+                ORDER BY 1 ";
+
+        $db->setQuery($sql);
+        $lista_bd = $db->loadColumn();
+
+        /* recupera os nomes de tabela no FABRIK */
+        $sql = " SELECT db_table_name nome_tabela 
+        FROM joomla_fabrik_lists 
+        where db_table_name NOT like 'joomla_%'   
+        and db_table_name != ''  
+        ORDER BY 1 ;";
+
+        $db->setQuery($sql);
+        $lista_fa = $db->loadColumn();
+
+
+        $colunasNaoExistentes = [];
+
+        /* percorre pelas tabelas no banco de dados */
+        foreach ($lista_bd as $key => $nome_tabela_banco) {
+
+            /* se a tabela no banco existir no fabrik continua a rotina de colunas */
+            if (array_search($nome_tabela_banco, $lista_fa)) {
+
+                /* recupera as colunas da tabela seleciona no banco de dados */
+                $sql1 = "SELECT d1.COLUMN_NAME
+                    FROM information_schema.columns d1 
+                    WHERE TABLE_schema ='devcett' 
+                    AND d1.TABLE_NAME =  '$nome_tabela_banco' ORDER BY 1";
+                $db->setQuery($sql1);
+                $colunas_bd = $db->loadColumn();
+
+                /* ======================================================================= */
+
+                /* recupera as colunas da tabela seleciona no fabrik */
+                $sql2 = "SELECT t1.name
+                        FROM joomla_fabrik_elements t1, joomla_fabrik_lists t2
+                        WHERE t1.group_id = t2.id
+                        AND t2.db_table_name =  '$nome_tabela_banco' ORDER BY 1";
+                        
+                $db->setQuery($sql2);
+                $colunas_fabrik = $db->loadColumn();
+
+                /* ======================================================================= */
+
+                /* percorre pelos colunas da tabela no banco de dados para verificar se existe no fabrik */
+                foreach ($colunas_bd as $key => $nome_coluna_banco) {
+
+                    /* se a coluna da tabela do banco existir no fabrik continua, senão registra a diferença */
+                    if ( ! array_search($nome_coluna_banco, $colunas_fabrik)) {
+                
+                        array_push($colunasNaoExistentes,$nome_tabela_banco ."." .$nome_coluna_banco) ;
+                    }
+
+                }
+                
+            }
+            
+        }
+        echo json_encode($colunasNaoExistentes);
+        $app->close();
+    }
+
+    public function deleteTablesAndFieldsBd() 
+    {
+        $retorno = [];
+        try {
+            $app    = JFactory::getApplication();
+            $db     = JFactory::getDbo();
+            $config = JFactory::getConfig();
+    
+            $tbs = $app->input->getModel("tbs");
+            $fds = $app->input->getModel("fds");
+
+            array_push($retorno, "===== TABELAS =====");
+            foreach ($tbs as $key => $value) {
+                if( $db->dropTable($value) ){
+                    array_push($retorno, $value);
+                };
+                array_push($retorno, $value);
+            }
+
+            array_push($retorno, "===== CAMPOS =====");
+            foreach ($fds as $key => $value) {
+                
+                $tab_field = explode(".",$value);
+
+                $query = "ALTER TABLE $tab_field[0] DROP COLUMN $tab_field[1];";
+                $db->setQuery($query);
+                if( $db->execute() ){
+                    array_push($retorno, $value);
+                };
+                array_push($retorno, $value);
+            }
+    
+            $user       = JFactory::getUser();
+            $path       = getcwd() .'/components/com_administrativetools/logs/';
+            $file_log   = 'cleandb.log';
+ 
+            if (!file_exists($path .$file_log)) {
+                mkdir($path, 0777, true);
+            }
+
+            $fp = fopen($path .$file_log, 'a+'); 
+
+            $textoLog = "\n" . "Limpeza realizada por: " .$user->name . " em " .date("d/m/Y") . " - " . date("h:i:sa");
+            fwrite($fp,  $textoLog ) ; 
+
+            foreach ($retorno as $key => $value) {
+                fwrite($fp, "\n" . $value); 
+            }
+            fwrite($fp, "\n\n\n" ); 
+
+            fclose($fp);
+
+            echo json_encode($retorno);
+
+
+
+        } catch (Exception $e) {
+            echo $e->getMessage();
+        }
+
+        
+        $app->close();
+    }
+
+    public function pluginsManagerListElement()
+    {
+        $app = JFactory::getApplication();
+        $db = JFactory::getDbo();
+
+        $tipo = $app->input->getInt("typeName");
+
+        if ($tipo == 1) {
+            $sql = "SELECT form.id,form.label FROM joomla_fabrik_forms AS form ORDER BY form.label ASC;";
+        } elseif ($tipo == 2)  {
+            $sql = "SELECT list.id, list.label FROM joomla_fabrik_lists AS list ORDER BY list.label ASC;";
+        } else {
+            $sql = "SELECT 0 ;";
+        }
+        
+        $db->setQuery($sql);
+
+        $list = $db->loadObjectList();
+
+        if (count($list) > 0) {
+            foreach ($list as $key => $value) {
+                $list[$key]->params     = ($value->params);
+                $list[$key]->paramList  = ($value->paramList);
+            }
+
+            echo json_encode($list);
+        } else {
+            echo '0';
+        }
+
+        $app->close();
+    }
+
+    public function pluginsManagerTypeParams()
+    {
+        $app = JFactory::getApplication();
+        $db = JFactory::getDbo();
+
+        $typeName = $app->input->getInt("typeName");
+        $idList = $app->input->getInt("idList");
+
+
+        if ($typeName == 1) {
+            $sql = "SELECT form.params FROM joomla_fabrik_forms AS form where form.id = $idList;";
+        } elseif ($typeName == 2)  {
+            $sql = "SELECT list.params FROM joomla_fabrik_lists AS list where list.id = $idList;";
+        } else {
+            $sql = "SELECT 0 ;";
+        }
+        
+        $db->setQuery($sql);
+
+        $list = $db->loadObjectList();
+
+      
+        if (count($list) > 0) {
+            foreach ($list as $key => $value) {
+                $list[$key]->params     = json_decode($value->params);
+                $list[$key]->paramList  = json_decode($value->paramList);
+            }
+
+            echo json_encode($list);
+        } else {
+            echo '0';
+        }
+        
+        $app->close();
+    }
+
+    public function pluginsManagerListObjects()
+    {
+        $app    = JFactory::getApplication();
+        $db     = JFactory::getDbo();
+        $config = JFactory::getConfig();
+        
+        $typeName    = $app->input->getInt("typeName");
+        $idList      = $app->input->getString("idList");
+        $pluginName  = $app->input->getString("pluginName");
+        $action      = $app->input->getString("action");
+        
+        //echo($typeName);
+
+        if($typeName == "1"){ 
+            //formulário
+            $sql = " SELECT id, label
+            FROM joomla_fabrik_forms 
+            ORDER BY 2 ;";
+        }elseif($typeName == "2"){ 
+            //Lista
+            $sql = " SELECT id, label
+            FROM joomla_fabrik_lists 
+            where db_table_name NOT like 'joomla_%'   
+            and db_table_name != ''  
+            ORDER BY 2 ;";
+        }
+
+        $db->setQuery($sql);
+        $sqlReturn = $db->loadRowList();
+
+        $objetos = [['0','Todos']];
+        foreach ($sqlReturn as $key => $linha) {
+            array_push($objetos,$linha) ;
+        }
+        echo json_encode($objetos);
+        $app->close();
+    }
+
+
+    public function pluginsManagerModifyForms() 
+    {
+        $app    = JFactory::getApplication();
+        $db     = JFactory::getDbo();
+        $config = JFactory::getConfig();
+
+        //$typeName           = $app->input->getInt("typeName");
+        $idList             = $app->input->getString("idList");
+        $pluginName         = $app->input->getString("pluginName");
+        $action             = $app->input->getString("action");
+        $selected_objects   = $app->input->getString("selected_objects");
+        
+        $plugin_selecionado =  explode(";", $pluginName) ;
+        $log     = [];   
+
+        //log
+        array_push($log, "===== FORMULÁRIO(S) =====");
+        if($action == 1){ 
+            array_push($log, "Adicionado o  $plugin_selecionado[1]  - $plugin_selecionado[2]   em:");
+        }else if($action == 2){
+            array_push($log, "Removido o  $plugin_selecionado[1]  - $plugin_selecionado[2]  de:");
+        }
+
+
+        //significa que foi marcada a opção "TODOS" na caixa de seleção
+        //busca todos os objetos da tabela
+        if($selected_objects[0] == 0){
+            $selected_objects = [];
+            $sql = " SELECT t1.id FROM joomla_fabrik_forms as t1 order by t1.label ;";
+            $db->setQuery($sql);
+            $resultado = $db->loadObjectList();
+            foreach ($resultado as $key => $object) {
+                array_push($selected_objects, $object->id);
+            }
+        }
+        
+
+        //loop principal pelos objetos
+        foreach ($selected_objects as $key => $object_id) {
+            if ($object_id == 26){
+                $a= 1;
+            }
+            
+            //busca o nome do objeto para colocar na log
+            $sql = " SELECT t1.label FROM joomla_fabrik_forms as t1 where t1.id = $object_id ;";
+            $db->setQuery($sql);
+            $objeto = $db->loadObject();
+            array_push($log, $objeto->label);
+
+            
+            $sql = " SELECT t1.params FROM joomla_fabrik_forms as t1 where t1.id = $object_id ;";
+            $db->setQuery($sql);
+            $return_params = $db->loadObjectList();
+
+            $campo = [];
+            array_push($campo, $return_params);
+            $campo_params_array = json_decode($campo[0][0]->params, true);
+
+            //lista dos plugins que já possui, usado no teste  
+            $pluginsQuePossui               = json_decode($campo[0][0]->params)->plugins ;
+            $plugin_descriptionQuePossui    = json_decode($campo[0][0]->params)->plugin_description ;
+                        
+            //qtd de plugins existentes
+            $qtdPlugins                     = count(json_decode($campo[0][0]->params)->plugins);
+
+
+            if($action == 1){ //opção ADICIONAR plugin
+                if( $qtdPlugins == 0){
+                    $query = "UPDATE joomla_fabrik_forms t1 
+                            SET t1.params = 
+                            JSON_INSERT(t1.params, 
+                                '$.plugin_condition[$qtdPlugins]',      '$plugin_selecionado[0]',
+                                '$.plugin_description[$qtdPlugins]',    '$plugin_selecionado[1]',
+                                '$.plugin_events[$qtdPlugins]',         '$plugin_selecionado[2]',
+                                '$.plugin_locations[$qtdPlugins]',      '$plugin_selecionado[3]',
+                                '$.plugin_state[$qtdPlugins]',          '$plugin_selecionado[4]',
+                                '$.plugins[$qtdPlugins]',               '$plugin_selecionado[5]'
+                            )
+                            WHERE t1.id = $object_id";
+        
+                    $db->setQuery($query);
+                    $db->execute();
+
+                }else{
+                    $adiciona = true;
+
+                    for ($i=0; $i < $qtdPlugins ; $i++) { 
+                        //testa para verificar se ele já possui o novo plugin
+                        if( ($plugin_selecionado[5] == $pluginsQuePossui[$i]) && ($plugin_selecionado[1] == $plugin_descriptionQuePossui[$i]) ){
+                            $adiciona = false;
+                        }
+                    }
+                    
+                    
+                    if($adiciona == TRUE){
+        
+                        $query = "UPDATE joomla_fabrik_forms t1 
+                                SET t1.params = 
+                                JSON_INSERT(t1.params, 
+                                    '$.plugin_condition[$qtdPlugins]',      '$plugin_selecionado[0]',
+                                    '$.plugin_description[$qtdPlugins]',    '$plugin_selecionado[1]',
+                                    '$.plugin_events[$qtdPlugins]',         '$plugin_selecionado[2]',
+                                    '$.plugin_locations[$qtdPlugins]',      '$plugin_selecionado[3]',
+                                    '$.plugin_state[$qtdPlugins]',          '$plugin_selecionado[4]',
+                                    '$.plugins[$qtdPlugins]',               '$plugin_selecionado[5]'
+                                )
+                                WHERE t1.id = $object_id";
+            
+                        $db->setQuery($query);
+                        $db->execute();
+                        array_push($log, "                  Adicionado");
+                    } else{
+                        array_push($log, "                  Já possuía o plugin");
+                    }  
+    
+                    
+                }
+
+            }else if($action == 2){  //opção REMOVER plugin
+
+
+                if( $qtdPlugins == 0){
+                    array_push($log, "Não possuia nenhum plugin!");
+                }else{
+                    for ($i=0; $i < $qtdPlugins ; $i++) { 
+                        $busca  = [];
+                        $remove = [];
+
+                        $sql = "SELECT t1.params from joomla_fabrik_forms t1 WHERE  t1.id = $object_id;";
+                        $db->setQuery($sql);
+                        $campo_params = $db->loadObjectList();
+
+                        if( ($plugin_selecionado[5] == $pluginsQuePossui[$i]) && ($plugin_selecionado[1] == $plugin_descriptionQuePossui[$i]) ){
+                            try {
+
+                                
+                                $busca[0]  = "SELECT JSON_CONTAINS_PATH(t1.params,'one', '$.plugin_condition') from joomla_fabrik_forms t1 WHERE  t1.id = $object_id";
+                                $busca[1]  = "SELECT JSON_CONTAINS_PATH(t1.params,'one', '$.plugin_description') from joomla_fabrik_forms t1 WHERE  t1.id = $object_id";
+                                $busca[2]  = "SELECT JSON_CONTAINS_PATH(t1.params,'one', '$.plugin_events') from joomla_fabrik_forms t1 WHERE  t1.id = $object_id";
+                                $busca[3]  = "SELECT JSON_CONTAINS_PATH(t1.params,'one', '$.plugin_locations') from joomla_fabrik_forms t1 WHERE  t1.id = $object_id";
+                                $busca[4]  = "SELECT JSON_CONTAINS_PATH(t1.params,'one', '$.plugin_state') from joomla_fabrik_forms t1 WHERE  t1.id = $object_id";
+                                $busca[5]  = "SELECT JSON_CONTAINS_PATH(t1.params,'one', '$.plugins') from joomla_fabrik_forms t1 WHERE  t1.id = $object_id";
+        
+
+
+                                $remove[0] = "update joomla_fabrik_forms t1 set t1.params = JSON_REMOVE(t1.params,'$.plugin_condition[$i]') WHERE  t1.id = $object_id";
+                                $remove[1] = "update joomla_fabrik_forms t1 set t1.params = JSON_REMOVE(t1.params,'$.plugin_description[$i]') WHERE  t1.id = $object_id";
+                                $remove[2] = "update joomla_fabrik_forms t1 set t1.params = JSON_REMOVE(t1.params,'$.plugin_events[$i]') WHERE  t1.id = $object_id";
+                                $remove[3] = "update joomla_fabrik_forms t1 set t1.params = JSON_REMOVE(t1.params,'$.plugin_locations[$i]') WHERE  t1.id = $object_id";
+                                $remove[4] = "update joomla_fabrik_forms t1 set t1.params = JSON_REMOVE(t1.params,'$.plugin_state[$i]') WHERE  t1.id = $object_id";
+                                $remove[5] = "update joomla_fabrik_forms t1 set t1.params = JSON_REMOVE(t1.params,'$.plugins[$i]') WHERE  t1.id = $object_id";
+                                
+
+                                for ($j=0; $j < 6 ; $j++) { 
+                                    $db->setQuery($busca[$j]);
+                                    $result[$j] = $db->loadResult();
+
+                                    $db->transactionStart();
+                                    if (count($result[$j]) > 0) {
+                                        $db->setQuery($remove[$j]);
+                                        $campo_alterado = $db->execute();
+                                        
+                                    }
+                                }
+
+
+                                //monta os sqls para verificar se o obleto contem o path a ser removido o json
+                                // $busca = [];
+                                // $busca[0]  = "SELECT JSON_CONTAINS_PATH(t1.params,'one', '$.plugin_condition') from joomla_fabrik_forms t1 WHERE  t1.id = $object_id";
+                                // $busca[1]  = "SELECT JSON_CONTAINS_PATH(t1.params,'one', '$.plugin_description') from joomla_fabrik_forms t1 WHERE  t1.id = $object_id";
+                                // $busca[2]  = "SELECT JSON_CONTAINS_PATH(t1.params,'one', '$.plugin_events') from joomla_fabrik_forms t1 WHERE  t1.id = $object_id";
+                                // $busca[3]  = "SELECT JSON_CONTAINS_PATH(t1.params,'one', '$.plugin_locations') from joomla_fabrik_forms t1 WHERE  t1.id = $object_id";
+                                // $busca[4]  = "SELECT JSON_CONTAINS_PATH(t1.params,'one', '$.plugin_state') from joomla_fabrik_forms t1 WHERE  t1.id = $object_id";
+                                // $busca[5]  = "SELECT JSON_CONTAINS_PATH(t1.params,'one', '$.plugins') from joomla_fabrik_forms t1 WHERE  t1.id = $object_id";
+        
+                                // $remove = [];
+                                // $remove[0] = "UPDATE joomla_fabrik_forms t1 SET t1.params = JSON_REMOVE(t1.params,'$.plugin_condition[$i]') WHERE t1.id = $object_id";
+                                // $remove[1] = "UPDATE joomla_fabrik_forms t1 SET t1.params = JSON_REMOVE(t1.params,'$.plugin_description[$i]') WHERE t1.id = $object_id";
+                                // $remove[2] = "UPDATE joomla_fabrik_forms t1 SET t1.params = JSON_REMOVE(t1.params,'$.plugin_events[$i]') WHERE t1.id = $object_id";
+                                // $remove[3] = "UPDATE joomla_fabrik_forms t1 SET t1.params = JSON_REMOVE(t1.params,'$.plugin_locations[$i]') WHERE t1.id = $object_id";
+                                // $remove[4] = "UPDATE joomla_fabrik_forms t1 SET t1.params = JSON_REMOVE(t1.params,'$.plugin_state[$i]') WHERE t1.id = $object_id";
+                                // $remove[5] = "UPDATE joomla_fabrik_forms t1 SET t1.params = JSON_REMOVE(t1.params,'$.plugins[$i]') WHERE t1.id = $object_id";
+
+
+
+                                // for ($j=0; $j < 6 ; $j++) { 
+                                //     $db->setQuery($busca[$j]);
+                                //     $result[$j] = $db->loadResult();
+
+                                //     $db->transactionStart();
+                                //     if (count($result[$j]) > 0) {
+                                //         $db->setQuery($remove[$j]);
+                                //         $db->execute();
+                                //     }
+                                // }
+
+
+
+
+                                $db->transactionCommit();
+                            } catch (Exception $exc) {
+                                $db->transactionRollback();
+                                print_r($exc);
+                                die();
+                            }
+                
+                            
+                        }else{
+
+                            if($i == $qtdPlugins - 1){
+                                array_push($log, "Não possuia.");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        //geração do arquivo de LOG
+        $user       = JFactory::getUser();
+        $path       = getcwd() .'/components/com_administrativetools/logs/';
+        $file_log   = 'pluginsManager.log';
+
+        if (!file_exists($path .$file_log)) {
+            mkdir($path, 0777, true);
+        }
+
+        $fp = fopen($path .$file_log, 'a+'); 
+
+        $textoLog = "\n" . "Alteração realizada por: " .$user->name . " em " .date("d/m/Y") . " - " . date("h:i:sa");
+        fwrite($fp,  $textoLog ) ; 
+
+        foreach ($log as $key => $value) {
+            fwrite($fp, "\n" . $value); 
+        }
+        fwrite($fp, "\n\n\n" ); 
+
+        fclose($fp);
+        
+        echo json_encode($log);
+        $app->close();
+
+    }
 }
+
+

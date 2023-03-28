@@ -324,6 +324,333 @@ jQuery(document).ready(function () {
             }
         });
     });
+ 
+    jQuery("#btnShowCleanDB").click(function () {
+        let ar_bd_tables = [];
+        let ar_fa_tables = [];
+             
+        //console.log("clicou");
+        jQuery.post('./index.php?option=com_administrativetools&task=tools.showDifferentTablesInDatabase', {
+        }, function (recebido) {
+            jQuery('#selectTablesCleanDB').empty();
+
+            //console.log((recebido));
+            const arrAgain = JSON.parse(recebido);
+            arrAgain.forEach(element => {
+                if (element.nome_tabela != "") {
+                    jQuery('#selectTablesCleanDB').append('<option value="' + element.nome_tabela + '">' + element.nome_tabela + '</option>');
+                }
+            });
+        });
+
+        jQuery.post('./index.php?option=com_administrativetools&task=tools.showDifferentFiledsInTables', {
+        }, function (recebido) {
+            //console.log((recebido));
+            jQuery('#selectFieldsCleanDB').empty();
+
+            //console.log((recebido));
+            const arrAgain = JSON.parse(recebido);
+            arrAgain.forEach(element => {
+                if (element.nome_tabela != "") {
+                    jQuery('#selectFieldsCleanDB').append('<option value="' + element + '">' + element + '</option>');
+                }
+            });
+        });
+    });
+
+    jQuery("#btnDelCleanDB").click(function () {
+        alertify.confirm("Atenção", "Confirma excluir do banco de dados as tabelas e campos selecionados?", function () {
+            var select_tables = jQuery('#selectTablesCleanDB option:selected').toArray().map(item => item.value);
+            var select_fields = jQuery('#selectFieldsCleanDB option:selected').toArray().map(item => item.value);
+
+
+            if (select_tables.length == 0 & select_fields.length == 0) {
+                alertify.alert(Joomla.JText._('COM_ADMINISTRATIVETOOLS_MESSAGE_TITLE_ALERT'), Joomla.JText._('COM_ADMINISTRATIVETOOLS_MESSAGE_LABEL_ALERT_REQUIRED_FIELDS'));
+                //alertify.alert("Selecione algo!");
+            }else{
+            
+                jQuery.post('./index.php?option=com_administrativetools&task=tools.deleteTablesAndFieldsBd', {
+                    tbs: select_tables,
+                    fds: select_fields
+                }, function (res) {
+
+                    if (res !== '0') {
+                        var mensagem = jQuery.parseJSON(res);
+                        let mostrar ="";
+                        mensagem.forEach(element => {
+                            mostrar = mostrar + element + "</br>";
+                        });
+
+                        alertify.alert("O que foi excluido", mostrar) ;
+                        //console.log(mensagem);
+                    }
+                    jQuery('#selectTablesCleanDB').empty();
+                    jQuery('#selectFieldsCleanDB').empty();
+                });
+
+            }
+
+        }, function () {
+        }).set('labels', {ok: "Sim", cancel: "Não"});
+
+    });
+    
+
+    jQuery("#tabPluginsManager").click(function() {
+        jQuery('#pluginsManagerChooseList').css('display', 'none');
+        jQuery('#divPluginsManagerTypeParams').css('display', 'none');
+        jQuery('#divSelectFieldsPluginsManager').css('display', 'none');
+        jQuery('#pluginsManagerAction').css('display', 'none');
+        
+    });
+
+    jQuery("#pluginsManagerTypeList").change(function () {
+        var typeName = jQuery("#pluginsManagerTypeList").val();
+        
+        jQuery('#pluginsManagerChooseList').css('display', 'none');
+        jQuery('#divPluginsManagerTypeParams').css('display', 'none');
+        jQuery('#divSelectFieldsPluginsManager').css('display', 'none');
+        jQuery('#pluginsManagerAction').css('display', 'none');
+
+        jQuery('#pluginsManagerChooseList').val('');
+        jQuery('#pluginsManagerChooseList').css('display', 'block');
+
+        if (typeName.length === 0) {
+            alertify.alert(Joomla.JText._('COM_ADMINISTRATIVETOOLS_MESSAGE_TITLE_ALERT'), Joomla.JText._('COM_ADMINISTRATIVETOOLS_MESSAGE_LABEL_ALERT_REQUIRED_FIELDS'));
+        } else {
+            jQuery.post('./index.php?option=com_administrativetools&task=tools.pluginsManagerListElement', {
+                typeName: typeName
+            }, function (res) {
+                //console.log (res)
+                if (res !== '0') {
+                    var json = jQuery.parseJSON(res);
+
+                    jQuery('#pluginsManagerChooseList').html('<select id="pluginsManagerChooseList" name="pluginsManagerChooseList" form="formTransformation" required>' +
+                        '<option value="">' + Joomla.JText._('COM_ADMINISTRATIVETOOLS_TRANSFORMATION_FIELD_VALUE0') + '</option>' +
+                        '</select>');
+
+                    jQuery.each(json, function (index, value) {
+                        jQuery('#pluginsManagerChooseList').append('<option value="' + value.id + '">' + value.label + '</option>');
+                    });
+            
+                } else {
+                    alertify.alert(Joomla.JText._('COM_ADMINISTRATIVETOOLS_MESSAGE_TITLE_ALERT'), Joomla.JText._('COM_ADMINISTRATIVETOOLS_MESSAGE_ALERT_ERRO_SELECT_LIST'));
+                }
+            });
+        }
+
+    });
+
+    jQuery("#pluginsManagerChooseList").change(function () {
+        var typeName = jQuery("#pluginsManagerTypeList").val();
+        var idList = jQuery("#pluginsManagerChooseList").val();
+
+        jQuery('#divPluginsManagerTypeParams').css('display', 'none');
+        jQuery('#divSelectFieldsPluginsManager').css('display', 'none');
+        jQuery('#pluginsManagerAction').css('display', 'none');
+        jQuery('#divPluginsManagerTypeParams').css('display', 'block');
+
+        if (idList.length === 0) {
+            alertify.alert(Joomla.JText._('COM_ADMINISTRATIVETOOLS_MESSAGE_TITLE_ALERT'), Joomla.JText._('COM_ADMINISTRATIVETOOLS_MESSAGE_LABEL_ALERT_REQUIRED_FIELDS'));
+        } else {
+            jQuery.post('./index.php?option=com_administrativetools&task=tools.pluginsManagerTypeParams', {
+                idList: idList,
+                typeName: typeName
+            }, function (res) {
+                //console.log (res)
+                jQuery("#pluginsManagerTypeParams").empty();
+
+                if (res !== '0') {
+                    var json = jQuery.parseJSON(res);
+
+                    const arrAgain = JSON.parse(res);
+                    //console.log (arrAgain);
+                    arrAgain.forEach(element => {
+                        const qtd_plgs = element.params.plugin_description.length;
+                        if(qtd_plgs > 0){
+
+                            jQuery('#pluginsManagerTypeParams').append('<option value="0"> --- </option>');
+
+                            if (typeName == 1) {
+                                //formulario
+                                for (let index = 0; index < qtd_plgs; index++) {
+
+                                    let plugin_condition    = '';
+                                    let plugin_description  = '';
+                                    let plugin_events       = '';
+                                    let plugin_locations    = '';
+                                    let plugin_state        = '';
+                                    let plugins             = '';
+                                    
+                                    
+                                    typeof element.params.plugin_condition   !== 'undefined' ? plugin_condition =    element.params.plugin_condition[index]      : plugin_condition      = '' ;
+                                    typeof element.params.plugin_description !== 'undefined' ? plugin_description =  element.params.plugin_description[index]    : plugin_description    = '' ;
+                                    typeof element.params.plugin_events      !== 'undefined' ? plugin_events =       element.params.plugin_events[index]         : plugin_events         = '' ;
+                                    typeof element.params.plugin_locations   !== 'undefined' ? plugin_locations =    element.params.plugin_locations[index]      : plugin_locations      = '' ;
+                                    typeof element.params.plugin_state       !== 'undefined' ? plugin_state =        element.params.plugin_state[index]          : plugin_state          = '' ;
+                                    typeof element.params.plugins            !== 'undefined' ? plugins =             element.params.plugins[index]               : plugins               = '' ;
+
+
+                                    jQuery('#pluginsManagerTypeParams').append(
+                                        '<option value="'  
+                                                            + plugin_condition      + ";"
+                                                            + plugin_description    + ";"
+                                                            + plugin_events         + ";"
+                                                            + plugin_locations      + ";"
+                                                            + plugin_state          + ";"
+                                                            + plugins               + '">' 
+    
+                                        + element.params.plugins[index] 
+                                        + " -> " 
+                                        + element.params.plugin_description[index] 
+                                        + '</option>'
+                                    );
+                                    
+                                }
+    
+                            } else {
+                                //lista
+                                for (let index = 0; index < qtd_plgs; index++) {
+                                    jQuery('#pluginsManagerTypeParams').append(
+                                        '<option value="'   + element.params.plugin_state[index] + ";" 
+                                                            + element.params.plugins[index] + ";" 
+                                                            + element.params.plugin_description[index] + '">' 
+    
+                                        + element.params.plugins[index] 
+                                        + " -> " 
+                                        + element.params.plugin_description[index] 
+                                        + '</option>'
+                                    );
+                                    
+                                }
+                            }
+
+                        }else{
+                            jQuery('#pluginsManagerTypeParams').append('<option value="0"> SEM PLUGINS </option>');
+                        }
+                    });
+
+                } else {
+                    alertify.alert(Joomla.JText._('COM_ADMINISTRATIVETOOLS_MESSAGE_TITLE_ALERT'), Joomla.JText._('COM_ADMINISTRATIVETOOLS_MESSAGE_ALERT_ERRO_SELECT_LIST'));
+                }
+            });
+        }
+
+    });
+
+    jQuery("#pluginsManagerTypeParams").change(function () {
+        const typeName    = jQuery("#pluginsManagerTypeList").val();
+        const idList      = jQuery("#pluginsManagerChooseList").val();
+        const pluginName  = jQuery("#pluginsManagerTypeParams").val();
+        
+        jQuery('#pluginsManagerAction').css('display', 'block');
+        jQuery('#divSelectFieldsPluginsManager').css('display', 'none');
+        jQuery("#pluginsManagerAction").val(0);
+    });
+
+    jQuery("#pluginsManagerAction").change(function () {
+        const typeName    = jQuery("#pluginsManagerTypeList").val();
+        const idList      = jQuery("#pluginsManagerChooseList").val();
+        const action      = jQuery("#pluginsManagerAction").val();
+
+        jQuery('#divSelectFieldsPluginsManager').css('display', 'block');
+
+        jQuery.post('./index.php?option=com_administrativetools&task=tools.pluginsManagerListObjects', {
+            typeName: typeName,
+            idList: idList,
+            action: action
+        }, function (recebido) {
+            jQuery('#selectFieldsPluginsManager').empty();
+            const arrAgain = JSON.parse(recebido);
+            arrAgain.forEach(element => {
+                jQuery('#selectFieldsPluginsManager').append('<option value="' + element[0] + '">' + element[1] + '</option>');
+            });
+        }); 
+    });
+
+    jQuery("#btnPluginsManagerExecute").click(function () {
+        const typeName    = jQuery("#pluginsManagerTypeList").val();
+        const idList      = jQuery("#pluginsManagerChooseList").val();
+        const action      = jQuery("#pluginsManagerAction").val();
+        const pluginName  = jQuery("#pluginsManagerTypeParams").val();
+        
+        alertify.confirm( Joomla.JText._("COM_ADMINISTRATIVETOOLS_MESSAGE_TITLE_ALERT"), "Confirma a modificação dos objetos selecionados?", function () {
+            const selected_objects = jQuery('#selectFieldsPluginsManager option:selected').toArray().map(item => item.value);
+    
+            
+            if (selected_objects.length == 0) {
+                alertify.alert(Joomla.JText._('COM_ADMINISTRATIVETOOLS_MESSAGE_TITLE_ALERT'), Joomla.JText._('COM_ADMINISTRATIVETOOLS_MESSAGE_LABEL_ALERT_REQUIRED_FIELDS'));
+            }else{
+            
+                console.log(typeName);
+                if (typeName == 1) {
+                    jQuery.post('./index.php?option=com_administrativetools&task=tools.pluginsManagerModifyForms', {
+                        typeName: typeName,
+                        idList: idList,
+                        action: action,
+                        pluginName: pluginName,
+                        selected_objects: selected_objects
+                    }, function (res) {
+                        if (res !== '0') {
+                            var mensagem = jQuery.parseJSON(res);
+                            let mostrar ="";
+                            mensagem.forEach(element => {
+                                mostrar = mostrar + element + "</br>";
+                            });
+
+                            alertify.alert("O que foi alterado", mostrar) ;
+                        }
+                        
+                        jQuery('#pluginsManagerChooseList').css('display', 'none');
+                        jQuery('#divPluginsManagerTypeParams').css('display', 'none');
+                        jQuery('#divSelectFieldsPluginsManager').css('display', 'none');
+                        jQuery('#pluginsManagerAction').css('display', 'none');
+
+                        jQuery('#pluginsManagerTypeList').val('');
+                        jQuery('#pluginsManagerChooseList').val('');
+                        
+
+                    });
+                } else if (typeName == 2) {
+                    jQuery.post('./index.php?option=com_administrativetools&task=tools.pluginsManagerModifyLists', {
+                        typeName: typeName,
+                        idList: idList,
+                        action: action,
+                        pluginName: pluginName,
+                        selected_objects: selected_objects
+                    }, function (res) {
+                        if (res !== '0') {
+                            var mensagem = jQuery.parseJSON(res);
+                            let mostrar ="";
+                            mensagem.forEach(element => {
+                                mostrar = mostrar + element + "</br>";
+                            });
+
+                            alertify.alert("O que foi alterado", mostrar) ;
+                        }
+                        
+                        jQuery('#pluginsManagerChooseList').css('display', 'none');
+                        jQuery('#divPluginsManagerTypeParams').css('display', 'none');
+                        jQuery('#divSelectFieldsPluginsManager').css('display', 'none');
+                        jQuery('#pluginsManagerAction').css('display', 'none');
+
+                        jQuery('#pluginsManagerTypeList').val('');
+                        jQuery('#pluginsManagerChooseList').val('');
+                        
+
+                    });
+                }
+
+
+            }
+
+        }, function () {
+
+        }).set('labels', {ok: "Sim", cancel: "Não"});
+
+    });
+    
+
 });
 
 
