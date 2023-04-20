@@ -45,7 +45,7 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
         //Configuring the tables needed
         $dbExternal = $this->connectSync($data);
         $data->data_type == 'identical' ? $arrFabrikTables = FabrikAdminModelAdministrativetools::tablesVersions() : $arrFabrikTables = Array();
-        $data->model_type == 'identical' ? $arrModelTables = $this->tablesOnlyModel($dbExternal, $data->name) : $arrModelTables = Array();
+        $data->model_type == 'identical' ? $arrModelTables = $this->tablesOnlyModel($dbExternal, $data->name) : $arrModelTables = Array('external' => Array(), 'internal' => Array());
         $arrOthersTables = $this->othersTablesOnlyData($data);
 
         //Without external connection doesn't work
