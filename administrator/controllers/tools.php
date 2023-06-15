@@ -6824,4 +6824,20 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
         return $resultConnection;
     }
+
+    /**
+     * Fabrik CleanDB
+     * 
+     * Method that scans comparing Fabrik tables with Joomla tables
+     * 
+     */
+    public function scanDb()
+    {
+        // $config = JFactory::getConfig();
+        // $db = JFactory::getDbo();
+        //Verifica o banco de dados. Caso tenha alguma diferença nas tabelas,
+        // retorna a visualização das doferenças. Caso não haja alteração,
+        // retorna mensagem de que não há difer
+        echo "Método Scandb acionado";
+    }
 }
