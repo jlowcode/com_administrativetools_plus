@@ -30,7 +30,7 @@ defined('_JEXEC') or die('Restricted access');
                                                                               aria-controls="messages" role="tab"
                                                                               data-toggle="tab">
                         <?php echo FText::_('COM_ADMINISTRATIVETOOLS_TITLE_NAV_TABS_SYNC_LIST'); ?></a></li>
-                <li role="presentation" class="<?php echo $this->tab6; ?>"><a href="#synclist"
+                <li role="presentation" class="<?php echo $this->tab6; ?>"><a href="#cleandb"
                                                                               aria-controls="messages" role="tab"
                                                                               data-toggle="tab">
                         <?php echo FText::_('COM_ADMINISTRATIVETOOLS_TITLE_NAV_TABS_CLEANDB'); ?></a></li>
@@ -53,12 +53,12 @@ defined('_JEXEC') or die('Restricted access');
                 <div role="tabpanel" class="tab-pane <?php echo $this->tab5; ?>" id="chargelist">
                     <?php echo $this->loadTemplate('change_list'); ?>
                 </div>
+                <div role="tabpanel" class="tab-pane <?php echo $this->tab7; ?>" id="cleandb">
+                    <?php echo $this->loadTemplate('cleandb'); ?>
+                </div>
                 <!-- Fabrik sync lists 1.0 -->
                 <div role="tabpanel" class="tab-pane <?php echo $this->tab6; ?>" id="synclist">
                     <?php echo $this->loadTemplate('sync_list'); ?>
-                </div>
-                <div role="tabpanel" class="tab-pane <?php echo $this->tab7; ?>" id="cleandb">
-                    <?php echo $this->loadTemplate('cleandb'); ?>
                 </div>
             </div>
         </div>
