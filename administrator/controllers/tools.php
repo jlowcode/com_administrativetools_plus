@@ -6131,7 +6131,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $db = JFactory::getDbo();
         
         // BEGIN - Solved problem with menu
-        $menu = new MenusModelItem();
+        $menuItem = new MenusModelItem();
         // END - Solved problem with menu
 
         foreach ($menus as $menu){
@@ -6150,7 +6150,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
                     // BEGIN - Solved problem with menu
                     //$insert = $db->insertObject('#__menu', $list, 'id');
-                    $menu->save((array) $list);
+                    $menuItem->save((array) $list);
                     // END - Solved problem with menu
                 }
             } elseif ($menu->forms){
@@ -6159,7 +6159,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                     $form->link = $new_link . 'formid='.$form_id;
                     // BEGIN - Solved problem with menu
                     //$insert = $db->insertObject('#__menu', $form, 'id');
-                    $menu->save((array) $form);
+                    $menuItem->save((array) $form);
                     // END - Solved problem with menu
                 }       
             } elseif ($menu->details){
@@ -6168,7 +6168,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                     $detail->link = $new_link . 'formid='.$form_id;
                     // BEGIN - Solved problem with menu
                     //$insert = $db->insertObject('#__menu', $detail, 'id');
-                    $menu->save((array) $detail);
+                    $menuItem->save((array) $detail);
                     // END - Solved problem with menu
                 }
             } elseif ($menu->csvs){
@@ -6177,7 +6177,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                     $csv->link = $new_link . 'listid='.$list_id;
                     // BEGIN - Solved problem with menu
                     //$insert = $db->insertObject('#__menu', $csv, 'id');
-                    $menu->save((array) $csv);
+                    $menuItem->save((array) $csv);
                     // END - Solved problem with menu
                 }
             } elseif ($menu->visualizations){
@@ -6186,7 +6186,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                     $visualization->link = $new_link . 'listid='.$list_id;
                     // BEGIN - Solved problem with menu
                     //$insert = $db->insertObject('#__menu', $visualization, 'id');
-                    $menu->save((array) $visualization);
+                    $menuItem->save((array) $visualization);
                     // END - Solved problem with menu
                 }
             }
