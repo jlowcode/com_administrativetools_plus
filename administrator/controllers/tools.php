@@ -12,6 +12,11 @@ defined('_JEXEC') or die;
 
 jimport('joomla.application.component.controlleradmin');
 
+//BEGIN - Solved problem with menu
+include_once (JPATH_ADMINISTRATOR . '/components/com_menus/models/item.php');
+include_once (JPATH_ADMINISTRATOR . '/components/com_menus/tables/menu.php');
+//END - Solved problem with menu
+
 use \Joomla\Utilities\ArrayHelper;
 use \Joomla\CMS\Session\session;
 use \Joomla\CMS\Factory;
@@ -6040,8 +6045,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $tableName = $this->clones_info[$listId]->db_table_name;
         $oldTableName = $this->clones_info[$listId]->old_db_table_name;
 
-        $tableSql = str_replace("CREATE TABLE `$oldTableName`", "CREATE TABLE `$tableName`", $tableSql);
-        $tableSql = str_replace("CREATE TABLE", "CREATE TABLE IF NOT EXISTS", $tableSql);
+        $tableSql = str_replace("CREATE TABLE $oldTableName", "CREATE TABLE $tableName", $tableSql);
         $db->setQuery($tableSql);
 
         try {
@@ -6062,13 +6066,10 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
             $db = JFactory::getDbo();
             $tableName = $this->clones_info[$listId]->db_table_name;
             $oldTableName = $this->clones_info[$listId]->old_db_table_name;
-            $tableSql = str_replace("INSERT INTO `$oldTableName`", "INSERT INTO `$tableName`", $tableSql);
+            $tableSql = str_replace("INSERT INTO $oldTableName", "INSERT INTO $tableName", $tableSql);
             $tableSql = str_replace("\\\\", "\\", $tableSql);
-            $sqlTruncate = "TRUNCATE TABLE `" . $tableName . "`;";
+            $db->setQuery($tableSql);
             try {
-                $db->setQuery($sqlTruncate);
-                $db->execute();
-                $db->setQuery($tableSql);
                 $db->execute();
             } catch (RuntimeException $e) {
                 $err = new stdClass;
@@ -6087,8 +6088,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $oldTableName = $this->clones_info[$listId]->old_db_table_name;
 
         foreach ($tablesRepeatSql as $tableRepeat) {
-            $sql = str_replace("CREATE TABLE `$oldTableName`", "CREATE TABLE `$tableName`", $tableRepeat);
-            $sql = str_replace("CREATE TABLE", "CREATE TABLE IF NOT EXISTS", $tableRepeat);
+            $sql = str_replace("CREATE TABLE $oldTableName", "CREATE TABLE $tableName", $tableRepeat);
             $db->setQuery($sql);
 
             try {
@@ -6111,13 +6111,10 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
             $tableName = $this->clones_info[$listId]->db_table_name;
             $oldTableName = $this->clones_info[$listId]->old_db_table_name;
             foreach ($tablesRepeatSql as $tableRepeat) {
-                $sql = str_replace("INSERT INTO `$oldTableName`", "INSERT INTO `$tableName`", $tableRepeat);
+                $sql = str_replace("INSERT INTO $oldTableName", "INSERT INTO $tableName", $tableRepeat);
                 $sql = str_replace("\\\\", "\\", $sql);
-                $sqlTruncate = "TRUNCATE TABLE `" . $tableName . "`;";
+                $db->setQuery($sql);
                 try {
-                    $db->setQuery($sqlTruncate);
-                    $db->execute();
-                    $db->setQuery($sql);
                     $db->execute();
                 } catch (RuntimeException $e) {
                     $err = new stdClass;
@@ -6133,10 +6130,9 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     protected function importCreateMenuFabrik($listId, $menus){
         $db = JFactory::getDbo();
         
-        $query = $db->getQuery(true);
-        $query = "SELECT extension_id FROM `#__extensions` WHERE element = 'com_fabrik'";
-        $db->setQuery($query);
-        $com_fabrik_id = $db->loadResult();
+        // BEGIN - Solved problem with menu
+        $menu = new MenusModelItem();
+        // END - Solved problem with menu
 
         foreach ($menus as $menu){
             $cloneData = new stdClass();
@@ -6145,97 +6141,53 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
             $cloneData->id = 0;
             $list_id = $this->clones_info[$listId]->listId;
             $form_id = $this->clones_info[$listId]->listId;
-           
+
             if ($menu->lists){
                 foreach ($menu->lists as $list){
-                    $list->component_id = $com_fabrik_id;
-                    $query = $db->getQuery(true)->select('MAX(id)')->from($db->quoteName('#__menu'));
-                    $db->setQuery($query);
-                    $last_id = $db->loadResult();
+                    $list->id = 0;
+                    $new_link = explode("listid=",$list->link)[0];
+                    $list->link = $new_link . 'listid='.$list_id;
 
-                    $query = $db->getQuery(true)->select('COUNT(*)')->from($db->quoteName('#__menu'))->where($db->quoteName('alias') . " = " . $db->quote($list->alias));
-                    $db->setQuery($query);
-                    $count = $db->loadResult();
-
-                    if ($count == 0){
-                        $list->id = $last_id + 1;
-                        $new_link = explode("listid=",$list->link)[0];
-                        $list->link = $new_link . 'listid='.$list_id;
-                        $insert = $db->insertObject('#__menu', $list, 'id');
-                    }
-                    
+                    // BEGIN - Solved problem with menu
+                    //$insert = $db->insertObject('#__menu', $list, 'id');
+                    $menu->save((array) $list);
+                    // END - Solved problem with menu
                 }
             } elseif ($menu->forms){
                 foreach ($menu->forms as $form){
-                    $form->component_id = $com_fabrik_id;
-                    $query = $db->getQuery(true)->select('MAX(id)')->from($db->quoteName('#__menu'));
-                    $db->setQuery($query);
-                    $last_id = $db->loadResult();
-
-                    $query = $db->getQuery(true)->select('COUNT(*)')->from($db->quoteName('#__menu'))->where($db->quoteName('alias') . " = " . $db->quote($form->alias));
-                    $db->setQuery($query);
-                    $count = $db->loadResult();
-                    if ($count == 0){
-                        $form->id = $last_id + 1;
-                        $new_link = explode("formid=",$form->link)[0];
-                        $form->link = $new_link . 'formid='.$form_id;
-                        $insert = $db->insertObject('#__menu', $form, 'id');
-                    }
+                    $new_link = explode("formid=",$form->link)[0];
+                    $form->link = $new_link . 'formid='.$form_id;
+                    // BEGIN - Solved problem with menu
+                    //$insert = $db->insertObject('#__menu', $form, 'id');
+                    $menu->save((array) $form);
+                    // END - Solved problem with menu
                 }       
             } elseif ($menu->details){
                 foreach ($menu->details as $detail){
-                    $detail->component_id = $com_fabrik_id;
-                    $query = $db->getQuery(true)->select('MAX(id)')->from($db->quoteName('#__menu'));
-                    $db->setQuery($query);
-                    $last_id = $db->loadResult();
-
-                    $query = $db->getQuery(true)->select('COUNT(*)')->from($db->quoteName('#__menu'))->where($db->quoteName('alias') . " = " . $db->quote($detail->alias));
-                    $db->setQuery($query);
-                    $count = $db->loadResult();
-
-                    if ($count == 0){
-                        $detail->id = $last_id + 1;
-                        $new_link = explode("formid=",$detail->link)[0];
-                        $detail->link = $new_link . 'formid='.$form_id;
-                        $insert = $db->insertObject('#__menu', $detail, 'id');
-                    }
-
+                    $new_link = explode("formid=",$detail->link)[0];
+                    $detail->link = $new_link . 'formid='.$form_id;
+                    // BEGIN - Solved problem with menu
+                    //$insert = $db->insertObject('#__menu', $detail, 'id');
+                    $menu->save((array) $detail);
+                    // END - Solved problem with menu
                 }
             } elseif ($menu->csvs){
                 foreach ($menu->csvs as $csv){
-                    $csv->component_id = $com_fabrik_id;
-                    $query = $db->getQuery(true)->select('MAX(id)')->from($db->quoteName('#__menu'));
-                    $db->setQuery($query);
-                    $last_id = $db->loadResult();
-
-                    $query = $db->getQuery(true)->select('COUNT(*)')->from($db->quoteName('#__menu'))->where($db->quoteName('alias') . " = " . $db->quote($csv->alias));
-                    $db->setQuery($query);
-                    $count = $db->loadResult();
-
-                    if ($count == 0){
-                        $csv->id = $last_id + 1;
-                        $new_link = explode("listid=",$csv->link)[0];
-                        $csv->link = $new_link . 'listid='.$list_id;
-                        $insert = $db->insertObject('#__menu', $csv, 'id');
-                    }
+                    $new_link = explode("listid=",$csv->link)[0];
+                    $csv->link = $new_link . 'listid='.$list_id;
+                    // BEGIN - Solved problem with menu
+                    //$insert = $db->insertObject('#__menu', $csv, 'id');
+                    $menu->save((array) $csv);
+                    // END - Solved problem with menu
                 }
             } elseif ($menu->visualizations){
                 foreach ($menu->visualizations as $visualization){
-                    $visualization->component_id = $com_fabrik_id;
-                    $query = $db->getQuery(true)->select('MAX(id)')->from($db->quoteName('#__menu'));
-                    $db->setQuery($query);
-                    $last_id = $db->loadResult();
-
-                    $query = $db->getQuery(true)->select('COUNT(*)')->from($db->quoteName('#__menu'))->where($db->quoteName('alias') . " = " . $db->quote($visualization->alias));
-                    $db->setQuery($query);
-                    $count = $db->loadResult();
-                    
-                    if ($count == 0){
-                        $visualization->id = $last_id + 1;
-                        $new_link = explode("listid=",$visualization->link)[0];
-                        $visualization->link = $new_link . 'listid='.$list_id;
-                        $insert = $db->insertObject('#__menu', $visualization, 'id');
-                    }
+                    $new_link = explode("listid=",$visualization->link)[0];
+                    $visualization->link = $new_link . 'listid='.$list_id;
+                    // BEGIN - Solved problem with menu
+                    //$insert = $db->insertObject('#__menu', $visualization, 'id');
+                    $menu->save((array) $visualization);
+                    // END - Solved problem with menu
                 }
             }
         }
@@ -6694,134 +6646,5 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
             $db->transactionRollback();
             return false;
         }
-    }
-
-    /**
-     * Fabrik sync lists 1.0
-     * 
-     * Method that process the submit of sync list
-     *
-     */
-    public function submitSyncLists()
-    {
-        $app = JFactory::getApplication();
-        $model = $this->getModel();
-        $input = $app->input;
-
-        $data = new stdClass();
-        $data->host = $input->getString('host');
-        $data->port = $input->getString('port');
-        $data->name = $input->getString('name');
-        $data->prefix = $input->getString('prefix');
-        $data->user = $input->getString('user');
-        $data->password = $input->getString('password');
-        $data->model_type = $input->getString('model_type');
-        $data->data_type = $input->getString('data_type');
-        $data->connectSync = $input->getString('connectSync', false);
-        $data->saveConfiguration = $input->getString('saveConfiguration', false);
-        $data->syncLists = $input->getString('syncLists', false);
-        $data->joomla_menus = $input->getBool('joomla_menus', false);
-        $data->joomla_modules = $input->getBool('joomla_modules', false);
-        $data->joomla_themes = $input->getBool('joomla_themes', false);
-        $data->joomla_extensions = $input->getBool('joomla_extensions', false);
-
-        foreach($data as $key => $value) {
-            if($key == 'saveConfiguration' || $key == 'connectSync' || $key == 'syncLists') {
-                if($value) {
-                    $method = $key;    
-                } else {
-                    unset($data->$key);
-                }
-            }
-        }
-
-        $result = $this->$method($data);
-
-        $site_message = JUri::base() . 'index.php?option=com_administrativetools&tab=6';
-        $this->setRedirect($site_message, $result->message, $result->type_message);
-    }
-
-    /**
-     * Fabrik sync lists 1.0
-     * 
-     * Method that process the submit of sync list
-     *
-     */
-    private function syncLists($data)
-    {
-        $model = $this->getModel();
-        $resultSync = new stdClass();
-
-        if(!$data->syncLists) {
-            return false;
-        }
-
-        $sync = $model->syncLists($data);
-
-        if (!$sync) {
-            $resultSync->message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR_SYNC_LISTS');
-            $resultSync->type_message = 'error';
-        } else {
-            $resultSync->message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_SUCCESS_SYNC_LISTS');
-            $resultSync->type_message = 'success';
-        }
-
-        return $resultSync;
-    }
-
-    /**
-     * Fabrik sync lists 1.0
-     * 
-     * Method that save the configuration of sync list
-     *
-     */
-    private function saveConfiguration($data)
-    {
-        $model = $this->getModel();
-        $resultSave = new stdClass();
-
-        if(!$data->saveConfiguration) {
-            return false;
-        }
-
-        $saved = $model->saveConfiguration($data);
-
-        if (!$saved) {
-            $resultSave->message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR_SAVE_CONFIGURATION');
-            $resultSave->type_message = 'error';
-        } else {
-            $resultSave->message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_SUCCESS_SAVE_CONFIGURATION');
-            $resultSave->type_message = 'success';
-        }
-
-        return $resultSave;
-    }
-
-    /**
-     * Fabrik sync lists 1.0
-     * 
-     * Method that test the connection of the configuration of sync list
-     *
-     */
-    private function connectSync($data)
-    {
-        $model = $this->getModel();
-        $resultConnection = new stdClass();
-
-        if(!$data->connectSync) {
-            return false;
-        }
-
-        $connection = $model->connectSync($data);
-
-        if (!$connection) {
-            $resultConnection->message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR_CONNECT_SYNC');
-            $resultConnection->type_message = 'error';
-        } else {
-            $resultConnection->message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_SUCCESS_CONNECT_SYNC');
-            $resultConnection->type_message = 'success';
-        }
-
-        return $resultConnection;
     }
 }
