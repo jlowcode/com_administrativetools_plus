@@ -12,6 +12,11 @@ defined('_JEXEC') or die;
 
 jimport('joomla.application.component.controlleradmin');
 
+//BEGIN - Solved problem with menu
+include_once (JPATH_ADMINISTRATOR . '/components/com_menus/models/item.php');
+include_once (JPATH_ADMINISTRATOR . '/components/com_menus/tables/menu.php');
+//END - Solved problem with menu
+
 use \Joomla\Utilities\ArrayHelper;
 use \Joomla\CMS\Session\session;
 use \Joomla\CMS\Factory;
@@ -6113,7 +6118,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $db = JFactory::getDbo();
         $tableName = $this->clones_info[$listId]->db_table_name;
         $oldTableName = $this->clones_info[$listId]->old_db_table_name;
-
+      
         $query = $db->getQuery(true);
         $query->clear()->select($db->qn('table_name'))
             ->from($db->qn('information_schema.tables'))
@@ -6129,6 +6134,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         }
         $tableSql = str_replace("CREATE TABLE `$oldTableName`", "CREATE TABLE `$tableName`", $tableSql);
         $tableSql = str_replace("CREATE TABLE", "CREATE TABLE IF NOT EXISTS", $tableSql);
+
         $db->setQuery($tableSql);
 
         try {
@@ -6228,10 +6234,9 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     protected function importCreateMenuFabrik($listId, $menus){
         $db = JFactory::getDbo();
         
-        $query = $db->getQuery(true);
-        $query = "SELECT extension_id FROM `#__extensions` WHERE element = 'com_fabrik'";
-        $db->setQuery($query);
-        $com_fabrik_id = $db->loadResult();
+        // BEGIN - Solved problem with menu
+        $menuItem = new MenusModelItem();
+        // END - Solved problem with menu
 
         foreach ($menus as $menu){
             $cloneData = new stdClass();
@@ -6240,97 +6245,53 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
             $cloneData->id = 0;
             $list_id = $this->clones_info[$listId]->listId;
             $form_id = $this->clones_info[$listId]->listId;
-           
+
             if ($menu->lists){
                 foreach ($menu->lists as $list){
-                    $list->component_id = $com_fabrik_id;
-                    $query = $db->getQuery(true)->select('MAX(id)')->from($db->quoteName('#__menu'));
-                    $db->setQuery($query);
-                    $last_id = $db->loadResult();
+                    $list->id = 0;
+                    $new_link = explode("listid=",$list->link)[0];
+                    $list->link = $new_link . 'listid='.$list_id;
 
-                    $query = $db->getQuery(true)->select('COUNT(*)')->from($db->quoteName('#__menu'))->where($db->quoteName('alias') . " = " . $db->quote($list->alias));
-                    $db->setQuery($query);
-                    $count = $db->loadResult();
-
-                    if ($count == 0){
-                        $list->id = $last_id + 1;
-                        $new_link = explode("listid=",$list->link)[0];
-                        $list->link = $new_link . 'listid='.$list_id;
-                        $insert = $db->insertObject('#__menu', $list, 'id');
-                    }
-                    
+                    // BEGIN - Solved problem with menu
+                    //$insert = $db->insertObject('#__menu', $list, 'id');
+                    $menuItem->save((array) $list);
+                    // END - Solved problem with menu
                 }
             } elseif ($menu->forms){
                 foreach ($menu->forms as $form){
-                    $form->component_id = $com_fabrik_id;
-                    $query = $db->getQuery(true)->select('MAX(id)')->from($db->quoteName('#__menu'));
-                    $db->setQuery($query);
-                    $last_id = $db->loadResult();
-
-                    $query = $db->getQuery(true)->select('COUNT(*)')->from($db->quoteName('#__menu'))->where($db->quoteName('alias') . " = " . $db->quote($form->alias));
-                    $db->setQuery($query);
-                    $count = $db->loadResult();
-                    if ($count == 0){
-                        $form->id = $last_id + 1;
-                        $new_link = explode("formid=",$form->link)[0];
-                        $form->link = $new_link . 'formid='.$form_id;
-                        $insert = $db->insertObject('#__menu', $form, 'id');
-                    }
+                    $new_link = explode("formid=",$form->link)[0];
+                    $form->link = $new_link . 'formid='.$form_id;
+                    // BEGIN - Solved problem with menu
+                    //$insert = $db->insertObject('#__menu', $form, 'id');
+                    $menuItem->save((array) $form);
+                    // END - Solved problem with menu
                 }       
             } elseif ($menu->details){
                 foreach ($menu->details as $detail){
-                    $detail->component_id = $com_fabrik_id;
-                    $query = $db->getQuery(true)->select('MAX(id)')->from($db->quoteName('#__menu'));
-                    $db->setQuery($query);
-                    $last_id = $db->loadResult();
-
-                    $query = $db->getQuery(true)->select('COUNT(*)')->from($db->quoteName('#__menu'))->where($db->quoteName('alias') . " = " . $db->quote($detail->alias));
-                    $db->setQuery($query);
-                    $count = $db->loadResult();
-
-                    if ($count == 0){
-                        $detail->id = $last_id + 1;
-                        $new_link = explode("formid=",$detail->link)[0];
-                        $detail->link = $new_link . 'formid='.$form_id;
-                        $insert = $db->insertObject('#__menu', $detail, 'id');
-                    }
-
+                    $new_link = explode("formid=",$detail->link)[0];
+                    $detail->link = $new_link . 'formid='.$form_id;
+                    // BEGIN - Solved problem with menu
+                    //$insert = $db->insertObject('#__menu', $detail, 'id');
+                    $menuItem->save((array) $detail);
+                    // END - Solved problem with menu
                 }
             } elseif ($menu->csvs){
                 foreach ($menu->csvs as $csv){
-                    $csv->component_id = $com_fabrik_id;
-                    $query = $db->getQuery(true)->select('MAX(id)')->from($db->quoteName('#__menu'));
-                    $db->setQuery($query);
-                    $last_id = $db->loadResult();
-
-                    $query = $db->getQuery(true)->select('COUNT(*)')->from($db->quoteName('#__menu'))->where($db->quoteName('alias') . " = " . $db->quote($csv->alias));
-                    $db->setQuery($query);
-                    $count = $db->loadResult();
-
-                    if ($count == 0){
-                        $csv->id = $last_id + 1;
-                        $new_link = explode("listid=",$csv->link)[0];
-                        $csv->link = $new_link . 'listid='.$list_id;
-                        $insert = $db->insertObject('#__menu', $csv, 'id');
-                    }
+                    $new_link = explode("listid=",$csv->link)[0];
+                    $csv->link = $new_link . 'listid='.$list_id;
+                    // BEGIN - Solved problem with menu
+                    //$insert = $db->insertObject('#__menu', $csv, 'id');
+                    $menuItem->save((array) $csv);
+                    // END - Solved problem with menu
                 }
             } elseif ($menu->visualizations){
                 foreach ($menu->visualizations as $visualization){
-                    $visualization->component_id = $com_fabrik_id;
-                    $query = $db->getQuery(true)->select('MAX(id)')->from($db->quoteName('#__menu'));
-                    $db->setQuery($query);
-                    $last_id = $db->loadResult();
-
-                    $query = $db->getQuery(true)->select('COUNT(*)')->from($db->quoteName('#__menu'))->where($db->quoteName('alias') . " = " . $db->quote($visualization->alias));
-                    $db->setQuery($query);
-                    $count = $db->loadResult();
-                    
-                    if ($count == 0){
-                        $visualization->id = $last_id + 1;
-                        $new_link = explode("listid=",$visualization->link)[0];
-                        $visualization->link = $new_link . 'listid='.$list_id;
-                        $insert = $db->insertObject('#__menu', $visualization, 'id');
-                    }
+                    $new_link = explode("listid=",$visualization->link)[0];
+                    $visualization->link = $new_link . 'listid='.$list_id;
+                    // BEGIN - Solved problem with menu
+                    //$insert = $db->insertObject('#__menu', $visualization, 'id');
+                    $menuItem->save((array) $visualization);
+                    // END - Solved problem with menu
                 }
             }
         }
@@ -7442,5 +7403,3 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
     }
 }
-
-
