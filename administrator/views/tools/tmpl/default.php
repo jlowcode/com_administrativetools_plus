@@ -8,32 +8,48 @@ defined('_JEXEC') or die('Restricted access');
             <!-- Nav tabs -->
             <ul class="nav nav-tabs" role="tablist">
                 <li role="presentation" class="<?php echo $this->tab1; ?>"><a href="#package" aria-controls=""
-                                                                              role="tab" data-toggle="tab">
+                                                                            role="tab" data-toggle="tab">
                         <?php echo FText::_('COM_ADMINISTRATIVETOOLS_TITLE_NAV_TABS_PACKEGE'); ?></a></li>
                 <li role="presentation" class="<?php echo $this->tab4; ?>"><a href="#importandexportlists" aria-controls=""
-                                                                              role="tab" data-toggle="tab">
+                                                                            role="tab" data-toggle="tab">
                         <?php echo FText::_('COM_ADMINISTRATIVETOOLS_TITLE_NAV_TABS_IMPORT_EXPORT_LISTS'); ?></a></li>
                 <li role="presentation" class="<?php echo $this->tab2; ?>"><a href="#transformation"
-                                                                              aria-controls="profile" role="tab"
-                                                                              data-toggle="tab">
+                                                                            aria-controls="profile" role="tab"
+                                                                            data-toggle="tab">
                         <?php echo FText::_('COM_ADMINISTRATIVETOOLS_TITLE_NAV_TABS_TRANSFORMATION'); ?></a></li>
                 <li role="presentation" class="<?php echo $this->tab3; ?>"><a href="#haversting"
-                                                                              aria-controls="messages" role="tab"
-                                                                              data-toggle="tab">
+                                                                            aria-controls="messages" role="tab"
+                                                                            data-toggle="tab">
                         <?php echo FText::_('COM_ADMINISTRATIVETOOLS_TITLE_NAV_TABS_HAVERSTING'); ?></a></li>
                 <li role="presentation" class="<?php echo $this->tab5; ?>"><a href="#chargelist"
-                                                                              aria-controls="messages" role="tab"
-                                                                              data-toggle="tab">
+                                                                            aria-controls="messages" role="tab"
+                                                                            data-toggle="tab">
                         <?php echo FText::_('COM_ADMINISTRATIVETOOLS_TITLE_NAV_TABS_CHANGE_LIST'); ?></a></li>
                 <!-- Fabrik sync lists 1.0 -->
                 <li role="presentation" class="<?php echo $this->tab6; ?>"><a href="#synclist"
-                                                                              aria-controls="messages" role="tab"
-                                                                              data-toggle="tab">
+                                                                            aria-controls="messages" role="tab"
+                                                                            data-toggle="tab">
                         <?php echo FText::_('COM_ADMINISTRATIVETOOLS_TITLE_NAV_TABS_SYNC_LIST'); ?></a></li>
+
+                <li role="presentation" class="<?php echo $this->tab7; ?>"><a href="#cleandb"
+                                                                            aria-controls="messages" role="tab"
+                                                                            data-toggle="tab">
+                        <?php echo FText::_('COM_ADMINISTRATIVETOOLS_TITLE_NAV_TABS_CLEANDB'); ?></a></li>
+
+                <li role="presentation" class="<?php echo $this->tab8; ?>"><a href="#pluginsmanager"
+                                                                            aria-controls="messages" role="tab"
+                                                                            data-toggle="tab" id="tabPluginsManager">
+                        <?php echo FText::_('COM_ADMINISTRATIVETOOLS_TITLE_NAV_TABS_PLUGINSMANAGER'); ?></a></li>
             </ul>
 
             <!-- Tab panes -->
             <div class="tab-content">
+                <div role="tabpanel" class="tab-pane <?php echo $this->tab8; ?>" id="pluginsmanager">
+                    <?php echo $this->loadTemplate('pluginsmanager'); ?>
+                </div>
+                <div role="tabpanel" class="tab-pane <?php echo $this->tab7; ?>" id="cleandb">
+                    <?php echo $this->loadTemplate('cleandb'); ?>
+                </div>
                 <div role="tabpanel" class="tab-pane <?php echo $this->tab1; ?>" id="package">
                     <?php echo $this->loadTemplate('packege'); ?>
                 </div>
@@ -53,6 +69,7 @@ defined('_JEXEC') or die('Restricted access');
                 <div role="tabpanel" class="tab-pane <?php echo $this->tab6; ?>" id="synclist">
                     <?php echo $this->loadTemplate('sync_list'); ?>
                 </div>
+                
             </div>
         </div>
     </div>

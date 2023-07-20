@@ -1,0 +1,94 @@
+
+Limpeza realizada por: Super User em 07/03/2023 - 08:09:14pm
+===== TABELAS =====
+edu_oficios_repeat_arquivo_resposta
+edu_oficios_repeat_oficios_relacionados
+edu_patrimonios_repeat_media
+edu_solicitacoes_121_repeat
+edu_solicitacoes_121_repeat_repeat_fun_produtos
+===== CAMPOS =====
+adm_elementos.elemento
+adm_elementos.etapa_anterior
+adm_elementos.lista_origem
+adm_elementos.operacao
+adm_elementos.parent_id
+adm_elementos.plugin_form
+adm_elementos.processo
+adm_elementos.tipo
+adm_elementos.titulo
+
+
+
+Limpeza realizada por: Super User em 07/03/2023 - 08:09:29pm
+===== TABELAS =====
+edu_oficios_repeat_arquivo_recebido
+edu_oficios_repeat_arquivo_resposta
+edu_oficios_repeat_oficios_relacionados
+edu_patrimonios_repeat_media
+edu_solicitacoes_121_repeat
+edu_solicitacoes_121_repeat_repeat_fun_produtos
+===== CAMPOS =====
+adm_elementos.bpmn_id
+adm_elementos.bpmn_xml
+adm_elementos.condicao
+
+
+
+Limpeza realizada por: Super User em 09/03/2023 - 12:19:50pm
+===== TABELAS =====
+dataset_areas_conhecimento_repeat_areas_relacionadas
+edu_oficios_repeat_arquivo_resposta
+edu_solicitacoes_147_repeat
+edu_solicitacoes_repeat_anexos_pri
+===== CAMPOS =====
+adm_elementos.bpmn_id
+adm_elementos.date_time
+adm_elementos.lista_origem
+adm_elementos.operacao
+adm_elementos.processo
+
+
+
+Limpeza realizada por: Super User em 17/03/2023 - 12:45:04pm
+===== TABELAS =====
+Registro de uso
+Registro de uso
+Registro excluído
+Registro excluído
+Rubricas
+Rubricas
+Solicitação
+Solicitação
+===== CAMPOS =====
+
+
+
+Limpeza realizada por: Super User em 17/03/2023 - 12:49:26pm
+===== TABELAS =====
+Estoques
+Estoques
+Folha de pontos
+Folha de pontos
+Itens apoiados
+Itens apoiados
+Mensagens
+Mensagens
+Metas
+Metas
+Municípios
+Municípios
+Notificações
+Notificações
+Patrimônios
+Patrimônios
+Produtos
+Produtos
+Produtos
+Produtos
+Recebimentos
+Recebimentos
+Registros de uso
+Registros de uso
+===== CAMPOS =====
+
+
