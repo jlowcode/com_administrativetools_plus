@@ -515,7 +515,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $dbprefix = $config->get('dbprefix');
         $database = $config->get('db');
 
-        $sql_show = "SHOW TABLES FROM {$database} LIKE '{$dbprefix}fabrik%'";
+        $sql_show = "SHOW TABLES FROM {$db->qn($database)} LIKE '{$dbprefix}fabrik%'";
         $db->setQuery($sql_show);
 
         $ar_show = $db->loadRowList();
