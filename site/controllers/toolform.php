@@ -20,7 +20,7 @@ use \Joomla\CMS\Language\Text;
  *
  * @since  1.6
  */
-class AdministrativetoolsControllerToolForm extends \Joomla\CMS\MVC\Controller\FormController
+class AdministrativetoolsFEControllerToolForm extends \Joomla\CMS\MVC\Controller\FormController
 {
 	/**
 	 * Method to check out an item for editing and redirect to the edit form.
@@ -43,7 +43,7 @@ class AdministrativetoolsControllerToolForm extends \Joomla\CMS\MVC\Controller\F
 		$app->setUserState('com_administrativetools.edit.tool.id', $editId);
 
 		// Get the model.
-		$model = $this->getModel('ToolForm', 'AdministrativetoolsModel');
+		$model = $this->getModel('ToolForm', 'AdministrativetoolsFEModel');
 
 		// Check out the item
 		if ($editId)
@@ -76,7 +76,7 @@ class AdministrativetoolsControllerToolForm extends \Joomla\CMS\MVC\Controller\F
 
 		// Initialise variables.
 		$app   = Factory::getApplication();
-		$model = $this->getModel('ToolForm', 'AdministrativetoolsModel');
+		$model = $this->getModel('ToolForm', 'AdministrativetoolsFEModel');
 
 		// Get the user data.
 		$data = Factory::getApplication()->input->get('jform', array(), 'array');
@@ -175,7 +175,7 @@ class AdministrativetoolsControllerToolForm extends \Joomla\CMS\MVC\Controller\F
 		$editId = (int) $app->getUserState('com_administrativetools.edit.tool.id');
 
 		// Get the model.
-		$model = $this->getModel('ToolForm', 'AdministrativetoolsModel');
+		$model = $this->getModel('ToolForm', 'AdministrativetoolsFEModel');
 
 		// Check in the item
 		if ($editId)
@@ -201,7 +201,7 @@ class AdministrativetoolsControllerToolForm extends \Joomla\CMS\MVC\Controller\F
 	public function remove()
     {
         $app   = Factory::getApplication();
-        $model = $this->getModel('ToolForm', 'AdministrativetoolsModel');
+        $model = $this->getModel('ToolForm', 'AdministrativetoolsFEModel');
         $pk    = $app->input->getInt('id');
 
         // Attempt to save the data

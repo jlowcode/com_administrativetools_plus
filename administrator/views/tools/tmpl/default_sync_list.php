@@ -9,45 +9,69 @@
 ?>
 
 <form action="<?php echo JRoute::_('index.php?option=com_administrativetools&task=tools.submitSyncLists'); ?>" class="form-horizontal" id="submitSyncLists" name="submitSyncLists" method="post" enctype="multipart/form-data">
+    <!-- Begin - Fabrik sync lists 2.0 -->
+    <!-- Id Task: 13 -->
+    <div class="control-group">
+        <label class="control-label" for="urlApi"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_URL_API'); ?></label>
+        <div class="controls">
+            <input form="submitSyncLists" type="text" value="<?php echo $this->connection->urlApi ?>" class="form-control" id="urlApi" name="urlApi" required placeholder="<?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_URL_API'); ?>">
+        </div>
+    </div>
+    
+    <div class="control-group">
+        <label class="control-label" for="keyApi"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_KEY_API'); ?></label>
+        <div class="controls">
+            <input form="submitSyncLists" type="text" value="<?php echo $this->connection->keyApi ?>" class="form-control" id="keyApi" name="keyApi" required placeholder="<?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_KEY_API'); ?>">
+        </div>
+    </div>
+
+    <div class="control-group">
+        <label class="control-label" for="secretApi"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_SECRET_API'); ?></label>
+        <div class="controls">
+            <input form="submitSyncLists" type="text" value="<?php echo $this->connection->secretApi ?>" class="form-control" id="secretApi" name="secretApi" required placeholder="<?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_SECRET_API'); ?>">
+        </div>
+    </div>
+    <!-- End - Fabrik sync lists 2.0 -->
+
     <div class="control-group">
         <label class="control-label" for="host"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_IP_HOST'); ?></label>
         <div class="controls">
-            <input form="submitSyncLists" type="text" value="<?php echo $this->connection->host ?>" class="form-control" id="host" name="host" required placeholder="<?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_IP_HOST'); ?>">
+            <input form="submitSyncLists" type="text" value="<?php echo $this->connection->host ?>" class="form-control" id="host" name="host" placeholder="<?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_IP_HOST'); ?>">
         </div>
     </div>
 
     <div class="control-group">
         <label class="control-label" for="port"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_PORT'); ?></label>
         <div class="controls">
-            <input form="submitSyncLists" type="text" value="<?php echo $port ?>" class="form-control" id="port" name="port" required placeholder="<?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_PORT'); ?>">
+            <input form="submitSyncLists" type="text" value="<?php echo $port ?>" class="form-control" id="port" name="port" placeholder="<?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_PORT'); ?>">
         </div>
     </div>
 
     <div class="control-group">
         <label class="control-label" for="name"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_NAME_DB'); ?></label>
         <div class="controls">
-            <input form="submitSyncLists" type="text" value="<?php echo $this->connection->name ?>" class="form-control" id="name" name="name" required placeholder="<?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_NAME_DB'); ?>">
+            <input form="submitSyncLists" type="text" value="<?php echo $this->connection->name ?>" class="form-control" id="name" name="name" placeholder="<?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_NAME_DB'); ?>">
         </div>
     </div>
 
     <div class="control-group">
         <label class="control-label" for="prefix"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_JOOMLA_PREFIX'); ?></label>
         <div class="controls">
-            <input form="submitSyncLists" type="text" value="<?php echo $this->connection->prefix ?>" class="form-control" id="prefix" name="prefix" required placeholder="<?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_JOOMLA_PREFIX'); ?>">
+            <input form="submitSyncLists" type="text" value="<?php echo $this->connection->prefix ?>" class="form-control" id="prefix" name="prefix" placeholder="<?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_JOOMLA_PREFIX'); ?>">
         </div>
     </div>
 
     <div class="control-group">
         <label class="control-label" for="user"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_USER'); ?></label>
         <div class="controls">
-            <input form="submitSyncLists" type="text" value="<?php echo $this->connection->user ?>" class="form-control" id="user" name="user" required placeholder="<?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_USER'); ?>">
+            <input form="submitSyncLists" type="text" value="<?php echo $this->connection->user ?>" class="form-control" id="user" name="user" placeholder="<?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_USER'); ?>">
         </div>
     </div>
 
     <div class="control-group">
         <label class="control-label" for="password"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_PASSWORD'); ?></label>
         <div class="controls">
-            <input form="submitSyncLists" type="password" value="<?php echo $this->connection->password ?>" class="form-control" id="password" name="password" required placeholder="<?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_PASSWORD'); ?>">
+            <input form="submitSyncLists" type="password" value="<?php echo $this->connection->password ?>" class="form-control" id="password" name="password" placeholder="<?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_PASSWORD'); ?>">
         </div>
     </div>
 
@@ -78,6 +102,10 @@
                     <input type="radio" name="model_type" value="identical" id="model_type_identical" checked>
                     <label for="model_type_identical"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_LABEL_IDENTICAL'); ?></label>
                 </div>
+                <div class="first_type">
+                    <input type="radio" name="model_type" value="merge" id="model_type_merge">
+                    <label for="model_type_merge"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_LABEL_MERGE'); ?></label>
+                </div>
                 <div>
                     <input type="radio" name="model_type" value="none" id="model_type_none">
                     <label for="model_type_none"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_LABEL_NONE'); ?></label>
@@ -88,6 +116,10 @@
                 <div class="first_type">
                     <input type="radio" name="data_type" value="identical" id="data_type_identical" checked>
                     <label for="data_type_identical"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_LABEL_IDENTICAL'); ?></label>
+                </div>
+                <div class="first_type">
+                    <input type="radio" name="data_type" value="merge" id="data_type_merge">
+                    <label for="data_type_merge"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_LABEL_MERGE'); ?></label>
                 </div>
                 <div>
                     <input type="radio" name="data_type" value="none" id="data_type_none">
@@ -115,9 +147,17 @@
             </div>
         <div>
 
-        <div class="control-group" id="div_button_sync">
-            <div class="controls">
-                <input class="btn btn-info" type="submit" name="syncLists" formmethod="post" form="submitSyncLists" value="<?php echo FText::_('COM_ADMINISTRATIVETOOLS_TRANSFORMATION_BTN_SYNC'); ?>">
+        <div id="div_buttons">
+            <div class="control-group" id="div_button_search">
+                <div class="controls">
+                    <input class="btn btn-info" type="submit" name="searchLists" formmethod="post" form="submitSyncLists" value="<?php echo FText::_('COM_ADMINISTRATIVETOOLS_TRANSFORMATION_BTN_SEARCH_LISTS'); ?>">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <div class="controls">
+                    <input class="btn btn-success" type="submit" name="syncLists" formmethod="post" form="submitSyncLists" value="<?php echo FText::_('COM_ADMINISTRATIVETOOLS_TRANSFORMATION_BTN_SYNC'); ?>">
+                </div>
             </div>
         </div>
     </div>

@@ -15,11 +15,11 @@ use \Joomla\CMS\Factory;
 use \Joomla\CMS\MVC\Model\BaseDatabaseModel;
 
 /**
- * Class AdministrativetoolsFrontendHelper
+ * class AdministrativetoolsFEFrontendHelper
  *
  * @since  1.6
  */
-class AdministrativetoolsHelpersAdministrativetools
+class AdministrativetoolsFEHelpersAdministrativetools
 {
 	/**
 	 * Get an instance of the named model
@@ -37,7 +37,7 @@ class AdministrativetoolsHelpersAdministrativetools
 		if (file_exists(JPATH_SITE . '/components/com_administrativetools/models/' . strtolower($name) . '.php'))
 		{
 			require_once JPATH_SITE . '/components/com_administrativetools/models/' . strtolower($name) . '.php';
-			$model = BaseDatabaseModel::getInstance($name, 'AdministrativetoolsModel');
+			$model = BaseDatabaseModel::getInstance($name, 'AdministrativetoolsFEModel');
 		}
 
 		return $model;

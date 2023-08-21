@@ -10,6 +10,14 @@
 // No direct access.
 defined('_JEXEC') or die;
 
+/**
+ * Begin - Fabrik sync lists 2.0
+ * Id Task: 13
+ *  
+ */
+include JPATH_ADMINISTRATOR . '/components/com_fabrik/models/administrativetools.php';
+// End - Fabrik sync lists 2.0
+
 jimport('joomla.application.component.modeladmin');
 
 use \Joomla\CMS\Table\Table;
@@ -24,6 +32,8 @@ use \Joomla\CMS\Plugin\PluginHelper;
  */
 class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
 {
+    private $encripty = 'sha256';
+
 	public function getForm ($data = array(), $loadData = true)
 	{
 	
@@ -447,5 +457,814 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
         }
 
         return $tables;
+    }
+
+    /**
+     * Fabrik sync lists 2.0
+     * 
+     * Method that search the lists.
+     *
+     */
+    public function searchLists($data)
+    {
+        //Initial configurations
+        $writeFile = Array();
+        $hashOk = true;
+        $path = JPATH_SITE . '/media/com_administrativetools/merge/';
+        $pathName = $path . 'fileHashBaseSourceEnv.json';
+
+        $data->data_type == 'merge' ? $dataType = true : $dataType = false;
+        $data->model_type == 'merge' ? $modelType = true : $modelType = false;
+        
+        if(!$dataType && !$modelType) {
+            return false;
+        }
+
+        //Getting the base file from source environment
+        $opts = new stdClass();
+        $opts->url = $data->urlApi;
+        $opts->key = $data->keyApi;
+        $opts->secret = $data->secretApi;
+        $opts->data_type = $data->data_type;
+        $opts->model_type = $data->model_type;
+        $opts->format = 'json';
+        $opts->task = 'getBaseFile';
+        $fileSourceEnv = $this->getFromApi($path, $opts);
+
+        if(!$fileSourceEnv) {
+            return false;
+        }
+
+        $changes = $this->readAndVerifyFile($pathName, true);
+
+        $opts->task = 'getChanges';
+        $opts->changes = $changes;
+        $sqlFile = $this->getFromApi($path, $opts);
+
+        return $hashOk && $fileSourceEnv;
+    }
+
+    /**
+	 * Fabrik sync lists 2.0
+	 * 
+     * Method that returns tables to process
+     *
+     * @return boolean
+     */
+    private function tablesVersions($others = Array(), $principals=false) {
+		//Defaults
+		$arrFabrik = Array(
+            '#__fabrik_joins',
+            '#__fabrik_forms',
+            '#__fabrik_lists',
+            '#__fabrik_cron',
+            '#__fabrik_elements',
+            '#__fabrik_formgroup',
+            '#__fabrik_groups',
+            '#__fabrik_jsactions',
+            '#__fabrik_visualizations',
+            '#__fabrik_validations'
+        );
+
+        $arrPrincipals = [
+            '#__fabrik_forms',
+            '#__fabrik_formgroup',
+            '#__fabrik_groups',
+            '#__fabrik_elements',
+            '#__fabrik_joins',
+            '#__fabrik_validations',
+            '#__fabrik_jsactions'
+        ];
+
+        if($principals) {
+            return $arrPrincipals;
+        }
+
+		if(empty($others)) {
+			return $arrFabrik;
+		}
+
+        return array_merge($arrFabrik, $others);;
+	}
+
+    /**
+     * Fabrik sync lists 2.0
+     * 
+     * Method that get the columns from information_schema and format to select query.
+     *
+     */
+    private function getColumnsOfTableToQueryJoin($tables, $prefix='')
+    {
+        $db = $this->getDbo();
+        $columnsFormat = Array();
+
+        if(is_array($tables)) {
+            $searchTables = str_replace('#__', $db->getPrefix(), implode($tables, '","'));
+        } else {
+            $searchTables = $db->q($tables);
+        }
+
+        $query = $db->getQuery(true)
+            ->clear()
+            ->select([$db->qn('column_name'), $db->qn('table_name')])
+            ->from($db->qn('information_schema') . '.' . $db->qn('columns'))
+            ->where($db->qn('table_schema') . ' = (SELECT DATABASE())')
+            ->where($db->qn('table_name') . ' IN ("' . $searchTables . '")');
+        $db->setQuery($query);
+        $columns = $db->loadObjectList();
+
+        if(!is_array($prefix)) {
+            foreach ($columns as $column) {
+                $prefix != '' ? $pre = $db->qn($prefix) : $pre = $db->qn($column->TABLE_NAME);
+                $p = $pre . '.' . $db->qn($column->COLUMN_NAME);
+                $columnsFormat[] = $p . ' AS ' . $db->q(str_replace('`', '', $p));
+            }
+        }
+
+        return $columnsFormat;
+    }
+
+    /**
+     * Fabrik sync lists 2.0
+     * 
+     * Method that hash the general groupment
+     *
+     */
+    private function hashGroupmentsDataType(&$arrHashsData)
+    {
+        $db = $this->getDbo();
+        $tables = $this->tablesVersions(Array(), true);
+
+        $arrGroupments = $this->getTypeGroupments();
+
+        // List grouping hash
+        $query = $db->getQuery(true)
+            ->clear()
+            ->select('*')
+            ->from($db->qn('#__fabrik_lists'));
+        $db->setQuery($query);
+        $lists = $db->loadAssocList('id');
+
+        foreach ($lists as $idList => $list) {
+            $g2 = Array();
+            $g3 = Array();
+            $members = Array();
+            $list = Array($list);
+
+            $query = $this->buildQueryGroupments('G0', $idList);
+            $db->setQuery($query);
+            $rowGroupments = $db->loadAssocList();
+
+            $arrHashsData['PG'][$idList]['G0']['hash'] = hash($this->encripty, json_encode($rowGroupments)); // Hash general groupment
+            $arrHashsData['PG'][$idList]['G1']['hash'] = hash($this->encripty, json_encode($list)); // Hash first groupment
+
+            foreach ($rowGroupments as $row) {
+                $members = Array();
+                foreach ($row as $tableColumn => $value) {
+                    $exColumn = explode('.', $tableColumn);
+                    $exTable = explode('_', $exColumn[0]);
+                    $table = $exTable[count($exTable)-1];
+                    $column = $exColumn[1];
+                    $id = $row[$db->getPrefix() . 'fabrik_' . $table . '.id'];
+
+                    if(!isset($id)) {
+                        continue;
+                    }
+
+                    $members[$table][$id][$column] = $value;
+                }
+
+                foreach ($arrGroupments as $groupment => $tbl) {
+                    foreach ($tbl as $t) {
+                        $id = $row[$db->getPrefix() . 'fabrik_' . $t . '.id'];
+
+                        if(!isset($id)) {
+                            continue;
+                        }
+
+                        !isset($arrHashsData['PG'][$idList][$groupment][$t][$id]) ? 
+                        $arrHashsData['PG'][$idList][$groupment][$t][$id] = hash($this->encripty, json_encode($members[$t])) : 
+                        '';
+                    }
+                }
+            }
+
+            $this->hashGroupments($arrHashsData, $idList);
+        }
+
+        return $tables;
+    }
+
+    /**
+     * Fabrik sync lists 2.0
+     * 
+     * Method that hash the groupments with data from members
+     *
+     */
+    private function hashGroupments(&$arrHashsData, $idList)
+    {
+        $arrGroupments = $this->getTypeGroupments();
+
+        foreach ($arrGroupments as $groupment => $arrFuncs) {
+            foreach ($arrFuncs as $func) {
+                $temp = Array();
+                $temp['hash'] = hash($this->encripty, json_encode($arrHashsData['PG'][$idList][$groupment][$func]));
+                $temp['rows'] = $arrHashsData['PG'][$idList][$groupment][$func];
+                unset($arrHashsData['PG'][$idList][$groupment][$func]);
+                $arrHashsData['PG'][$idList][$groupment][$func] = $temp;
+            }
+
+            $tempG = Array();
+            $tempG['hash'] = hash($this->encripty, json_encode($arrHashsData['PG'][$idList][$groupment]));
+            $tempG['functionality'] = $arrHashsData['PG'][$idList][$groupment];
+            unset($arrHashsData['PG'][$idList][$groupment]);
+            $arrHashsData['PG'][$idList][$groupment] = $tempG;
+        }
+    }
+
+    /**
+     * Fabrik sync lists 2.0
+     * 
+     * Method that hash the groupment with data from members
+     *
+     */
+    private function hashGroupment(&$arrHashsData, $idList)
+    {
+        // Forms groupment hash
+        $g2Forms['hash'][] = hash($this->encripty, json_encode($arrHashsData['PG'][$idList]['G2']['forms']));
+        $g2Forms['hash'][] = $arrHashsData['PG'][$idList]['G2']['forms'];
+        unset($arrHashsData['PG'][$idList]['G2']['forms']);
+        $arrHashsData['PG'][$idList]['G2'] = $g2Forms;
+    }
+
+    /**
+     * Fabrik sync lists 2.0
+     * 
+     * Method that hash the secondary groupments 
+     * like tables #__fabrik_visualizations or #__fabrik_cron
+     *
+     */
+    private function hashGroupmentsDataTypeSecondary(&$arrHashsData, $tablesHashed)
+    {
+        $db = $this->getDbo();
+        $tablesFabrik = $this->tablesVersions();
+
+        $g = 5;
+        $tablesHashed[] = '#__fabrik_lists';
+
+        foreach ($tablesFabrik as $table) {
+            if(in_array($table, $tablesHashed)) {
+                continue;
+            }
+
+            $query = $db->getQuery(true)
+                ->clear()
+                ->select('*')
+                ->from($db->qn($table));
+            $db->setQuery($query);
+            $allData = $db->loadAssocList('id');
+
+            $arrHashsData['SG']['G'.$g]['hash'] = hash($this->encripty, json_encode($allData));
+
+            foreach ($allData as $id => $row) {
+                $arrHashsData['SG']['G'.$g]['rows'][$id] = hash($this->encripty, json_encode($row));
+            }
+
+            if(empty($allData)) {
+                $arrHashsData['SG']['G'.$g]['rows'] = null;
+            }
+
+            $g++;
+        }
+    }
+
+    /**
+	 * Fabrik sync lists 2.0
+	 * 
+     * Method that write at files to search lists
+     *
+     * @return boolean
+     */
+    private function writeFile(&$string, $pathName) 
+    {
+        $aux = explode('/', $pathName);
+
+        for ($i=1; $i < count($aux)-1; $i++) {
+            $path .= '/'.$aux[$i];
+
+            if(!is_dir($path)) {
+                mkdir($path);
+            }
+        }
+        
+        if(is_file($pathName)) {
+            unlink($pathName);
+        }
+
+        $handle = fopen($pathName, 'x+');
+        if(!isset($handle)) {
+            return false;
+        }
+
+        fwrite($handle, $string);
+        fclose($handle);
+
+        return true;
+    }
+
+    /**
+     * Fabrik sync lists 2.0
+     * 
+     * Method that verify actual hash to update him
+     *
+     */
+    private function verifyActualHash(&$arrHashs, $getChanges)
+    {
+        $changes = Array();
+
+        foreach ($arrHashs as $type => &$generalData) {
+            if($type == 'data') {
+                $alteredData = $this->verifyActualHashData($generalData, $getChanges);
+            }
+
+            if($type == 'model') {
+                $alteredModel = $this->verifyActualHashModel($generalData, $getChanges);
+            //    $alteredModel ? $arrHashs[$type] = $generalData : '';
+            }
+        }
+
+        if($getChanges) {
+            $changes['data'] = $alteredData['data'];
+            $changes['model'] = $alteredModel['data'];
+        }
+
+        return $getChanges ? $changes : true;
+    }
+
+    /**
+     * Fabrik sync lists 2.0
+     * 
+     * Method that verify actual data hash to update him
+     *
+     */
+    private function verifyActualHashData(&$generalData, $getChanges=false)
+    {
+        //Initial configurations
+        $altered = false;
+        $arrChanges = Array();
+
+        foreach ($generalData as $staGroupment => &$rows) {
+            if($staGroupment == 'PG') {
+                foreach ($rows as $idList => &$groupments) {
+                    foreach ($groupments as $keyG => &$valuesGroupment) {
+                        foreach ($valuesGroupment as $key => &$funcionality) {
+                            if($key == 'hash' && !is_array($funcionality)) {
+                                $query = $this->buildQueryGroupments($keyG, $idList);
+                                $actualHash = $this->verifyHashGroupments($query, $keyG);
+                                if(is_array($actualHash)) {
+                                    $actualFuncs = $actualHash['functionality'];
+                                    $actualHash = $actualHash['hash'];
+                                }
+
+                                if($funcionality == $actualHash) {
+                                    if($keyG == 'G0') {
+                                        break 2;
+                                    } else {
+                                        break;
+                                    }
+                                } else {
+                                    $funcionality = $actualHash;
+                                }
+                            }
+
+                            foreach ($funcionality as $funcName => &$valuesFunc) {
+                                foreach ($valuesFunc as $key2 => &$rowsFunc) {
+                                    if($key2 == 'hash' && !is_array($rowsFunc)) {
+                                        $actualHashFunc = $actualFuncs[$funcName][$key2];
+                                        if($rowsFunc == $actualHashFunc) {
+                                            break;
+                                        } else {
+                                            $rowsFunc = $actualHashFunc;
+                                        }
+                                    }
+
+                                    foreach ($rowsFunc as $idFunc => &$hashMember) {
+                                        $actualHashMember = $actualFuncs[$funcName][$key2][$idFunc];
+                                        if($hashMember == $actualHashMember) {
+                                            continue;
+                                        } else {
+                                            $hashMember = $actualHashMember;
+                                            $getChanges ? $arrChanges['data'][$staGroupment][$idList][$keyG][$funcName][$idFunc] = true : $altered = true;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            if($staGroupment == 'SG') {
+                foreach ($rows as $keyG => &$values) {
+                    switch ($keyG) {
+                        case 'G5':
+                            $table = '#__fabrik_cron';
+                            break;
+                        case 'G6':
+                            $table = '#__fabrik_visualizations';
+                            break;
+                    }
+
+                    foreach ($values as $key => &$value) {
+                        if($key == 'hash' && !is_array($value)) {
+                            $query = $this->buildQueryGroupments($keyG, '', $table);
+                            $groupmentHash = $this->verifyHashGroupments($query, $keyG);
+
+                            $actualRows = $groupmentHash['rows'];
+                            $groupmentHash = $groupmentHash['hash'];
+
+                            if($value == $groupmentHash) {
+                                continue;
+                            } else {
+                                $value = $groupmentHash;
+                            }
+                        }
+
+                        foreach ($value as $id => &$val) {
+                            if($val == $actualRows[$id]) {
+                                continue;
+                            } else {
+                                $val = $actualRows[$id];
+                                $getChanges ? $arrChanges['data'][$staGroupment][$keyG][$id] = true : $altered = true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        unset($rows, $groupments, $valuesGroupment, $funcionality, $valuesFunc);
+        unset($hashMember, $values, $value, $val);
+
+        return $getChanges ? $arrChanges : $altered;
+    }
+
+    /**
+     * Fabrik sync lists 2.0
+     * 
+     * Method that verify actual model hash to update him
+     *
+     */
+    private function verifyActualHashModel(&$generalData)
+    {
+        //Initial configurations
+        $db = $this->getDbo();
+
+        return true;
+    }
+
+    /**
+     * Fabrik sync lists 2.0
+     * 
+     * Method that verify actual groupments data hash
+     *
+     */
+    private function buildQueryGroupments($groupment, $idList, $table='')
+    {
+        //Initial configurations
+        $db = $this->getDbo();
+        $query = $db->getQuery(true)->clear();
+
+        if(empty($table)) {
+            $table = '#__fabrik_lists';
+        }
+
+        switch ($groupment) {
+            case 'G0':
+                $tables = $this->tablesVersions(Array(), true);
+                $columns = $this->getColumnsOfTableToQueryJoin($tables);
+                $query->select($columns)
+                    ->from($db->qn($table) . ' AS ' . $table)
+                    ->join('LEFT', $db->qn('#__fabrik_forms') . ' AS #__fabrik_forms ON #__fabrik_forms.id = #__fabrik_lists.form_id')
+                    ->join('LEFT', $db->qn('#__fabrik_formgroup') . ' AS #__fabrik_formgroup ON #__fabrik_formgroup.form_id = #__fabrik_forms.id')
+                    ->join('LEFT', $db->qn('#__fabrik_groups') . ' AS #__fabrik_groups ON #__fabrik_groups.id = #__fabrik_formgroup.group_id')
+                    ->join('LEFT', $db->qn('#__fabrik_elements') . ' AS #__fabrik_elements ON #__fabrik_elements.group_id = #__fabrik_groups.id')
+                    ->join('LEFT', $db->qn('#__fabrik_joins') . ' AS #__fabrik_joins ON #__fabrik_joins.element_id = #__fabrik_elements.id')
+                    ->join('LEFT', $db->qn('#__fabrik_jsactions') . ' AS #__fabrik_jsactions ON #__fabrik_jsactions.element_id = #__fabrik_elements.id')
+                    ->join('LEFT', $db->qn('#__fabrik_validations') . ' AS #__fabrik_validations ON #__fabrik_validations.element_id = #__fabrik_elements.id');
+                break;
+
+            case 'G1':
+                $query->select('*')
+                ->from($db->qn($table));
+                break;
+            
+            case 'G2':
+                $tables = ['#__fabrik_forms', '#__fabrik_formgroup', '#__fabrik_groups'];
+                $columns = $this->getColumnsOfTableToQueryJoin($tables);
+                $query->select($columns)
+                    ->from($db->qn($table) . ' AS ' . $table)
+                    ->join('LEFT', $db->qn('#__fabrik_forms') . ' AS #__fabrik_forms ON #__fabrik_forms.id = #__fabrik_lists.form_id')
+                    ->join('LEFT', $db->qn('#__fabrik_formgroup') . ' AS #__fabrik_formgroup ON #__fabrik_formgroup.form_id = #__fabrik_forms.id')
+                    ->join('LEFT', $db->qn('#__fabrik_groups') . ' AS #__fabrik_groups ON #__fabrik_groups.id = #__fabrik_formgroup.group_id');
+                break;
+
+            case 'G3':
+                $tables = ['#__fabrik_elements', '#__fabrik_joins'];
+                $columns = $this->getColumnsOfTableToQueryJoin($tables);
+                $query->select($columns)
+                    ->from($db->qn($table) . ' AS ' . $table)
+                    ->join('LEFT', $db->qn('#__fabrik_forms') . ' AS #__fabrik_forms ON #__fabrik_forms.id = #__fabrik_lists.form_id')
+                    ->join('LEFT', $db->qn('#__fabrik_formgroup') . ' AS #__fabrik_formgroup ON #__fabrik_formgroup.form_id = #__fabrik_forms.id')
+                    ->join('LEFT', $db->qn('#__fabrik_groups') . ' AS #__fabrik_groups ON #__fabrik_groups.id = #__fabrik_formgroup.group_id')
+                    ->join('LEFT', $db->qn('#__fabrik_elements') . ' AS #__fabrik_elements ON #__fabrik_elements.group_id = #__fabrik_groups.id')
+                    ->join('LEFT', $db->qn('#__fabrik_joins') . ' AS #__fabrik_joins ON #__fabrik_joins.element_id = #__fabrik_elements.id');
+                break;
+            case 'G4':
+                $tables = ['#__fabrik_jsactions', '#__fabrik_validations'];
+                $columns = $this->getColumnsOfTableToQueryJoin($tables);
+                $query->select($columns)
+                    ->from($db->qn($table) . ' AS ' . $table)
+                    ->join('LEFT', $db->qn('#__fabrik_forms') . ' AS #__fabrik_forms ON #__fabrik_forms.id = #__fabrik_lists.form_id')
+                    ->join('LEFT', $db->qn('#__fabrik_formgroup') . ' AS #__fabrik_formgroup ON #__fabrik_formgroup.form_id = #__fabrik_forms.id')
+                    ->join('LEFT', $db->qn('#__fabrik_groups') . ' AS #__fabrik_groups ON #__fabrik_groups.id = #__fabrik_formgroup.group_id')
+                    ->join('LEFT', $db->qn('#__fabrik_elements') . ' AS #__fabrik_elements ON #__fabrik_elements.group_id = #__fabrik_groups.id')
+                    ->join('LEFT', $db->qn('#__fabrik_jsactions') . ' AS #__fabrik_jsactions ON #__fabrik_jsactions.element_id = #__fabrik_elements.id')
+                    ->join('LEFT', $db->qn('#__fabrik_validations') . ' AS #__fabrik_validations ON #__fabrik_validations.element_id = #__fabrik_elements.id');
+                break;
+
+            case 'G5':
+            case 'G6':
+                $query->select('*')
+                    ->from($db->qn($table));
+                break;
+        }
+
+        if(in_array($groupment, ['G0', 'G1', 'G2', 'G3', 'G4'])) {
+            $query->where($table . '.id = ' . $idList);
+        }
+
+        return $query;
+    }
+
+    /**
+     * Fabrik sync lists 2.0
+     * 
+     * Method that verify actual groupments data hash
+     *
+     */
+    private function verifyHashGroupments($query, $groupment)
+    {
+        //Initial configurations
+        $db = $this->getDbo();
+        $db->setQuery($query);
+
+        $rows = $db->loadAssocList();
+        
+        if(in_array($groupment, ['G0', 'G1'])) {
+            $gData = hash($this->encripty, json_encode($rows));
+        }
+
+        if(in_array($groupment, ['G5', 'G6'])) {
+            $rows = $db->loadAssocList('id');
+            $gData['hash'] = hash($this->encripty, json_encode($rows));
+            foreach ($rows as $id => $row) {
+                $gData['rows'][$id] = hash($this->encripty, json_encode($row));
+            }
+        }
+
+        if(in_array($groupment, ['G2', 'G3', 'G4'])) {
+            $gData = $this->verifyHashGroupmentsPrimary($rows, $groupment);
+        }
+
+        return $gData;
+    }
+
+    /**
+     * Fabrik sync lists 2.0
+     * 
+     * Method that verify actual groupments data hash
+     *
+     */
+    private function verifyHashGroupmentsPrimary($rows, $groupment)
+    {
+        //Initial configurations
+        $db = $this->getDbo();
+        $arrGroupments = $this->getTypeGroupments();
+
+        foreach ($rows as $row) {
+            $members = Array();
+            foreach ($row as $tableColumn => $value) {
+                $exColumn = explode('.', $tableColumn);
+                $exTable = explode('_', $exColumn[0]);
+                $table = $exTable[count($exTable)-1];
+                $column = $exColumn[1];
+                $id = $row[$db->getPrefix() . 'fabrik_' . $table . '.id'];
+
+                if(!isset($id)) {
+                    continue;
+                }
+
+                $members[$table][$id][$column] = $value;
+            }
+
+            foreach ($arrGroupments[$groupment] as $table) {
+                $id = $row[$db->getPrefix() . 'fabrik_' . $table . '.id'];
+
+                if(!isset($id)) {
+                    continue;
+                }
+
+                !isset($gData[$table][$id]) ?
+                $gData[$table][$id] = hash($this->encripty, json_encode($members[$table])) : 
+                '';
+            }
+        }
+
+        foreach ($arrGroupments[$groupment] as $func) {
+            $temp = Array();
+            $temp['hash'] = hash($this->encripty, json_encode($gData[$func]));
+            $temp['rows'] = $gData[$func];
+            unset($gData[$func]);
+            $gData[$func] = $temp;
+        }
+
+        $tempG = Array();
+        $tempG['hash'] = hash($this->encripty, json_encode($gData));
+        $tempG['functionality'] = $gData;
+        unset($gData);
+        $gData = $tempG;
+
+        return $gData;
+    }
+
+    /**
+     * Fabrik sync lists 2.0
+     * 
+     * Method that return the array with associations
+     *
+     */
+    private function getTypeGroupments()
+    {
+        $arrGroupments = Array(
+            'G2' => ['forms', 'groups', 'formgroup'], 
+            'G3' => ['elements', 'joins'],
+            'G4' => ['jsactions', 'validations']
+        );
+
+        return $arrGroupments;
+    }
+
+    /**
+     * Fabrik sync lists 2.0
+     * 
+     * Method that call the api with method post
+     *
+     */
+    private function getFromApi($pathToSave, $opts)
+    {
+        $nameFile = 'fileHashBaseSourceEnv.json';
+        $pathName = $pathToSave . $nameFile;
+        $return = true;
+
+        $response = $this->callApi($opts);
+        if($response->error) {
+            $return = false;
+        }
+
+        //Downloading the file
+        $urlToFile = $response->data;
+        $content = file_get_contents($urlToFile);
+        if ($content !== false) {
+            if(is_file($pathName)) {
+                unlink($pathName);
+            }
+
+            $save = file_put_contents($pathName, $content);
+            if (!$save) {
+                $return = false;
+            }
+        } else {
+            $return = false;
+        }
+
+        return $return ? $pathName : $return;
+    }
+
+    /**
+     * Fabrik sync lists 2.0
+     * 
+     * Method that read a file and verify if hash ok
+     *
+     */
+    private function readAndVerifyFile($pathName, $getChanges=false) 
+    {
+        $hashOk = true;
+
+        try {
+            $handle = fopen($pathName, 'r');
+            while($row = fgets($handle)) {
+                if(trim($row) != '') {
+                    $jsonFile .= $row;
+                }
+            }
+            $arrHashs = (array) json_decode($jsonFile, true);
+            $altered = $this->verifyActualHash($arrHashs, $getChanges);
+        } catch (\Throwable $th) {
+            $hashOk = false;
+        }
+
+        if(!$hashOk) {
+            return false;
+        }
+
+        return $getChanges ? $altered : $arrHashs;
+    }
+
+    /**
+     * Fabrik sync lists 2.0
+     * 
+     * Method that get the lists for API.
+     *
+     */
+    public function searchListsAPI($data)
+    {
+        $writeFile = Array();
+        $hashOk = true;
+        $path = JPATH_SITE . '/media/com_administrativetools/merge/';
+        $pathName = $path . 'fileHashBase.json';
+
+        $data->data_type == 'merge' ? $dataType = true : $dataType = false;
+        $data->model_type == 'merge' ? $modelType = true : $modelType = false;
+
+        if(!$dataType && !$modelType) {
+            return false;
+        }
+
+        if(is_file($pathName)) {
+            $writeFile = $this->readAndVerifyFile($pathName);
+            $writeFile ? '' : $hashOk = false;
+            $baseFileExists = true;
+        }
+
+        if(!$baseFileExists) {
+            //Encripting type data
+            if($dataType == 'merge') {
+                $arrHashsData = Array();
+
+                try {
+                    $tablesHashed = $this->hashGroupmentsDataType($arrHashsData);
+                    $this->hashGroupmentsDataTypeSecondary($arrHashsData, $tablesHashed);
+                } catch (\Throwable $th) {
+                    $hashOk = false;
+                }
+
+                $writeFile['data'] = $arrHashsData;
+            }
+
+            if($modelType == 'merge') {
+                $arrHashsModel = Array();
+
+                /*try {
+                    $this->hashGroupmentsDataType($arrHashsModel);
+                    $this->hashGroupmentsDataTypeSecondary($arrHashsModel, $tablesHashed);
+                } catch (\Throwable $th) {
+                    $hashOk = false;
+                }*/
+
+                $writeFile['model'] = $arrHashsModel;
+            }
+        }
+
+        $file = $this->writeFile(json_encode($writeFile), $pathName);
+
+        return ($hashOk && $file) ? $pathName : false;
+    }
+
+    /**
+     * Fabrik sync lists 2.0
+     * 
+     * Method that call the api with method post
+     *
+     */
+    public function callApi($opts) 
+    {
+        $curl = curl_init();
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => $opts->url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_POSTFIELDS => (array) $opts,
+        ));
+
+        $response = json_decode(curl_exec($curl));
+        curl_close($curl);
+
+        return $response;
     }
 }

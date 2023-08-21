@@ -20,7 +20,7 @@ jimport('joomla.application.component.view');
  *
  * @since  1.6
  */
-class AdministrativetoolsViewToolform extends \Joomla\CMS\MVC\View\HtmlView
+class AdministrativetoolsFEViewToolform extends \Joomla\CMS\MVC\View\HtmlView
 {
 	protected $state;
 

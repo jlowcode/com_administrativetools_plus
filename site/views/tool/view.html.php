@@ -20,7 +20,7 @@ use \Joomla\CMS\Language\Text;
  *
  * @since  1.6
  */
-class AdministrativetoolsViewTool extends \Joomla\CMS\MVC\View\HtmlView
+class AdministrativetoolsFEViewTool extends \Joomla\CMS\MVC\View\HtmlView
 {
 	protected $state;
 

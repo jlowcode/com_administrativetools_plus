@@ -19,7 +19,7 @@ use \Joomla\CMS\Language\Text;
  *
  * @since  1.6
  */
-class AdministrativetoolsControllerTool extends \Joomla\CMS\MVC\Controller\BaseController
+class AdministrativetoolsFEControllerTool extends \Joomla\CMS\MVC\Controller\BaseController
 {
 	/**
 	 * Method to check out an item for editing and redirect to the edit form.
@@ -42,7 +42,7 @@ class AdministrativetoolsControllerTool extends \Joomla\CMS\MVC\Controller\BaseC
 		$app->setUserState('com_administrativetools.edit.tool.id', $editId);
 
 		// Get the model.
-		$model = $this->getModel('Tool', 'AdministrativetoolsModel');
+		$model = $this->getModel('Tool', 'AdministrativetoolsFEModel');
 
 		// Check out the item
 		if ($editId)
@@ -78,7 +78,7 @@ class AdministrativetoolsControllerTool extends \Joomla\CMS\MVC\Controller\BaseC
 
 		if ($user->authorise('core.edit', 'com_administrativetools') || $user->authorise('core.edit.state', 'com_administrativetools'))
 		{
-			$model = $this->getModel('Tool', 'AdministrativetoolsModel');
+			$model = $this->getModel('Tool', 'AdministrativetoolsFEModel');
 
 			// Get the user data.
 			$id    = $app->input->getInt('id');
@@ -138,7 +138,7 @@ class AdministrativetoolsControllerTool extends \Joomla\CMS\MVC\Controller\BaseC
 
 		if ($user->authorise('core.delete', 'com_administrativetools'))
 		{
-			$model = $this->getModel('Tool', 'AdministrativetoolsModel');
+			$model = $this->getModel('Tool', 'AdministrativetoolsFEModel');
 
 			// Get the user data.
 			$id = $app->input->getInt('id', 0);

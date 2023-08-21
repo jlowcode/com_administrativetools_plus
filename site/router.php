@@ -10,14 +10,14 @@
 // No direct access
 defined('_JEXEC') or die;
 
-JLoader::registerPrefix('Administrativetools', JPATH_SITE . '/components/com_administrativetools/');
+JLoader::registerPrefix('AdministrativetoolsFE', JPATH_SITE . '/components/com_administrativetools/');
 
 /**
- * Class AdministrativetoolsRouter
+ * class AdministrativetoolsFERouter
  *
  * @since  3.3
  */
-class AdministrativetoolsRouter extends \Joomla\CMS\Component\Router\RouterBase
+class AdministrativetoolsFERouter extends \Joomla\CMS\Component\Router\RouterBase
 {
 	/**
 	 * Build method for URLs
@@ -85,7 +85,7 @@ class AdministrativetoolsRouter extends \Joomla\CMS\Component\Router\RouterBase
 
 		// View is always the first element of the array
 		$vars['view'] = array_shift($segments);
-		$model        = AdministrativetoolsHelpersAdministrativetools::getModel($vars['view']);
+		$model        = AdministrativetoolsFEHelpersAdministrativetools::getModel($vars['view']);
 
 		while (!empty($segments))
 		{

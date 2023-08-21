@@ -23,7 +23,67 @@ use \Joomla\CMS\Table\Table;
  *
  * @since  1.6
  */
-class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\ItemModel
+class AdministrativetoolsFEModelTool extends \Joomla\CMS\MVC\Model\ItemModel
 {
+    /**
+     * Fabrik sync lists 2.0
+     * 
+     * Method that generate the base file for API
+     *
+     */
+    public function generateBaseFile($data_type, $model_type)
+    {
+        JModelLegacy::addIncludePath(JPATH_ADMINISTRATOR . '/components/com_administrativetools/models', 'AdministrativetoolsFEModel');
+        $model = JModelLegacy::getInstance('Tool', 'AdministrativetoolsModel', array('ignore_request' => true));
 
+        $data = new stdClass();
+        $data->data_type = $data_type;
+        $data->model_type = $model_type;
+        $url = $model->searchListsAPI($data);
+
+        return $url;
+    }
+
+    /**
+     * Fabrik sync lists 2.0
+     * 
+     * Method that authenticate the API
+     *
+     */
+    public function authenticateApi($auth) 
+    {
+        $db = JFactory::getDbo();
+
+        $key = $auth->key;
+        $secret = $auth->secret;
+        $access_token = $auth->access_token;
+
+        $query = $db->getQuery(true);
+        $query
+            ->select('id')
+            ->from('#__fabrik_api_access')
+            ->where("client_id = '{$key}'")
+            ->where("client_secret = '{$secret}'")
+            ->where("access_token = '{$access_token}'");
+        $db->setQuery($query);
+        $result = $db->loadResult();
+
+        return (bool) $result;
+    }
+
+    /**
+     * Fabrik sync lists 2.0
+     * 
+     * Method that generate the base file for API
+     *
+     */
+    public function getChanges($changes)
+    {
+        $path = JPATH_SITE . '/media/com_administrativetools/merge/';
+        $pathName = $path . 'sqlChanges.sql';
+
+        //GERAR ARQUIVO SQL COM MUDANÇAS AQUIIIII
+
+        return $pathName;
+    }
 }

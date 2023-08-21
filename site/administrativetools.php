@@ -15,11 +15,11 @@ use \Joomla\CMS\MVC\Controller\BaseController;
 // Include dependancies
 jimport('joomla.application.component.controller');
 
-JLoader::registerPrefix('Administrativetools', JPATH_COMPONENT);
-JLoader::register('AdministrativetoolsController', JPATH_COMPONENT . '/controller.php');
+JLoader::registerPrefix('AdministrativetoolsFE', JPATH_COMPONENT);
+JLoader::register('AdministrativetoolsFEController', JPATH_COMPONENT . '/controller.php');
 
 
 // Execute the task.
-$controller = BaseController::getInstance('Administrativetools');
+$controller = BaseController::getInstance('AdministrativetoolsFE');
 $controller->execute(Factory::getApplication()->input->get('task'));
 $controller->redirect();

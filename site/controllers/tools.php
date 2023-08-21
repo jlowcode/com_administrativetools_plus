@@ -15,7 +15,7 @@ defined('_JEXEC') or die;
  *
  * @since  1.6
  */
-class AdministrativetoolsControllerTools extends AdministrativetoolsController
+class AdministrativetoolsFEControllerTools extends AdministrativetoolsFEController
 {
 	/**
 	 * Proxy for getModel.
@@ -28,7 +28,7 @@ class AdministrativetoolsControllerTools extends AdministrativetoolsController
 	 *
 	 * @since	1.6
 	 */
-	public function &getModel($name = 'Tools', $prefix = 'AdministrativetoolsModel', $config = array()): object
+	public function &getModel($name = 'Tools', $prefix = 'AdministrativetoolsFEModel', $config = array()): object
     {
 		$model = parent::getModel($name, $prefix, array('ignore_request' => true));
 

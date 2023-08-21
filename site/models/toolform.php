@@ -23,7 +23,7 @@ use \Joomla\CMS\Table\Table;
  *
  * @since  1.6
  */
-class AdministrativetoolsModelToolForm extends \Joomla\CMS\MVC\Model\FormModel
+class AdministrativetoolsFEModelToolForm extends \Joomla\CMS\MVC\Model\FormModel
 {
     private $item = null;
 

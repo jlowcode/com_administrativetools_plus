@@ -6765,6 +6765,15 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $input = $app->input;
 
         $data = new stdClass();
+        
+        // Begin - Fabrik sync lists 2.0
+        // Id Task: 13
+        $data->urlApi = $input->getString('urlApi');
+        $data->keyApi = $input->getString('keyApi');
+        $data->secretApi = $input->getString('secretApi');
+        $data->searchLists = $input->getString('searchLists', false);
+        // End - Fabrik sync lists 2.0
+
         $data->host = $input->getString('host');
         $data->port = $input->getString('port');
         $data->name = $input->getString('name');
@@ -6782,7 +6791,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $data->joomla_extensions = $input->getBool('joomla_extensions', false);
 
         foreach($data as $key => $value) {
-            if($key == 'saveConfiguration' || $key == 'connectSync' || $key == 'syncLists') {
+            if(in_array($key, ['saveConfiguration', 'connectSync', 'syncLists', 'searchLists'])) {
                 if($value) {
                     $method = $key;    
                 } else {
@@ -6879,6 +6888,41 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         }
 
         return $resultConnection;
+    }
+
+    /**
+     * Fabrik sync lists 2.0
+     * 
+     * Method that process the submit of search list at source environment
+     *
+     */
+    private function searchLists($data)
+    {
+        $model = $this->getModel();
+        $resultSearch = new stdClass();
+
+        if(!$data->searchLists) {
+            return false;
+        }
+
+        if($data->model_type != 'merge' && $data->data_type != 'merge') {
+            $resultSearch->message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_INFO_NO_OPTION_MERGE');
+            $resultSearch->type_message = 'info';
+            
+            return $resultSearch;
+        }
+
+        $search = $model->searchLists($data);
+
+        if (!$search['sucess']) {
+            $resultSearch->message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR_SEARCH_LISTS');
+            $resultSearch->type_message = 'error';
+        } else {
+            $resultSearch->message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_SUCCESS_SEARCH_LISTS');
+            $resultSearch->type_message = 'success';
+        }
+
+        return $resultSearch;
     }
 
     /**

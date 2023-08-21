@@ -27,7 +27,7 @@ $doc = Factory::getDocument();
 $doc->addScript(Uri::base() . '/media/com_administrativetools/js/form.js');
 
 $user    = Factory::getUser();
-$canEdit = AdministrativetoolsHelpersAdministrativetools::canUserEdit($this->item, $user);
+$canEdit = AdministrativetoolsFEHelpersAdministrativetools::canUserEdit($this->item, $user);
 
 
 ?>

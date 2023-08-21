@@ -20,7 +20,7 @@ jimport('joomla.application.component.modellist');
  *
  * @since  1.6
  */
-class AdministrativetoolsModelTools extends \Joomla\CMS\MVC\Model\ListModel
+class AdministrativetoolsFEModelTools extends \Joomla\CMS\MVC\Model\ListModel
 {
     /**
      * Constructor.
