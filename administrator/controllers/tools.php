@@ -6763,35 +6763,31 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $app = JFactory::getApplication();
         $model = $this->getModel();
         $input = $app->input;
-
         $data = new stdClass();
         
         // Begin - Fabrik sync lists 2.0
         // Id Task: 13
-        $data->urlApi = $input->getString('urlApi');
-        $data->keyApi = $input->getString('keyApi');
-        $data->secretApi = $input->getString('secretApi');
-        $data->searchLists = $input->getString('searchLists', false);
+        $arrNeeded = Array(
+            'string' => ['urlApi','keyApi', 'secretApi', 'host', 'port', 'prefix', 'user', 'password', 'model_type', 'data_type', 'connectSync', 'saveConfiguration', 'syncLists'],
+            'bool' => ['joomla_menus','joomla_modules', 'joomla_themes', 'joomla_extensions']
+        );
+
+		foreach ($arrNeeded as $key => $values) {
+            foreach ($values as $value) {
+                if($key == 'bool') {
+                    $data->$value = $input->getBool($value, false);
+                }
+
+                if($key == 'string') {
+                    $data->$value = $input->getString($value, false);
+                }
+            }
+		}
+        $data->name = $input->getString('nameDb');
         // End - Fabrik sync lists 2.0
 
-        $data->host = $input->getString('host');
-        $data->port = $input->getString('port');
-        $data->name = $input->getString('name');
-        $data->prefix = $input->getString('prefix');
-        $data->user = $input->getString('user');
-        $data->password = $input->getString('password');
-        $data->model_type = $input->getString('model_type');
-        $data->data_type = $input->getString('data_type');
-        $data->connectSync = $input->getString('connectSync', false);
-        $data->saveConfiguration = $input->getString('saveConfiguration', false);
-        $data->syncLists = $input->getString('syncLists', false);
-        $data->joomla_menus = $input->getBool('joomla_menus', false);
-        $data->joomla_modules = $input->getBool('joomla_modules', false);
-        $data->joomla_themes = $input->getBool('joomla_themes', false);
-        $data->joomla_extensions = $input->getBool('joomla_extensions', false);
-
         foreach($data as $key => $value) {
-            if(in_array($key, ['saveConfiguration', 'connectSync', 'syncLists', 'searchLists'])) {
+            if(in_array($key, ['saveConfiguration', 'connectSync', 'syncLists'])) {
                 if($value) {
                     $method = $key;    
                 } else {
@@ -6802,7 +6798,12 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
         $result = $this->$method($data);
 
-        $site_message = JUri::base() . 'index.php?option=com_administrativetools&tab=6';
+        if($method == 'syncLists' && ($data->data_type == 'merge' || $data->model_type == 'merge')) {
+            $result = $this->searchLists($data);
+            $flag = '&changes=true';
+        }
+        
+        $site_message = JUri::base() . 'index.php?option=com_administrativetools&tab=6' . $flag;
         $this->setRedirect($site_message, $result->message, $result->type_message);
     }
 
@@ -6817,8 +6818,8 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $model = $this->getModel();
         $resultSync = new stdClass();
 
-        if(!$data->syncLists) {
-            return false;
+        if(!$data->syncLists || ($data->data_type != 'identical' && $data->model_type != 'identical')) {
+            return;
         }
 
         $sync = $model->syncLists($data);
@@ -6901,10 +6902,6 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $model = $this->getModel();
         $resultSearch = new stdClass();
 
-        if(!$data->searchLists) {
-            return false;
-        }
-
         if($data->model_type != 'merge' && $data->data_type != 'merge') {
             $resultSearch->message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_INFO_NO_OPTION_MERGE');
             $resultSearch->type_message = 'info';
@@ -6914,11 +6911,11 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
         $search = $model->searchLists($data);
 
-        if (!$search['sucess']) {
-            $resultSearch->message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR_SEARCH_LISTS');
+        if (!$search) {
+            $resultSearch->message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR_SYNC_LISTS');
             $resultSearch->type_message = 'error';
         } else {
-            $resultSearch->message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_SUCCESS_SEARCH_LISTS');
+            $resultSearch->message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_SUCCESS_SYNC_LISTS');
             $resultSearch->type_message = 'success';
         }
 

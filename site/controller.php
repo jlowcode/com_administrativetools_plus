@@ -79,8 +79,6 @@ class AdministrativetoolsFEController extends \Joomla\CMS\MVC\Controller\BaseCon
 		if($format == 'json') {
 			echo json_encode($response);
 		}
-
-		die(); //Do not execute display function
     }
 
 	/**
@@ -109,15 +107,15 @@ class AdministrativetoolsFEController extends \Joomla\CMS\MVC\Controller\BaseCon
      * Method that redirect to function to generate the sql file with changes for API
      *
      */
-    public function getChanges()
+    public function getChangesSqlFile()
     {
 		$app = JFactory::getApplication();
 		$input = $app->input;
 		$response = Array();
-		$arrNeeded = ['format','key', 'secret', 'changes'];
+		$arrNeeded = ['format','key', 'secret', 'changes', 'type'];
 
 		foreach ($arrNeeded as $value) {
-			$$value = $input->get($value);
+			$$value = $input->getString($value);
 		}
 		
 		$auth = $this->authenticateApi($key, $secret);
@@ -128,7 +126,7 @@ class AdministrativetoolsFEController extends \Joomla\CMS\MVC\Controller\BaseCon
 
 		if($auth) {
 			$model = $this->getModel('Tool', 'AdministrativetoolsFEModel');
-			$url = $model->getChanges($changes);
+			$url = $model->getChangesSqlFile(json_decode($changes, true), $path, $type);
 			if($url) {
 				$response['error'] = false;
 				$response['msg'] = 'Arquivo gerado com sucesso!';
@@ -139,7 +137,5 @@ class AdministrativetoolsFEController extends \Joomla\CMS\MVC\Controller\BaseCon
 		if($format == 'json') {
 			echo json_encode($response);
 		}
-
-		die(); //Do not execute display function
     }
 }

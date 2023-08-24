@@ -149,3 +149,27 @@ Css structure for transforming elements.
 #div_button_sync {
     margin-top: 10px !important;
 }
+
+/**
+    Fabrik sync lists 2.0
+*/
+#lists_finded table {
+    border-collapse: collapse;
+    width: 100%;
+    border: 1px solid #ada7a7;
+}
+#lists_finded th, #lists_finded td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #ada7a7;
+}
+#lists_finded th {
+    background-color: #ada7a7;
+}
+#lists_finded td {
+    border-right: 1px solid #ada7a7;
+}
+
+.group-bg {
+    background-color: #ddd;
+}

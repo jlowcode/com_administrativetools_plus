@@ -6,6 +6,77 @@
     } else {
         $port = $this->connection->port;
     }
+
+    /** 
+     * Begin - Fabrik sync lists 2.0
+     * Id Task: 13
+     * 
+     * Has changes to show?
+     */
+    $uri = JURI::getInstance();
+    $changes = (bool) $uri->getVar('changes');
+    if($changes) {
+        $pathName = JPATH_SITE . '/media/com_administrativetools/merge/sqlChanges.json';
+        $handle = fopen($pathName, 'r');
+        while($row = fgets($handle)) {
+            if(trim($row) != '') {
+                $jsonFile .= $row;
+            }
+        }
+        $arrChanges = (array) json_decode($jsonFile, true);
+        if(empty($arrChanges['data']) && empty($arrChanges['model'])) {
+            $arrChanges = Array();
+        }
+
+        $changesToTable = Array();
+        $x = 0;
+        foreach($arrChanges as $type) { 
+            foreach($type as $key => $value) {
+                if($key == 'add' || $key == 'remove') {
+                    break;
+                }
+                foreach($value as $idList => $groupments) {
+                    if($x == 0) $first = $idList;
+                    foreach($groupments as $groupment) {
+                        foreach($groupment as $funcionality => $row) {
+                            foreach($row as $idFunc => $val) {
+                                $opts = new stdClass();
+                                $opts->idList = $idList;
+                                $opts->idFunc = $idFunc;
+                                $opts->funcionality = $funcionality;
+                                $opts->uri = $uri;
+                                $opts->val = $val;
+                                generateDataTable($changesToTable, $x, $opts);
+                                $x++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    function generateDataTable(&$changesToTable, $x, $opts) {
+        foreach ((array) $opts as $var => $value) {
+            $$var = $value;
+        }
+
+        $uri = "<a href='" . $uri->toString() . "'>" . $uri->toString() . "<a>";
+        $checkbox = '<input type="checkbox" name="changes[]" value="' . $funcionality . '--' . $idFunc . '">';
+        if($val === 'removed') {
+            $msg = FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_FUNC_REMOVED');
+        } else {
+            $msg = FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_FUNC_CHANGED');
+        }
+        
+        $changesToTable[$idList][$x][] = $idList;
+        $changesToTable[$idList][$x][] = $idFunc;
+        $changesToTable[$idList][$x][] = $funcionality;
+        $changesToTable[$idList][$x][] = $msg;
+        $changesToTable[$idList][$x][] = $uri;
+        $changesToTable[$idList][$x][] = $checkbox;
+    }
+    //End - Fabrik sync lists 2.0
 ?>
 
 <form action="<?php echo JRoute::_('index.php?option=com_administrativetools&task=tools.submitSyncLists'); ?>" class="form-horizontal" id="submitSyncLists" name="submitSyncLists" method="post" enctype="multipart/form-data">
@@ -50,7 +121,7 @@
     <div class="control-group">
         <label class="control-label" for="name"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_NAME_DB'); ?></label>
         <div class="controls">
-            <input form="submitSyncLists" type="text" value="<?php echo $this->connection->name ?>" class="form-control" id="name" name="name" placeholder="<?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_NAME_DB'); ?>">
+            <input form="submitSyncLists" type="text" value="<?php echo $this->connection->name ?>" class="form-control" id="nameDb" name="nameDb" placeholder="<?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_NAME_DB'); ?>">
         </div>
     </div>
 
@@ -90,40 +161,86 @@
     </div>
 
     <div>
-        <strong id="subtitle"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_LABEL1'); ?></strong>
-        <div style="margin-bottom: 50px;" id="lists_finded">
+        <?php
+        /** 
+         * Begin - Fabrik sync lists 2.0
+         * Id Task: 13
+         */
+        if($changes && !empty($arrChanges) && $x != 0) { ?>
+            <strong id="subtitle"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_LABEL1'); ?></strong>
+            <div style="margin-bottom: 50px;" id="lists_finded">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Id da Lista</th>
+                            <th>Id do Recurso</th>
+                            <th>Recurso</th>
+                            <th>Mensagem</th>
+                            <th>Url</th>
+                            <th>Sincronizar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php 
+                            $currentGroupment = $first;
+                            $currentRowClass = 'group-bg';
+                            foreach($changesToTable as $idList => $rows) {
+                                foreach($rows as $row) {
+                                    $group = $idList;
 
-        </div>
+                                    if ($group == $currentGroupment || $alter) {
+                                        $currentRowClass == '' ? $rowClass='' : $rowClass = 'group-bg';
+                                        $alter = false;
+                                    } else {
+                                        $currentGroupment = $group;
+                                        $currentRowClass == '' ? $rowClass = 'group-bg' : $rowClass='';
+                                        $currentRowClass = $rowClass;
+                                        $alter = true;
+                                    }
+                            ?>
+                                    <tr class="<?php echo $rowClass; ?>">
+                                        <?php foreach($row as $key => $cell) { ?>
+                                                <td><?php echo $cell; ?></td>
+                                        <?php } ?>
+                                    </tr>
+                            <?php } 
+                            }
+                        ?>
+                    </tbody>
+                </table>
+            </div>
+        <?php } // End - Fabrik sync lists 2.0 ?>
+
         <div id="div_sync">
             <strong><?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_LABEL2'); ?></strong>
             <div class="type_sync">
                 <p><?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_LABEL3'); ?></p>
                 <div class="first_type">
-                    <input type="radio" name="model_type" value="identical" id="model_type_identical" checked>
-                    <label for="model_type_identical"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_LABEL_IDENTICAL'); ?></label>
+                    <input type="radio" name="model_type" value="none" id="model_type_none" checked>
+                    <label for="model_type_none"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_LABEL_NONE'); ?></label>
                 </div>
                 <div class="first_type">
                     <input type="radio" name="model_type" value="merge" id="model_type_merge">
                     <label for="model_type_merge"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_LABEL_MERGE'); ?></label>
                 </div>
                 <div>
-                    <input type="radio" name="model_type" value="none" id="model_type_none">
-                    <label for="model_type_none"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_LABEL_NONE'); ?></label>
+                    <input type="radio" name="model_type" value="identical" id="model_type_identical">
+                    <label for="model_type_identical"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_LABEL_IDENTICAL'); ?></label>
                 </div>
             </div>
             <div class="type_sync">
                 <p><?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_LABEL4'); ?></p>
                 <div class="first_type">
-                    <input type="radio" name="data_type" value="identical" id="data_type_identical" checked>
-                    <label for="data_type_identical"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_LABEL_IDENTICAL'); ?></label>
+                    <input type="radio" name="data_type" value="none" id="data_type_none" checked>
+                    <label for="data_type_none"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_LABEL_NONE'); ?></label>
                 </div>
                 <div class="first_type">
                     <input type="radio" name="data_type" value="merge" id="data_type_merge">
                     <label for="data_type_merge"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_LABEL_MERGE'); ?></label>
                 </div>
                 <div>
-                    <input type="radio" name="data_type" value="none" id="data_type_none">
-                    <label for="data_type_none"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_LABEL_NONE'); ?></label>
+                    <input type="radio" name="data_type" value="identical" id="data_type_identical">
+                    <label for="data_type_identical"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_LABEL_IDENTICAL'); ?></label>
                 </div>
             </div>
             <div class="type_sync">
@@ -148,12 +265,6 @@
         <div>
 
         <div id="div_buttons">
-            <div class="control-group" id="div_button_search">
-                <div class="controls">
-                    <input class="btn btn-info" type="submit" name="searchLists" formmethod="post" form="submitSyncLists" value="<?php echo FText::_('COM_ADMINISTRATIVETOOLS_TRANSFORMATION_BTN_SEARCH_LISTS'); ?>">
-                </div>
-            </div>
-
             <div class="control-group">
                 <div class="controls">
                     <input class="btn btn-success" type="submit" name="syncLists" formmethod="post" form="submitSyncLists" value="<?php echo FText::_('COM_ADMINISTRATIVETOOLS_TRANSFORMATION_BTN_SYNC'); ?>">
