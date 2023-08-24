@@ -83,7 +83,7 @@ class AdministrativetoolsFEModelTool extends \Joomla\CMS\MVC\Model\ItemModel
         $model = JModelLegacy::getInstance('Tool', 'AdministrativetoolsModel', array('ignore_request' => true));
 
         $db = JFactory::getDbo();
-        $pathName = $path . 'sqlChanges.sql';
+        $pathName = JPATH_SITE . $path . 'sqlChanges.sql';
         $strSql = '';
         $strSql = "SET sql_mode = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';<ql>\n\n";
 
