@@ -90,10 +90,9 @@ class AdministrativetoolsFEModelTool extends \Joomla\CMS\MVC\Model\ItemModel
         if($type == 'adding') {
             foreach($changes as $idList => $funcs) {
                 foreach($funcs as $func => $rows) {
-                    $ids = array_keys($rows); //USAR OS IDS PARA DIMINUIR QUERYS
-                    foreach($rows as $idEl => $type) {
-                        $strSql .= $this->buildStrSql($idEl, $func, $idList, $type);
-                    }
+                    $ids = array_keys($rows);
+                    $strSql .= $this->buildStrSql($ids, $func, $idList, $type);
+                    $strSql .= "<ql>\n\n";
                 }
             }
         }
@@ -102,22 +101,54 @@ class AdministrativetoolsFEModelTool extends \Joomla\CMS\MVC\Model\ItemModel
 
         }
 
-        return $pathName;
+        $sqlFile = $model->writeFile($strSql, $pathName);
+
+        return $sqlFile ? $pathName : false;
     }
 
     /**
      * Fabrik sync lists 2.0
-     * 
+     *
      * Method that build the string for sql file to API
      *
      */
     private function buildStrSql($idEl, $func, $idList, $type)
     {
+        $db = JFactory::getDbo();
+        $query = $db->getQuery(true);
         $str = '';
         $valColumns = $this->getValuesToSqlFile($idEl, $func, $idList, $type);
+
+        if(is_array($idEl)) {
+            $idEl = implode('","', $idEl);
+        }
+
         switch ($type) {
-            case 'added':
-                $str = "INSERT INTO #__fabrik_$func VALUES()";
+            case 'adding':
+                $query->clear()
+                    ->select('*')
+                    ->from($db->qn('#__fabrik_'.$func))
+                    ->where('id IN ("' . $idEl . '")');
+                $db->setQuery($query);
+                $values = $db->loadAssocList();
+
+                if(empty($values)) {
+                    return;
+                }
+
+                $query->clear()
+                    ->insert($db->qn('#__fabrik_'.$func));
+                foreach ($values as $arrRow) {
+                    $query->values(implode(",", array_map(
+                        function($vlr) {
+                            $db = JFactory::getDbo();
+                            return $db->q($vlr);
+                        },
+                        $arrRow)));
+                }
+
+                $str = (string) $query;
+
                 break;
         }
 

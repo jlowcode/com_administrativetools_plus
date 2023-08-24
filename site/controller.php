@@ -103,7 +103,7 @@ class AdministrativetoolsFEController extends \Joomla\CMS\MVC\Controller\BaseCon
 
 	/**
      * Fabrik sync lists 2.0
-     * 
+     *
      * Method that redirect to function to generate the sql file with changes for API
      *
      */
@@ -112,7 +112,7 @@ class AdministrativetoolsFEController extends \Joomla\CMS\MVC\Controller\BaseCon
 		$app = JFactory::getApplication();
 		$input = $app->input;
 		$response = Array();
-		$arrNeeded = ['format','key', 'secret', 'changes', 'type'];
+		$arrNeeded = ['format','key', 'secret', 'changes', 'type', 'path'];
 
 		foreach ($arrNeeded as $value) {
 			$$value = $input->getString($value);

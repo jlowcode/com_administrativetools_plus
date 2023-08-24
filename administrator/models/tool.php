@@ -210,7 +210,7 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
             }
 
             fclose($handle);
-            $syncData = $this->syncSqlFile($idVersion, $nameVersion ,$pathNameVersion);
+            $syncData = $this->syncSqlFile($pathNameVersion);
             $resultReturn = $newVersion && $syncData;
         }
 
@@ -289,7 +289,7 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
      *
      * @return boolean
      */
-    private function syncSqlFile($id, $fileSql, $pathNameVersion) 
+    private function syncSqlFile($pathNameVersion) 
     {
 		$db = JFactory::getDbo();
 		
@@ -499,7 +499,7 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
 
         //With mapped changes, sync the members adds
         $sqlFile = $this->getChangesApi($changes['data']['add'], $path, $opts);
-        $adds = $this->setChangesFromApi($sqlFile);
+        $adds = $this->syncSqlFile($sqlFile);
         if(!$adds) {
             return false;
         }
@@ -756,7 +756,7 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
      *
      * @return boolean
      */
-    private function writeFile(&$string, $pathName) 
+    public function writeFile(&$string, $pathName) 
     {
         $aux = explode('/', $pathName);
 
