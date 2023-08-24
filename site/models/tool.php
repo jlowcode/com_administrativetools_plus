@@ -109,7 +109,7 @@ class AdministrativetoolsFEModelTool extends \Joomla\CMS\MVC\Model\ItemModel
         $parsedUrl = parse_url($fullUrl);
         $pathUrl = $parsedUrl['scheme'] . '://' . $parsedUrl['host'];
 
-        return $sqlFile ? $pathUrl . $pathWithPrefix . $nameFile : false;
+        return $sqlFile ? $pathUrl . $path . $nameFile : false;
     }
 
     /**
