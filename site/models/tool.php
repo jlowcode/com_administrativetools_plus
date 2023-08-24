@@ -83,7 +83,9 @@ class AdministrativetoolsFEModelTool extends \Joomla\CMS\MVC\Model\ItemModel
         $model = JModelLegacy::getInstance('Tool', 'AdministrativetoolsModel', array('ignore_request' => true));
 
         $db = JFactory::getDbo();
-        $pathName = JPATH_SITE . $path . 'sqlChanges.sql';
+        $nameFile = 'sqlChanges.sql';
+        $pathWithPrefix = JPATH_SITE . $path;
+        $pathName = $pathWithPrefix . $nameFile;
         $strSql = '';
         $strSql = "SET sql_mode = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';<ql>\n\n";
 
@@ -107,7 +109,7 @@ class AdministrativetoolsFEModelTool extends \Joomla\CMS\MVC\Model\ItemModel
         $parsedUrl = parse_url($fullUrl);
         $pathUrl = $parsedUrl['scheme'] . '://' . $parsedUrl['host'];
 
-        return $sqlFile ? $pathUrl . $pathName : false;
+        return $sqlFile ? $pathUrl . $pathWithPrefix . $nameFile : false;
     }
 
     /**
