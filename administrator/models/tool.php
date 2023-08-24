@@ -469,9 +469,17 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
         //Initial configurations
         $writeFile = Array();
         $hashOk = true;
-        $path = JPATH_SITE . '/media/com_administrativetools/merge/';
-        $pathName = $path . 'fileHashBaseSourceEnv.json';
-        $pathNameChanges = $path . 'sqlChanges.json';
+
+        $path = '/media/com_administrativetools/merge/';
+        $nameFile = 'fileHashBaseSourceEnv.json';
+        $nameFileChanges = 'sqlChanges.json';
+        $fullUrl = JURI::base();
+        $parsedUrl = parse_url($fullUrl);
+
+        $pathUrl = $parsedUrl['scheme'] . '://' . $parsedUrl['host'] . $path . $nameFile;
+        $pathUrlChanges = $parsedUrl['scheme'] . '://' . $parsedUrl['host'] . $path . $nameFile;
+        $pathName = JPATH_SITE . $path . $nameFile;
+        $pathNameChanges = JPATH_SITE . $path . $nameFileChanges;
 
         $data->data_type == 'merge' ? $dataType = true : $dataType = false;
         $data->model_type == 'merge' ? $modelType = true : $modelType = false;
@@ -498,10 +506,12 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
         $changesFile = $this->writeFile(json_encode($changes), $pathNameChanges);
 
         //With mapped changes, sync the members adds
-        $sqlFile = $this->getChangesApi($changes['data']['add'], $path, $opts);
-        $adds = $this->syncSqlFile($sqlFile);
-        if(!$adds) {
-            return false;
+        if(!empty($changes['data']['add'])) {
+            $sqlFile = $this->getChangesApi($changes['data']['add'], $path, $opts);
+            $adds = $this->syncSqlFile($sqlFile);
+            if(!$adds) {
+                return false;
+            }
         }
 
         return $hashOk && $fileSourceEnv;

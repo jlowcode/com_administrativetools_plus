@@ -103,7 +103,11 @@ class AdministrativetoolsFEModelTool extends \Joomla\CMS\MVC\Model\ItemModel
 
         $sqlFile = $model->writeFile($strSql, $pathName);
 
-        return $sqlFile ? $pathName : false;
+        $fullUrl = JURI::base();
+        $parsedUrl = parse_url($fullUrl);
+        $pathUrl = $parsedUrl['scheme'] . '://' . $parsedUrl['host'];
+
+        return $sqlFile ? $pathUrl . $pathName : false;
     }
 
     /**
