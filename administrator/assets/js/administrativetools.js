@@ -1225,6 +1225,11 @@ jQuery(document).ready(function() {
             jQuery.post('', data, function (res) {
                 response = JSON.parse(res);
                 alert(response.msg);
+                let actualUrl = '';
+                actualUrl = window.location.href;
+                actualUrl = actualUrl.split('&');
+                actualUrl.pop();
+                window.location.href = actualUrl.join('&');
             });
         });
     });
