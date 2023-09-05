@@ -471,6 +471,7 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
         $hashOk = true;
 
         $path = '/media/com_administrativetools/merge/';
+        $pathWithPrefix = JPATH_SITE . $path;
         $nameFile = 'fileHashBaseSourceEnv.json';
         $nameFileChanges = 'sqlChanges.json';
         $fullUrl = JURI::base();
@@ -478,8 +479,8 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
 
         $pathUrl = $parsedUrl['scheme'] . '://' . $parsedUrl['host'] . $path . $nameFile;
         $pathUrlChanges = $parsedUrl['scheme'] . '://' . $parsedUrl['host'] . $path . $nameFile;
-        $pathName = JPATH_SITE . $path . $nameFile;
-        $pathNameChanges = JPATH_SITE . $path . $nameFileChanges;
+        $pathName = $pathWithPrefix . $nameFile;
+        $pathNameChanges = $pathWithPrefix . $nameFileChanges;
 
         $data->data_type == 'merge' ? $dataType = true : $dataType = false;
         $data->model_type == 'merge' ? $modelType = true : $modelType = false;
@@ -496,7 +497,7 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
         $opts->model_type = $data->model_type;
         $opts->format = 'json';
         $opts->task = 'getBaseFile';
-        $fileSourceEnv = $this->getBaseFileApi($path, $opts);
+        $fileSourceEnv = $this->getBaseFileApi($pathWithPrefix, $opts);
         if(!$fileSourceEnv) {
             return false;
         }
@@ -514,7 +515,7 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
             }
         }
 
-        return $hashOk && $fileSourceEnv;
+        return $hashOk && $fileSourceEnv && $changes;
     }
 
     /**
@@ -567,7 +568,7 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
      * Method that get the columns from information_schema and format to select query.
      *
      */
-    private function getColumnsOfTableToQueryJoin($tables, $prefix='')
+    private function getColumnsOfTableToQueryJoin($tables, $prefix='', $order='hash')
     {
         $db = $this->getDbo();
         $columnsFormat = Array();
@@ -587,16 +588,24 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
             ])
             ->from($db->qn('information_schema') . '.' . $db->qn('columns'))
             ->where($db->qn('table_schema') . ' = (SELECT DATABASE())')
-            ->where($db->qn('table_name') . ' IN ("' . $searchTables . '")')
-            ->order('row_hash ASC');
+            ->where($db->qn('table_name') . ' IN ("' . $searchTables . '")');
+        
+        if($order == 'hash') {
+            $query->order('row_hash ASC');
+        } else {
+            $query->order('table_name');
+        }
+
         $db->setQuery($query);
         $columns = $db->loadObjectList();
 
         if(!is_array($prefix)) {
             foreach ($columns as $column) {
-                $prefix != '' ? $pre = $db->qn($prefix) : $pre = $db->qn($column->table_name);
-                $p = $pre . '.' . $db->qn($column->column_name);
-                $columnsFormat[] = $p . ' AS ' . $db->q(str_replace('`', '', $p));
+                if($column->column_name != 'ordering' || $order == 'nm') {
+                    $prefix != '' ? $pre = $db->qn($prefix) : $pre = $db->qn($column->table_name);
+                    $p = $pre . '.' . $db->qn($column->column_name);
+                    $columnsFormat[] = $p . ' AS ' . $db->q(str_replace('`', '', $p));
+                }
             }
         }
 
@@ -609,7 +618,7 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
      * Method that hash the general groupment
      *
      */
-    private function hashGroupmentsDataType(&$arrHashsData)
+    private function hashGroupmentsDataType(&$arrHashsData, $idsNewLists=false)
     {
         $db = $this->getDbo();
         $tables = $this->tablesVersions(Array(), true);
@@ -622,6 +631,12 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
             ->select('*')
             ->from($db->qn('#__fabrik_lists'))
             ->order('id');
+
+        if($idsNewLists) {
+            $idsNewLists = (array) $idsNewLists;
+            $query->where($db->qn('id') . ' IN ("' . implode($idsNewLists, '","') . '")');
+        }
+
         $db->setQuery($query);
         $lists = $db->loadAssocList('id');
 
@@ -801,22 +816,45 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
      */
     private function verifyActualHash(&$arrHashs, $getChanges)
     {
+        $db = JFactory::getDbo();
         $changes = Array();
+        $arrChanges = Array();
+
+        //Verifing id new lists were add
+        $query = $db->getQuery(true)
+            ->clear()
+            ->select('id')
+            ->from($db->qn('#__fabrik_lists'))
+            ->order('id');
+        $db->setQuery($query);
+        $actualLists = array_keys($db->loadAssocList('id'));
+        $oldLists = array_keys($arrHashs['data']['PG']);
+        $listsAdd = array_diff_key($oldLists, $actualLists);
+
+        if(!empty($listsAdd)) {
+            if($getChanges) {
+                foreach ($listsAdd as $idList) {
+                    $arrChanges['data']['PG']['add'][$idList] = 'added';
+                }
+            } else {
+                $this->hashGroupmentsDataType($arrHashs['data'], $listsAdd);
+            }
+        }
 
         foreach ($arrHashs as $type => &$generalData) {
             if($type == 'data') {
-                $alteredData = $this->verifyActualHashData($generalData, $getChanges);
+                $changedData = $this->verifyActualHashData($generalData, $getChanges, $arrChanges);
             }
 
             if($type == 'model') {
-                $alteredModel = $this->verifyActualHashModel($generalData, $getChanges);
-            //    $alteredModel ? $arrHashs[$type] = $generalData : '';
+                $changedModel = $this->verifyActualHashModel($generalData, $getChanges);
+            //    $changedModel ? $arrHashs[$type] = $generalData : '';
             }
         }
 
         if($getChanges) {
-            $changes['data'] = $alteredData['data'];
-            $changes['model'] = $alteredModel['model'];
+            $changes['data'] = $changedData['data'];
+            $changes['model'] = $changedModel['model'];
         }
 
         return $getChanges ? $changes : true;
@@ -828,11 +866,10 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
      * Method that verify actual data hash to update him
      *
      */
-    private function verifyActualHashData(&$generalData, $getChanges=false)
+    private function verifyActualHashData(&$generalData, $getChanges=false, $arrChanges=Array())
     {
         //Initial configurations
-        $altered = false;
-        $arrChanges = Array();
+        $changed = false;
 
         foreach ($generalData as $staGroupment => &$rows) {
             if($staGroupment == 'PG') {
@@ -842,6 +879,11 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
                             if($key == 'hash' && !is_array($funcionality)) {
                                 $query = $this->buildQueryGroupments($keyG, $idList);
                                 $actualHash = $this->verifyHashGroupments($query, $keyG);
+
+                                if(!$actualHash && $keyG == 'G0') {
+                                    break 2;
+                                }
+
                                 if(is_array($actualHash)) {
                                     $actualFuncs = $actualHash['functionality'];
                                     $actualHash = $actualHash['hash'];
@@ -855,7 +897,7 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
                                     }
                                 } else {
                                     if($keyG == 'G1') {
-                                        $getChanges ? $arrChanges['data'][$staGroupment][$idList][$keyG]['list'][$idList] = true : $altered = true;
+                                        $getChanges ? $arrChanges['data'][$staGroupment][$idList][$keyG]['list'][$idList] = true : $changed = true;
                                     }
                                     $funcionality = $actualHash;
                                 }
@@ -870,23 +912,42 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
                                         } else {
                                             $rowsFunc = $actualHashFunc;
                                         }
-                                    }
-
-                                    if($getChanges && $key2 != 'hash') {
-                                        $removes = array_diff_key($actualFuncs[$funcName][$key2], $rowsFunc);
-                                        $adds = array_diff_key($rowsFunc, $actualFuncs[$funcName][$key2]);
-
-                                        is_array($removes) && !empty($removes) ? $arrChanges['data'][$staGroupment][$idList][$keyG][$funcName] = array_fill_keys(array_keys($removes), 'removed') : '';
-                                        is_array($adds) && !empty($adds) ? $arrChanges['data']['add'][$idList][$funcName] =  array_fill_keys(array_keys($adds), 'added') : '';
-                                    }
-
+                                    } 
+                                    
                                     foreach ($rowsFunc as $idFunc => &$hashMember) {
                                         $actualHashMember = $actualFuncs[$funcName][$key2][$idFunc];
                                         if(hash_equals($hashMember, $actualHashMember) || !isset($actualHashMember)) {
                                             continue;
                                         } else {
                                             $hashMember = $actualHashMember;
-                                            $getChanges ? $arrChanges['data'][$staGroupment][$idList][$keyG][$funcName][$idFunc] = true : $altered = true;
+                                            $getChanges ? $arrChanges['data'][$staGroupment][$idList][$keyG][$funcName][$idFunc] = true : $changed = true;
+                                        }
+                                    }
+
+                                    if($key2 != 'hash') {
+                                        $removes = array_diff_key($actualFuncs[$funcName][$key2], $rowsFunc);
+                                        $adds = array_diff_key($rowsFunc, $actualFuncs[$funcName][$key2]);
+
+                                        if($getChanges) {
+                                            if(is_array($removes) && !empty($removes)) {
+                                                $arrRemoves = array_fill_keys(array_keys($removes), 'removed');
+                                                $arrActual = (array) $arrChanges['data'][$staGroupment][$idList][$keyG][$funcName];
+                                                $arrSum = $arrRemoves + $arrActual;
+                                                $arrChanges['data'][$staGroupment][$idList][$keyG][$funcName] = $arrSum;
+                                            }
+                                                is_array($adds) && !empty($adds) ? $arrChanges['data']['add'][$staGroupment][$idList][$funcName] =  array_fill_keys(array_keys($adds), 'added') : '';
+                                        } else {
+                                            if(!empty($removes) || !empty($adds)) {
+                                                $changed = true;
+                                            }
+
+                                            foreach ($removes as $idMemberR => $hMemberR) {
+                                                $generalData[$staGroupment][$idList][$keyG][$key][$funcName][$key2][$idMemberR] = $hMemberR;
+                                            }
+
+                                            foreach ($adds as $idMemberA => $hMemberA) {
+                                                unset($generalData[$staGroupment][$idList][$keyG][$key][$funcName][$key2][$idMemberA]);
+                                            }
                                         }
                                     }
                                 }
@@ -901,9 +962,11 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
                     switch ($keyG) {
                         case 'G5':
                             $table = '#__fabrik_cron';
+                            $prefixFunc = 'cron';
                             break;
                         case 'G6':
                             $table = '#__fabrik_visualizations';
+                            $prefixFunc = 'visualizations';
                             break;
                     }
 
@@ -923,11 +986,39 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
                         }
 
                         foreach ($value as $id => &$val) {
-                            if(hash_equals($val, $actualRows[$id])) {
+                            if(hash_equals($val, $actualRows[$id]) || !isset($actualRows[$id])) {
                                 continue;
                             } else {
                                 $val = $actualRows[$id];
-                                $getChanges ? $arrChanges['data'][$staGroupment][$keyG][$id] = true : $altered = true;
+                                $getChanges ? $arrChanges['data'][$staGroupment][$keyG][$id] = true : $changed = true;
+                            }
+                        }
+
+                        if($key != 'hash') {
+                            $removes = array_diff_key($actualRows, $value);
+                            $adds = array_diff_key($value, $actualRows);
+
+                            if($getChanges) {
+                                if(is_array($removes) && !empty($removes)) {
+                                    $arrRemoves = array_fill_keys(array_keys($removes), 'removed');
+                                    $arrActual = (array) $arrChanges['data'][$staGroupment][$keyG];
+                                    $arrSum = $arrRemoves + $arrActual;
+                                    $arrChanges['data'][$staGroupment][$keyG] = $arrSum;
+                                }
+
+                                is_array($adds) && !empty($adds) ? $arrChanges['data']['add'][$staGroupment][$prefixFunc] =  array_fill_keys(array_keys($adds), 'added') : '';
+                            } else {
+                                if(!empty($removes) || !empty($adds)) {
+                                    $changed = true;
+                                }
+                                
+                                foreach ($removes as $idMemberR => $hMemberR) {
+                                    $generalData[$staGroupment][$keyG][$key][$idMemberR] = $hMemberR;
+                                }
+
+                                foreach ($adds as $idMemberA => $hMemberA) {
+                                    unset($generalData[$staGroupment][$keyG][$key][$idMemberA]);
+                                }
                             }
                         }
                     }
@@ -938,7 +1029,7 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
         unset($rows, $groupments, $valuesGroupment, $funcionality, $valuesFunc);
         unset($hashMember, $values, $value, $val);
 
-        return $getChanges ? $arrChanges : $altered;
+        return $getChanges ? $arrChanges : $changed;
     }
 
     /**
@@ -961,7 +1052,7 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
      * Method that verify actual groupments data hash
      *
      */
-    private function buildQueryGroupments($groupment, $idList, $table='')
+    public function buildQueryGroupments($groupment, $idList, $table='', $order='hash')
     {
         //Initial configurations
         $db = $this->getDbo();
@@ -974,7 +1065,7 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
         switch ($groupment) {
             case 'G0':
                 $tables = $this->tablesVersions(Array(), true);
-                $columns = $this->getColumnsOfTableToQueryJoin($tables);
+                $columns = $this->getColumnsOfTableToQueryJoin($tables, '', $order);
                 $query->select($columns)
                     ->from($db->qn($table) . ' AS ' . $table)
                     ->join('LEFT', $db->qn('#__fabrik_forms') . ' AS #__fabrik_forms ON #__fabrik_forms.id = #__fabrik_lists.form_id')
@@ -1051,6 +1142,10 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
         $db->setQuery($query);
 
         $rows = $db->loadAssocList();
+
+        if(empty($rows)) {
+            return false;
+        }
 
         if(in_array($groupment, ['G0', 'G1'])) {
             $gData = hash($this->encripty, json_encode($rows));
@@ -1200,7 +1295,7 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
                 }
             }
             $arrHashs = (array) json_decode($jsonFile, true);
-            $altered = $this->verifyActualHash($arrHashs, $getChanges);
+            $changed = $this->verifyActualHash($arrHashs, $getChanges);
         } catch (\Throwable $th) {
             $hashOk = false;
         }
@@ -1209,12 +1304,12 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
             return false;
         }
 
-        return $getChanges ? $altered : $arrHashs;
+        return $getChanges ? $changed : $arrHashs;
     }
 
     /**
      * Fabrik sync lists 2.0
-     * 
+     *
      * Method that get the lists for API.
      *
      */
@@ -1230,7 +1325,7 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
         $parsedUrl = parse_url($fullUrl);
         $pathUrl = $parsedUrl['scheme'] . '://' . $parsedUrl['host'] . $path . $nameFile;
         $pathName = JPATH_SITE . $path . $nameFile;
-        
+
         $data->data_type == 'merge' ? $dataType = true : $dataType = false;
         $data->model_type == 'merge' ? $modelType = true : $modelType = false;
 
@@ -1316,7 +1411,7 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
     private function getChangesApi($changes, $path, $opts) 
     {
         $nameFile = 'sqlChangesSourceEnv.sql';
-        $pathName = $path . $nameFile;
+        $pathName = JPATH_SITE . $path . $nameFile;
         $return = true;
 
         if(empty($changes)) {
@@ -1349,5 +1444,39 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
         }
 
         return $return ? $pathName : $return;
+    }
+
+    /**
+     * Fabrik sync lists 2.0
+     *
+     * Method that get the file with some changes and update the changes
+     *
+     */
+    public function setChangesUser($urlFile)
+    {
+        $nameFile = 'sqlChangesSourceEnv.sql';
+        $pathName = JPATH_SITE . '/media/com_administrativetools/merge/' . $nameFile;
+        $return = true;
+
+        //Downloading the file
+        $content = file_get_contents($urlFile);
+        if ($content !== false) {
+            if(is_file($pathName)) {
+                unlink($pathName);
+            }
+
+            $save = file_put_contents($pathName, $content);
+            if (!$save) {
+                $return = false;
+            }
+        } else {
+            $return = false;
+        }
+
+        if(!$this->syncSqlFile($pathName)) {
+            $return = false;
+        }
+
+        return $return;
     }
 }

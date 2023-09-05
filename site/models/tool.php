@@ -87,21 +87,58 @@ class AdministrativetoolsFEModelTool extends \Joomla\CMS\MVC\Model\ItemModel
         $pathWithPrefix = JPATH_SITE . $path;
         $pathName = $pathWithPrefix . $nameFile;
         $strSql = '';
-        $strSql = "SET sql_mode = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';<ql>\n\n";
+        $strSql = "SET sql_mode = 'NO_ENGINE_SUBSTITUTION';<ql>\n\n";
 
         if($type == 'adding') {
-            foreach($changes as $idList => $funcs) {
-                foreach($funcs as $func => $rows) {
-                    $ids = array_keys($rows);
-                    $strSql .= $this->buildStrSql($ids, $func, $idList, $type);
-                    $strSql .= "<ql>\n\n";
+            foreach($changes as $staGroupment => $funcs) {
+                foreach($funcs as $idList => $rowsFunc) {
+                    if($staGroupment == 'PG') {
+                        if(is_array($rowsFunc)) {
+                            foreach($rowsFunc as $func => $rows) {
+                                $ids = array_keys($rows);
+                                $strSql .= $this->buildStrSql($ids, $type, $func);
+                                $strSql .= "<ql>\n\n";
+                            }
+                        } else {
+                            $type = 'adding-list';
+                            $strSql .= $this->buildStrSql($idList, $type);
+                        }
+                    }
+
+                    if($staGroupment == 'SG') {
+                        $ids = array_keys($rowsFunc);
+                        $func = $idList;
+                        $strSql .= $this->buildStrSql($ids, $type, $func);
+                        $strSql .= "<ql>\n\n";
+                    }
                 }
             }
         }
 
         if($type == 'user_change') {
+            foreach($changes as $row) {
+                if($row[0] == 'PG' || $row[0] == 'SG') {
+                    $rows[$row[1]][$row[3]][] = $row[2];
+                }
+            }
 
+            foreach($rows as $func => $rowsMembers) {
+                foreach ($rowsMembers as $alteration => $values) {
+                    $ids = array_values($values);
+                    $typeSql = 'removing-member';
+                    $strSql .= $this->buildStrSql($ids, $typeSql, $func);
+                    $strSql .= "<ql>\n\n";
+
+                    if($alteration == 'changed') {
+                        $typeSql = 'adding';
+                        $strSql .= $this->buildStrSql($ids, $typeSql, $func);
+                        $strSql .= "<ql>\n\n";
+                    }
+                }
+            }
         }
+
+        $strSql .= "SET sql_mode = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';<ql>\n\n";
 
         $sqlFile = $model->writeFile($strSql, $pathName);
 
@@ -118,12 +155,9 @@ class AdministrativetoolsFEModelTool extends \Joomla\CMS\MVC\Model\ItemModel
      * Method that build the string for sql file to API
      *
      */
-    private function buildStrSql($idEl, $func, $idList, $type)
+    private function buildStrSql($idEl, $type, $func='')
     {
-        $db = JFactory::getDbo();
-        $query = $db->getQuery(true);
-        $str = '';
-        $valColumns = $this->getValuesToSqlFile($idEl, $func, $idList, $type);
+        $strQuery = '';
 
         if(is_array($idEl)) {
             $idEl = implode('","', $idEl);
@@ -131,49 +165,162 @@ class AdministrativetoolsFEModelTool extends \Joomla\CMS\MVC\Model\ItemModel
 
         switch ($type) {
             case 'adding':
-                $query->clear()
-                    ->select('*')
-                    ->from($db->qn('#__fabrik_'.$func))
-                    ->where('id IN ("' . $idEl . '")');
-                $db->setQuery($query);
-                $values = $db->loadAssocList();
+                $query = $this->buildQueryDataMembers($idEl, $func);
+                break;
+            
+            case 'adding-list':
+                $query = $this->buildQueryNewLists($idEl);
+                break;
 
-                if(empty($values)) {
-                    return;
-                }
-
-                $query->clear()
-                    ->insert($db->qn('#__fabrik_'.$func));
-                foreach ($values as $arrRow) {
-                    $query->values(implode(",", array_map(
-                        function($vlr) {
-                            $db = JFactory::getDbo();
-                            return $db->q($vlr);
-                        },
-                        $arrRow)));
-                }
-
-                $str = (string) $query;
-
+            case 'removing-member':
+                $query = $this->buildQueryRemovingMember($idEl, $func);
                 break;
         }
 
-        return $str;
+        return (string) $query;
+    }
+
+
+    /**
+     * Fabrik sync lists 2.0
+     *
+     * Method that build the query for sql file, in case of data members
+     *
+     */
+    private function buildQueryDataMembers($idEl, $func)
+    {
+        $db = JFactory::getDbo();
+        $query = $db->getQuery(true);
+
+        $query->clear()
+            ->select('*')
+            ->from($db->qn('#__fabrik_'.$func))
+            ->where('id IN ("' . $idEl . '")');
+        $db->setQuery($query);
+        $values = $db->loadAssocList();
+
+        if(empty($values)) {
+            return;
+        }
+
+        $query->clear()
+            ->insert($db->qn('#__fabrik_'.$func));
+        foreach ($values as $arrRow) {
+            $query->values(implode(",", array_map(
+                function($vlr) {
+                    $db = JFactory::getDbo();
+                    return $db->q($vlr);
+                },
+                $arrRow)));
+        }
+
+        return $query;
     }
 
     /**
      * Fabrik sync lists 2.0
-     * 
-     * Method that build the string for sql file to API
+     *
+     * Method that build the query for sql file, in case of new lists
      *
      */
-    private function getValuesToSqlFile($idEl, $func, $idList, $type)
+    private function buildQueryNewLists($idList)
+    {
+        JModelLegacy::addIncludePath(JPATH_ADMINISTRATOR . '/components/com_administrativetools/models', 'AdministrativetoolsFEModel');
+        $modelAdmin = JModelLegacy::getInstance('Tool', 'AdministrativetoolsModel', array('ignore_request' => true));
+
+        $db = JFactory::getDbo();
+        $query = $db->getQuery(true);
+        $strQuerys = '';
+
+        // List grouping hash
+        $query->clear()
+            ->select('*')
+            ->from($db->qn('#__fabrik_lists'))
+            ->order('id')
+            ->where('id = ' . $db->q($idList));
+        $db->setQuery($query);
+        $list = $db->loadAssocList();
+
+        if(empty($list)) {
+            return;
+        }
+
+        $query->clear()
+            ->insert($db->qn('#__fabrik_lists'));
+        foreach ($list as $arrRow) {
+            $query->values(implode(",", array_map(
+                function($vlr) {
+                    $db = JFactory::getDbo();
+                    return $db->q($vlr);
+                },
+                $arrRow)));
+        }
+
+        $strQuerys .= (string) $query;
+        $strQuerys .= "<ql>\n\n";
+
+        $queryG0 = $modelAdmin->buildQueryGroupments('G0', $idList, '#__fabrik_lists', 'nm');
+        $db->setQuery($queryG0);
+        $rowGroupments = $db->loadAssocList();
+
+        foreach ($rowGroupments as $row) {
+            foreach ($row as $tableColumn => $value) {
+                $exColumn = explode('.', $tableColumn);
+                $exTable = explode('_', $exColumn[0]);
+                $table = $exTable[count($exTable)-1];
+                $column = $exColumn[1];
+                $id = $row[$db->getPrefix() . 'fabrik_' . $table . '.id'];
+
+                if(!isset($id)) {
+                    continue;
+                }
+
+                $members[$table][$id][$column] = $value;
+            }
+        }
+
+        foreach ($members as $func => $els) {
+            $columns = Array();
+            $query->clear()
+                ->insert($db->qn('#__fabrik_'.$func));
+            foreach($els as $el) {
+                $query->values(implode(",", array_map(
+                    function($vlr) {
+                        $db = JFactory::getDbo();
+                        return $db->q($vlr);
+                    },
+                    $el)));
+                empty($columns) ? $columns = array_keys($el) : '';
+            }
+            $query->columns(implode(",", array_map(
+                function($columns) {
+                    $db = JFactory::getDbo();
+                    return $db->qn($columns);
+                }, $columns)
+            ));
+
+            $strQuerys .= (string) $query;
+            $strQuerys .= "<ql>\n\n";
+        }
+
+        return $strQuerys;
+    }
+
+    /**
+     * Fabrik sync lists 2.0
+     *
+     * Method that build the query for sql file, in case of removing members
+     *
+     */
+    private function buildQueryRemovingMember($idEl, $func)
     {
         $db = JFactory::getDbo();
-        $valColumns = Array();
+        $query = $db->getQuery(true);
 
+        $query->clear()
+            ->delete($db->qn('#__fabrik_'.$func))
+            ->where('id IN ("' . $idEl . '")');
 
-
-        return $valColumns;
+        return $query;
     }
 }

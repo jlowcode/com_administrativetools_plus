@@ -1,6 +1,10 @@
 <?php
     // Fabrik sync lists 1.0
     defined('_JEXEC') or die('Restricted access');
+    
+    include_once JPATH_COMPONENT . '/helpers/administrativetools.php';
+    $helper = new AdministrativetoolsHelper;
+
     if(!$this->connection->port) {
         $port = '3306';
     } else {
@@ -23,6 +27,7 @@
                 $jsonFile .= $row;
             }
         }
+
         $arrChanges = (array) json_decode($jsonFile, true);
         if(empty($arrChanges['data']) && empty($arrChanges['model'])) {
             $arrChanges = Array();
@@ -32,49 +37,16 @@
         $x = 0;
         foreach($arrChanges as $type) { 
             foreach($type as $key => $value) {
-                if($key == 'add' || $key == 'remove') {
-                    break;
-                }
-                foreach($value as $idList => $groupments) {
-                    if($x == 0) $first = $idList;
-                    foreach($groupments as $groupment) {
-                        foreach($groupment as $funcionality => $row) {
-                            foreach($row as $idFunc => $val) {
-                                $opts = new stdClass();
-                                $opts->idList = $idList;
-                                $opts->idFunc = $idFunc;
-                                $opts->funcionality = $funcionality;
-                                $opts->uri = $uri;
-                                $opts->val = $val;
-                                generateDataTable($changesToTable, $x, $opts);
-                                $x++;
-                            }
-                        }
+                if($key == 'add') {
+                    foreach ($value as $key2 => $val) {
+                        $helper->constructDataTable($key, $val, $changesToTable, $x, $key2);
                     }
+                    continue;
                 }
+
+                $helper->constructDataTable($key, $value, $changesToTable, $x);
             }
         }
-    }
-
-    function generateDataTable(&$changesToTable, $x, $opts) {
-        foreach ((array) $opts as $var => $value) {
-            $$var = $value;
-        }
-
-        $uri = "<a href='" . $uri->toString() . "'>" . $uri->toString() . "<a>";
-        $checkbox = '<input type="checkbox" name="changes[]" value="' . $funcionality . '--' . $idFunc . '">';
-        if($val === 'removed') {
-            $msg = FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_FUNC_REMOVED');
-        } else {
-            $msg = FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_FUNC_CHANGED');
-        }
-        
-        $changesToTable[$idList][$x][] = $idList;
-        $changesToTable[$idList][$x][] = $idFunc;
-        $changesToTable[$idList][$x][] = $funcionality;
-        $changesToTable[$idList][$x][] = $msg;
-        $changesToTable[$idList][$x][] = $uri;
-        $changesToTable[$idList][$x][] = $checkbox;
     }
     //End - Fabrik sync lists 2.0
 ?>
@@ -146,7 +118,7 @@
         </div>
     </div>
 
-    <div id="div_buttons">
+    <div id="div_buttons" class="div_buttons">
         <div class="control-group">
             <div class="controls">
                 <input class="btn btn-info" type="submit" name="connectSync" formmethod="post" form="submitSyncLists" value="<?php echo FText::_('COM_ADMINISTRATIVETOOLS_TRANSFORMATION_BTN_CONNECT'); ?>">
@@ -168,7 +140,7 @@
          */
         if($changes && !empty($arrChanges) && $x != 0) { ?>
             <strong id="subtitle"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_LABEL1'); ?></strong>
-            <div style="margin-bottom: 50px;" id="lists_finded">
+            <div id="lists_finded">
                 <table>
                     <thead>
                         <tr>
@@ -208,6 +180,12 @@
                         ?>
                     </tbody>
                 </table>
+            </div>
+
+            <div class="div_buttons" id="divSyncChanges">
+                <div class="controls">
+                    <input class="btn btn-warning" id="syncChanges" name="syncChanges" value="<?php echo FText::_('COM_ADMINISTRATIVETOOLS_TRANSFORMATION_BTN_SYNC_CHANGES'); ?>">
+                </div>
             </div>
         <?php } // End - Fabrik sync lists 2.0 ?>
 
@@ -264,7 +242,7 @@
             </div>
         <div>
 
-        <div id="div_buttons">
+        <div id="div_buttons" class="div_buttons">
             <div class="control-group">
                 <div class="controls">
                     <input class="btn btn-success" type="submit" name="syncLists" formmethod="post" form="submitSyncLists" value="<?php echo FText::_('COM_ADMINISTRATIVETOOLS_TRANSFORMATION_BTN_SYNC'); ?>">

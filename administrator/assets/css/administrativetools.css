@@ -101,7 +101,7 @@ Css structure for transforming elements.
     Fabrik sync lists 1.0
 */
 
-#div_buttons {
+.div_buttons {
     display: flex;
 }
 
@@ -172,4 +172,20 @@ Css structure for transforming elements.
 
 .group-bg {
     background-color: #ddd;
+}
+
+#lists_finded {
+    margin-bottom: 10px;
+}
+
+#divSyncChanges {
+    justify-content: end;
+}
+
+.check {
+    text-align: center;
+}
+
+#lists_finded p {
+    margin: 0px;
 }

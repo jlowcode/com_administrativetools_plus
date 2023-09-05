@@ -1181,3 +1181,73 @@ function deletePackage(id, file, message) {
     }, function () {
     }).set('labels', {ok: ar_message[0], cancel: ar_message[1]});
 }
+
+/**
+ * Fabrik sync lists 2.0
+ * 
+ * Ajax request to sync changes from users choices
+ *
+ */
+jQuery(document).ready(function() {
+    jQuery('#syncChanges').on('click', function() {
+        let changes = getChanges();
+        let uri = jQuery('#urlApi').val();
+        let key = jQuery('#keyApi').val();
+        let secret = jQuery('#secretApi').val();
+
+        //test
+        uri = 'http://devcett/index.php?option=com_administrativetools' + '&task=getChangesSqlFile';
+
+        let data = {
+            url: uri,
+            key: key,
+            secret: secret,
+            format: 'json',
+            type: 'user_change',
+            task: 'getChangesSqlFile',
+            changes: JSON.stringify(changes),
+            path: '/media/com_administrativetools/merge/'
+        };
+
+        //Getting changes from source environment
+        jQuery.post(uri, data, function (res) {
+            let response = JSON.parse(res);
+            let urlFile = response.data;
+
+            if(response.error === true) {
+                alert(response.msg);
+            }
+
+            let data = {
+                task: 'setChangesUser',
+                format: 'json',
+                urlFile: urlFile
+            };
+
+            //Download the sql file and executing the changes on local environment
+            jQuery.post('', data, function (res) {
+                response = JSON.parse(res);
+                alert(response.msg);
+            });
+        });
+    });
+});
+
+/**
+ * Fabrik sync lists 2.0
+ * 
+ * Ajax request to sync changes from users choices
+ *
+ */
+function getChanges() {
+    var changes = [];
+
+    jQuery('.changes:checked').each(function() {
+        let val = this.value;
+        let values = val.split('--');
+        changes.push(values);
+    });
+
+    return changes;
+}
+//End - Fabrik sync lists 2.0

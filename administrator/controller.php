@@ -39,4 +39,37 @@ class AdministrativetoolsController extends \Joomla\CMS\MVC\Controller\BaseContr
 
 		return $this;
 	}
+
+	/**
+     * Fabrik sync lists 2.0
+     *
+     * Method that redirect to function that get the file with changes and update the changes
+     *
+     */
+    public function setChangesUser()
+    {
+		$app = JFactory::getApplication();
+		$input = $app->input;
+		$response = Array();
+		$arrNeeded = ['urlFile', 'format'];
+
+		foreach ($arrNeeded as $value) {
+			$$value = $input->getString($value);
+		}
+
+		$model = $this->getModel('Tool', 'AdministrativetoolsModel');
+		$sync = $model->setChangesUser($urlFile);
+		if($sync) {
+			$response['error'] = false;
+			$response['msg'] = JText::_('COM_ADMINISTRATIVETOOLS_SYNC_CHANGES_USER');
+		} else {
+			$response['error'] = true;
+			$response['msg'] = JText::_('COM_ADMINISTRATIVETOOLS_NOT_SYNC_CHANGES_USER');
+		}
+
+		if($format == 'json') {
+			echo json_encode($response);
+			die();
+		}
+    }
 }

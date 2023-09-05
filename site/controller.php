@@ -10,6 +10,8 @@
 // No direct access
 defined('_JEXEC') or die;
 
+header("Access-Control-Allow-Origin: *");
+
 jimport('joomla.application.component.controller');
 
 use \Joomla\CMS\Factory;
@@ -71,13 +73,17 @@ class AdministrativetoolsFEController extends \Joomla\CMS\MVC\Controller\BaseCon
 			$url = $model->generateBaseFile($data_type, $model_type);
 			if($url) {
 				$response['error'] = false;
-				$response['msg'] = 'Arquivo gerado com sucesso!';
+				$response['msg'] = JText::_('COM_ADMINISTRATIVETOOLS_SYNC_LISTS_FILE_GENERATED');
 				$response['data'] = $url;
+			} else {
+				$response['error'] = true;
+				$response['msg'] = JText::_('COM_ADMINISTRATIVETOOLS_SYNC_LISTS_FILE_NOT_GENERATED');
 			}
 		}
 
 		if($format == 'json') {
 			echo json_encode($response);
+			die();
 		}
     }
 
@@ -129,13 +135,17 @@ class AdministrativetoolsFEController extends \Joomla\CMS\MVC\Controller\BaseCon
 			$url = $model->getChangesSqlFile(json_decode($changes, true), $path, $type);
 			if($url) {
 				$response['error'] = false;
-				$response['msg'] = 'Arquivo gerado com sucesso!';
+				$response['msg'] = JText::_('COM_ADMINISTRATIVETOOLS_SYNC_LISTS_FILE_GENERATED');
 				$response['data'] = $url;
+			} else {
+				$response['error'] = true;
+				$response['msg'] = JText::_('COM_ADMINISTRATIVETOOLS_SYNC_LISTS_FILE_NOT_GENERATED');
 			}
 		}
 
 		if($format == 'json') {
 			echo json_encode($response);
+			die();
 		}
     }
 }

@@ -80,4 +80,136 @@ class AdministrativetoolsHelper {
         return $result;
     }
 
+    /**
+     * Fabrik sync lists 2.0
+     * 
+     * Method that generate the configurations of data to show details for user
+     *
+     */
+    public function generateDataTable(&$changesToTable, $x, $opts) {
+        foreach ((array) $opts as $var => $value) {
+            $$var = $value;
+        }
+
+        //Trocar depois para função que retire o plural
+        switch ($funcionality) {
+            case 'elements':
+                $view = 'element';
+                break;
+            case 'lists':
+                $view = 'list';
+                break;
+            case 'forms':
+                $view = 'form';
+                break;
+            case 'visualizations':
+                $view = 'visualization';
+                break;
+            case 'groups':
+                $view = 'group';
+                break;
+            case 'cron':
+                $view = $funcionality;
+                break;
+            default:
+                $view = '';
+                break;
+        }
+
+        $val === true ? $val = 'changed' : '';
+        $value = $mod . '--' . $funcionality . '--' . $idFunc . '--' . $val;
+        $urlPrefix = JUri::root();
+        $urlPath = "administrator/index.php?option=com_fabrik&view=$view&layout=edit&id=$idFunc";
+        $uri = $urlPrefix  . $urlPath;
+        $uri = "<a href='" . $uri . "'>" . $uri . "<a>";
+        $checkbox = '<input type="checkbox" class="changes" name="changes[]" value="' . $value .'">';
+        if($val === 'removed') {
+            $msg = FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_FUNC_REMOVED');
+        } else if($val === 'added') {
+            $msg = FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_FUNC_ADDED');
+            $checkbox = 'Adicionado';
+        } else {
+            $msg = FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_FUNC_CHANGED');
+        }
+        
+        $changesToTable[$idList][$x][] = $idList;
+        $changesToTable[$idList][$x][] = $idFunc;
+        $changesToTable[$idList][$x][] = $funcionality;
+        $changesToTable[$idList][$x][] = $msg;
+        $changesToTable[$idList][$x][] = $uri;
+        $changesToTable[$idList][$x][] = '<p class="check">' . $checkbox . '</p>';
+    }
+
+        /**
+     * Fabrik sync lists 2.0
+     * 
+     * Method that construct the struct to generate the data table
+     *
+     */
+    public function constructDataTable($type, $value, &$changesToTable, &$x, $mod=false) 
+    {
+        $mod ? '' : $mod = $type;
+
+        if($type == 'add') {
+            foreach($value as $idList => $vals) {
+                if($x == 0) $first = $idList;
+                foreach($vals as $funcionality => $row) {
+                    foreach($row as $idFunc => $val) {
+                        $opts = new stdClass();
+                        $opts->idList = $idList;
+                        $opts->idFunc = $idFunc;
+                        $opts->funcionality = $funcionality;
+                        $opts->val = $val;
+                        $opts->mod = $mod;
+                        $this->generateDataTable($changesToTable, $x, $opts);
+                        $x++;
+                    }
+                }
+            }
+        }
+
+        if($type == 'PG') {
+            foreach($value as $idList => $groupments) {
+                if($x == 0) $first = $idList;
+                foreach($groupments as $groupment) {
+                    foreach($groupment as $funcionality => $row) {
+                        foreach($row as $idFunc => $val) {
+                            $opts = new stdClass();
+                            $opts->idList = $idList;
+                            $opts->idFunc = $idFunc;
+                            $opts->funcionality = $funcionality;
+                            $opts->val = $val;
+                            $opts->mod = $mod;
+                            $this->generateDataTable($changesToTable, $x, $opts);
+                            $x++;
+                        }
+                    }
+                }
+            }
+        }
+
+        if($type == 'SG') {
+            foreach($value as $groupment => $rows) {
+                switch ($groupment) {
+                    case 'G5':
+                        $funcionality = 'cron';
+                        break;
+                    case 'G6':
+                        $funcionality = 'visualization';
+                        break;
+                }
+                if($x == 0) $first = $idList;
+                foreach($rows as $idRow => $val) {
+                    $opts = new stdClass();
+                    $opts->idList = FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_NOT_APPLY');;
+                    $opts->idFunc = $idRow;
+                    $opts->funcionality = $funcionality;
+                    $opts->val = $val;
+                    $opts->mod = $mod;
+                    $this->generateDataTable($changesToTable, $x, $opts);
+                    $x++;
+                }
+            }
+        }
+    }
 }
