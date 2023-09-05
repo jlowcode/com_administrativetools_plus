@@ -1195,9 +1195,6 @@ jQuery(document).ready(function() {
         let key = jQuery('#keyApi').val();
         let secret = jQuery('#secretApi').val();
 
-        //test
-        uri = 'http://devcett/index.php?option=com_administrativetools' + '&task=getChangesSqlFile';
-
         let data = {
             url: uri,
             key: key,
