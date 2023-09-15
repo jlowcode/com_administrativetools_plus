@@ -507,8 +507,12 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
         $changesFile = $this->writeFile(json_encode($changes), $pathNameChanges);
 
         //With mapped changes, sync the members adds
-        if(!empty($changes['data']['add'])) {
-            $sqlFile = $this->getChangesApi($changes['data']['add'], $path, $opts);
+        $addsNews = Array(
+            'data' => $changes['data']['add'],
+            'model' => $changes['model']['add']
+        );
+        if(!empty($changes['data']['add']) || !empty($changes['model']['add'])) {
+            $sqlFile = $this->getChangesApi($addsNews, $path, $opts);
             $adds = $this->syncSqlFile($sqlFile);
             if(!$adds) {
                 return false;
@@ -641,9 +645,6 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
         $lists = $db->loadAssocList('id');
 
         foreach ($lists as $idList => $list) {
-            $g2 = Array();
-            $g3 = Array();
-            $members = Array();
             $list = Array($list);
 
             $query = $this->buildQueryGroupments('G0', $idList);
@@ -820,36 +821,57 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
         $changes = Array();
         $arrChanges = Array();
 
-        //Verifing id new lists were add
-        $query = $db->getQuery(true)
-            ->clear()
-            ->select('id')
-            ->from($db->qn('#__fabrik_lists'))
-            ->order('id');
-        $db->setQuery($query);
-        $actualLists = array_keys($db->loadAssocList('id'));
-        $oldLists = array_keys($arrHashs['data']['PG']);
-        $listsAdd = array_diff_key($oldLists, $actualLists);
+        isset($arrHashs['model']) ? $modelType = true : '';
+        isset($arrHashs['data']) ? $dataType = true : '';
 
-        if(!empty($listsAdd)) {
-            if($getChanges) {
-                foreach ($listsAdd as $idList) {
-                    $arrChanges['data']['PG']['add'][$idList] = 'added';
+        if($dataType) {
+            //Verifing id new lists were add
+            $query = $db->getQuery(true)
+                ->clear()
+                ->select('id')
+                ->from($db->qn('#__fabrik_lists'))
+                ->order('id');
+            $db->setQuery($query);
+            $actualLists = array_keys($db->loadAssocList('id'));
+            $oldLists = array_keys($arrHashs['data']['PG']);
+            $listsAdd = array_diff_key($oldLists, $actualLists);
+
+            if(!empty($listsAdd)) {
+                if($getChanges) {
+                    foreach ($listsAdd as $idList) {
+                        $arrChanges['data']['PG']['add'][$idList] = 'added';
+                    }
+                } else {
+                    $this->hashGroupmentsDataType($arrHashs['data'], $listsAdd);
                 }
-            } else {
-                $this->hashGroupmentsDataType($arrHashs['data'], $listsAdd);
             }
+
+            $changedData = $this->verifyActualHashData($arrHashs['data'], $getChanges, $arrChanges);
         }
 
-        foreach ($arrHashs as $type => &$generalData) {
-            if($type == 'data') {
-                $changedData = $this->verifyActualHashData($generalData, $getChanges, $arrChanges);
+        if($modelType) {
+            //Verifing name new tables were add
+            $query = $db->getQuery(true)
+                ->clear()
+                ->select($db->qn('db_table_name'))
+                ->from($db->qn('#__fabrik_lists'));
+
+            $db->setQuery($query);
+            $actualTablesModel = array_unique($db->loadColumn(), SORT_STRING);
+            $oldTablesModel = array_keys($arrHashs['model']);
+            $tablesAdded = array_diff($oldTablesModel, $actualTablesModel);
+
+            if(!empty($tablesAdded)) {
+                if($getChanges) {
+                    foreach ($tablesAdded as $nameTable) {
+                        $arrChanges['model']['add'][$nameTable] = 'added';
+                    }
+                } else {
+                    $this->hashJointModelType($arrHashs['model'], $tablesAdded);
+                }
             }
 
-            if($type == 'model') {
-                $changedModel = $this->verifyActualHashModel($generalData, $getChanges);
-            //    $changedModel ? $arrHashs[$type] = $generalData : '';
-            }
+            $changedModel = $this->verifyActualHashModel($arrHashs['model'], $getChanges);
         }
 
         if($getChanges) {
@@ -1038,18 +1060,101 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
      * Method that verify actual model hash to update him
      *
      */
-    private function verifyActualHashModel(&$generalData)
+    private function verifyActualHashModel(&$generalData, $getChanges=false, $arrChanges=Array())
     {
         //Initial configurations
-        $db = $this->getDbo();
+        $changed = false;
 
-        return true;
+        foreach ($generalData as $jointName => &$joints) {
+            foreach ($joints as $keyG => &$valuesJoints) {
+                foreach ($valuesJoints as $key => &$func) {
+                    if($key == 'hash' && !is_array($func)) {
+                        $query = $this->buildQueryJoints($keyG, $jointName);
+                        $actualHash = $this->verifyHashJoints($query, $keyG, $jointName);
+
+                        if(!$actualHash && $keyG == 'J0') {
+                            break 2;
+                        }
+
+                        if(is_array($actualHash)) {
+                            $actualFuncs = $actualHash['tables'];
+                            $actualHash = $actualHash['hash'];
+                        }
+
+                        if(hash_equals($func, $actualHash)) {
+                            if($keyG == 'J0') {
+                                break 2;
+                            } else {
+                                break;
+                            }
+                        } else {
+                            $func = $actualHash;
+                        }
+                    }
+
+                    foreach ($func as $funcName => &$valuesFunc) {
+                        foreach ($valuesFunc as $key2 => &$rowsFunc) {
+                            if($key2 == 'hash' && !is_array($rowsFunc)) {
+                                $actualHashFunc = $actualFuncs[$funcName][$key2];
+                                if(hash_equals($rowsFunc, $actualHashFunc)) {
+                                    break;
+                                } else {
+                                    $rowsFunc = $actualHashFunc;
+                                }
+                            } 
+                            
+                            foreach ($rowsFunc as $nameColumn => &$hashMember) {
+                                $actualHashMember = $actualFuncs[$funcName][$key2][$nameColumn];
+                                if(hash_equals($hashMember, $actualHashMember) || !isset($actualHashMember)) {
+                                    continue;
+                                } else {
+                                    $hashMember = $actualHashMember;
+                                    $getChanges ? $arrChanges['model'][$jointName][$funcName][$nameColumn] = true : $changed = true;
+                                }
+                            }
+
+                            if($key2 != 'hash') {
+                                $removes = array_diff_key($actualFuncs[$funcName][$key2], $rowsFunc);
+                                $adds = array_diff_key($rowsFunc, $actualFuncs[$funcName][$key2]);
+
+                                if($getChanges) {
+                                    if(is_array($removes) && !empty($removes)) {
+                                        $arrRemoves = array_fill_keys(array_keys($removes), 'removed');
+                                        $arrActual = (array) $arrChanges['model'][$jointName][$funcName][$nameColumn];
+                                        $arrSum = $arrRemoves + $arrActual;
+                                        $arrChanges['model'][$jointName][$funcName][$nameColumn] = $arrSum;
+                                    }
+                                        is_array($adds) && !empty($adds) ? $arrChanges['model'][$jointName]['add'][$funcName] =  array_fill_keys(array_keys($adds), 'added') : '';
+                                } else {
+                                    if(!empty($removes) || !empty($adds)) {
+                                        $changed = true;
+                                    }
+
+                                    foreach ($removes as $nColumnR => $hMemberR) {
+                                        $generalData[$jointName][$keyG][$key][$funcName][$key2][$nColumnR] = $hMemberR;
+                                    }
+
+                                    foreach ($adds as $nColumnA => $hMemberA) {
+                                        unset($generalData[$jointName][$keyG][$key][$funcName][$key2][$nColumnA]);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        unset($rows, $groupments, $valuesGroupment, $func, $valuesFunc);
+        unset($hashMember, $values, $value, $val);
+
+        return $getChanges ? $arrChanges : $changed;
     }
 
     /**
      * Fabrik sync lists 2.0
      * 
-     * Method that verify actual groupments data hash
+     * Method that build the query to groupments
      *
      */
     public function buildQueryGroupments($groupment, $idList, $table='', $order='hash')
@@ -1341,7 +1446,7 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
 
         if(!$baseFileExists) {
             //Encripting type data
-            if($dataType == 'merge') {
+            if($dataType == 'merge' || $dataType) {
                 $arrHashsData = Array();
 
                 try {
@@ -1355,15 +1460,15 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
                 $writeFile['data'] = $arrHashsData;
             }
 
-            if($modelType == 'merge') {
+            if($modelType == 'merge' || $modelType) {
                 $arrHashsModel = Array();
 
-                /*try {
-                    $this->hashGroupmentsDataType($arrHashsModel);
-                    $this->hashGroupmentsDataTypeSecondary($arrHashsModel, $tablesHashed);
+                try {
+                    $this->hashJointModelType($arrHashsModel);
+                    //$this->hashJointModelTypeSecondary($arrHashsModel);
                 } catch (\Throwable $th) {
                     $hashOk = false;
-                }*/
+                }
 
                 $writeFile['model'] = $arrHashsModel;
             }
@@ -1478,5 +1583,175 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
         }
 
         return $return;
+    }
+
+    /**
+     * Fabrik sync lists 2.0
+     * 
+     * Method that hash the general joint
+     *
+     */
+    private function hashJointModelType(&$arrHashsModel, $tablesModel=false)
+    {
+        $db = $this->getDbo();
+
+        if(!$tablesModel) {
+            // General joint hash
+            $query = $db->getQuery(true)
+                ->clear()
+                ->select($db->qn('db_table_name'))
+                ->from($db->qn('#__fabrik_lists'));
+
+            $db->setQuery($query);
+            $tablesModel = array_unique($db->loadColumn(), SORT_STRING);
+        }
+
+        foreach ($tablesModel as $table) {
+            $joints = Array();
+            $query = $this->buildQueryJoints('J0', $table);
+            $db->setQuery($query);
+            $generalJoint = $db->loadAssocList();
+
+            $arrHashsModel[$table]['J0']['hash'] = hash($this->encripty, json_encode($generalJoint)); // Hash general joint
+
+            foreach ($generalJoint as $columnData) {
+                $joint = '';
+                $tableName = $columnData['TABLE_NAME'];
+                array_shift($columnData);
+                if($table == $tableName) {
+                    $joint = 'J1';
+                } else if(strpos($tableName, '_repeat_')) {
+                    $joint = 'J3';
+                } else if(strpos($tableName, '_repeat')) {
+                    $joint = 'J2';
+                }
+
+                $joint != '' ? $joints[$joint][$tableName][] = $columnData : ''; 
+            }
+
+            ksort($joints, SORT_STRING);
+            foreach ($joints as $joint => $columnInfo) {
+                $arrHashsModel[$table][$joint]['hash'] = hash($this->encripty, json_encode($columnInfo));
+
+                foreach($columnInfo as $tblName => $columns) {
+                    $arrHashsModel[$table][$joint]['tables'][$tblName]['hash'] = hash($this->encripty, json_encode($columnInfo));
+
+                    foreach ($columns as $column) {
+                        $arrHashsModel[$table][$joint]['tables'][$tblName]['members'][$column['COLUMN_NAME']] = hash($this->encripty, json_encode($column));
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Fabrik sync lists 2.0
+     * 
+     * Method that build the query to joints
+     *
+     */
+    public function buildQueryJoints($joint, $table)
+    {
+        //Initial configurations
+        $db = $this->getDbo();
+        $query = $db->getQuery(true)->clear();
+        $columns = ['table_name', 'column_name', 'column_type', 'character_maximum_length'];
+
+        $query->select('`' . implode('`,`', $columns) . '`, MD5(CONCAT(table_name, column_name, ordinal_position)) AS row_hash')
+            ->from($db->qn('information_schema') . '.' . $db->qn('columns'))
+            ->where($db->qn('table_schema') . ' = (SELECT DATABASE())')
+            ->order($db->qn('row_hash') . ' ASC');
+
+        switch ($joint) {
+            case 'J0':
+                    $query->where($db->qn('table_name') . ' LIKE ' . $db->q($table . '%'));
+                break;
+            
+            case 'J1':
+                    $query->where($db->qn('table_name') . ' = ' . $db->q($table));
+                break;
+            
+            case 'J2':
+                    $query->where($db->qn('table_name') . ' LIKE ' . $db->q($table . '_repeat_%'));
+                break;
+            
+            case 'J3':
+                    $query->where($db->qn('table_name') . ' LIKE ' . $db->q($table . '%_repeat'));
+                break;
+        }
+
+        return $query;
+    }
+
+    /**
+     * Fabrik sync lists 2.0
+     * 
+     * Method that verify actual joints data hash
+     *
+     */
+    private function verifyHashJoints($query, $joint, $table)
+    {
+        //Initial configurations
+        $db = $this->getDbo();
+        $db->setQuery($query);
+
+        $rows = $db->loadAssocList();
+
+        if(empty($rows)) {
+            return false;
+        }
+
+        if(in_array($joint, ['J0'])) {
+            $gData = hash($this->encripty, json_encode($rows));
+        }
+        
+        if(in_array($joint, ['J1','J2', 'J3', 'J4'])) {
+            $gData = $this->verifyHashJointsPrimary($rows, $joint, $table);
+        }
+
+        return $gData;
+    }
+
+        /**
+     * Fabrik sync lists 2.0
+     * 
+     * Method that verify actual Joints data hash
+     *
+     */
+    private function verifyHashJointsPrimary($rows, $joint, $table)
+    {
+        //Initial configurations
+        $db = $this->getDbo();
+        $arrJoints = '';
+
+        foreach ($rows as $columnData) {
+            $joint = '';
+            $tableName = $columnData['TABLE_NAME'];
+            array_shift($columnData);
+            if($table == $tableName) {
+                $joint = 'J1';
+            } else if(strpos($tableName, '_repeat_')) {
+                $joint = 'J3';
+            } else if(strpos($tableName, '_repeat')) {
+                $joint = 'J2';
+            }
+
+            $joint != '' ? $joints[$joint][$tableName][] = $columnData : ''; 
+        }
+
+        ksort($joints, SORT_STRING);
+        foreach ($joints as $joint => $columnInfo) {
+            $gData[$joint]['hash'] = hash($this->encripty, json_encode($columnInfo));
+
+            foreach($columnInfo as $tblName => $columns) {
+                $gData[$joint]['tables'][$tblName]['hash'] = hash($this->encripty, json_encode($columnInfo));
+
+                foreach ($columns as $column) {
+                    $gData[$joint]['tables'][$tblName]['members'][$column['COLUMN_NAME']] = hash($this->encripty, json_encode($column));
+                }
+            }
+        }
+
+        return $gData[$joint];
     }
 }

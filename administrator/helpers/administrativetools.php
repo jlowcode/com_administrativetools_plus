@@ -140,13 +140,86 @@ class AdministrativetoolsHelper {
         $changesToTable[$idList][$x][] = '<p class="check">' . $checkbox . '</p>';
     }
 
-        /**
+    /**
      * Fabrik sync lists 2.0
      * 
-     * Method that construct the struct to generate the data table
+     * Method that construct the struct to generate the data table for data mod
      *
      */
-    public function constructDataTable($type, $value, &$changesToTable, &$x, $mod=false) 
+    public function constructDataTableDataMod($type, $value, &$changesToTable, &$x, $mod=false) 
+    {
+        $mod ? '' : $mod = $type;
+
+        if($type == 'add') {
+            foreach($value as $idList => $vals) {
+                if($x == 0) $first = $idList;
+                foreach($vals as $funcionality => $row) {
+                    foreach($row as $idFunc => $val) {
+                        $opts = new stdClass();
+                        $opts->idList = $idList;
+                        $opts->idFunc = $idFunc;
+                        $opts->funcionality = $funcionality;
+                        $opts->val = $val;
+                        $opts->mod = $mod;
+                        $this->generateDataTable($changesToTable, $x, $opts);
+                        $x++;
+                    }
+                }
+            }
+        }
+
+        if($type == 'PG') {
+            foreach($value as $idList => $groupments) {
+                if($x == 0) $first = $idList;
+                foreach($groupments as $groupment) {
+                    foreach($groupment as $funcionality => $row) {
+                        foreach($row as $idFunc => $val) {
+                            $opts = new stdClass();
+                            $opts->idList = $idList;
+                            $opts->idFunc = $idFunc;
+                            $opts->funcionality = $funcionality;
+                            $opts->val = $val;
+                            $opts->mod = $mod;
+                            $this->generateDataTable($changesToTable, $x, $opts);
+                            $x++;
+                        }
+                    }
+                }
+            }
+        }
+
+        if($type == 'SG') {
+            foreach($value as $groupment => $rows) {
+                switch ($groupment) {
+                    case 'G5':
+                        $funcionality = 'cron';
+                        break;
+                    case 'G6':
+                        $funcionality = 'visualization';
+                        break;
+                }
+                if($x == 0) $first = $idList;
+                foreach($rows as $idRow => $val) {
+                    $opts = new stdClass();
+                    $opts->idList = FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_NOT_APPLY');;
+                    $opts->idFunc = $idRow;
+                    $opts->funcionality = $funcionality;
+                    $opts->val = $val;
+                    $opts->mod = $mod;
+                    $this->generateDataTable($changesToTable, $x, $opts);
+                    $x++;
+                }
+            }
+        }
+    }
+
+    /**
+     * Fabrik sync lists 2.0
+     * 
+     * Method that construct the struct to generate the data table for model mod
+     *
+     */
+    public function constructDataTableModelMod($type, $value, &$changesToTable, &$x, $mod=false) 
     {
         $mod ? '' : $mod = $type;
 

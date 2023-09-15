@@ -29,22 +29,36 @@
         }
 
         $arrChanges = (array) json_decode($jsonFile, true);
-        if(empty($arrChanges['data']) && empty($arrChanges['model'])) {
-            $arrChanges = Array();
-        }
 
         $changesToTable = Array();
         $x = 0;
-        foreach($arrChanges as $type) { 
+        if(isset($arrChanges['data'])) {
+            $type = $arrChanges['data'];
             foreach($type as $key => $value) {
                 if($key == 'add') {
                     foreach ($value as $key2 => $val) {
-                        $helper->constructDataTable($key, $val, $changesToTable, $x, $key2);
+                        $helper->constructDataTableDataMod($key, $val, $changesToTable, $x, $key2);
                     }
                     continue;
                 }
 
-                $helper->constructDataTable($key, $value, $changesToTable, $x);
+                $helper->constructDataTableDataMod($key, $value, $changesToTable, $x);
+            }
+        }
+
+        if(isset($arrChanges['model'])) {
+            $joint = $arrChanges['model'];
+            foreach($joint as $table => $columns) {
+                foreach($columns as $key => $value) {
+                    if($value == 'add') {
+                        foreach ($value as $key2 => $val) {
+                            $helper->constructDataTableModelMod($value, $val, $changesToTable, $x, $key2);
+                        }
+                        continue;
+                    }
+
+                    $helper->constructDataTableModelMod($value, $key, $changesToTable, $x);
+                }
             }
         }
     }
@@ -138,7 +152,7 @@
          * Begin - Fabrik sync lists 2.0
          * Id Task: 13
          */
-        if($changes && !empty($arrChanges) && $x != 0) { ?>
+        if($changes && $x != 0) { ?>
             <strong id="subtitle"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_LABEL1'); ?></strong>
             <div id="lists_finded">
                 <table>
