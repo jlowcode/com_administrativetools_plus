@@ -42,22 +42,15 @@
                     continue;
                 }
 
-                $helper->constructDataTableDataMod($key, $value, $changesToTable, $x);
+                $helper->constructDataTableDataMod($key, $value, $changesToTable, $x, false, 'data');
             }
         }
 
         if(isset($arrChanges['model'])) {
-            $joint = $arrChanges['model'];
-            foreach($joint as $table => $columns) {
-                foreach($columns as $key => $value) {
-                    if($value == 'add') {
-                        foreach ($value as $key2 => $val) {
-                            $helper->constructDataTableModelMod($value, $val, $changesToTable, $x, $key2);
-                        }
-                        continue;
-                    }
-
-                    $helper->constructDataTableModelMod($value, $key, $changesToTable, $x);
+            $joints = $arrChanges['model'];
+            foreach($joints as $joint => $tables) {
+                foreach($tables as $table => $value) {
+                    $helper->constructDataTableModelMod($table, $value, $joint, $changesToTable, $x, 'model');
                 }
             }
         }

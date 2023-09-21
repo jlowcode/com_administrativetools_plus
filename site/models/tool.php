@@ -90,35 +90,55 @@ class AdministrativetoolsFEModelTool extends \Joomla\CMS\MVC\Model\ItemModel
         $strSql = "SET sql_mode = 'NO_ENGINE_SUBSTITUTION';<ql>\n\n";
 
         if($type == 'adding') {
-            foreach($changes as $staGroupment => $funcs) {
+            //For data mode
+            foreach($changes['data'] as $staGroupment => $funcs) {
                 foreach($funcs as $idList => $rowsFunc) {
                     if($staGroupment == 'PG') {
                         if(is_array($rowsFunc)) {
                             foreach($rowsFunc as $func => $rows) {
                                 $ids = array_keys($rows);
-                                $strSql .= $this->buildStrSql($ids, $type, $func);
+                                $strSql .= $this->buildStrSqlToDataMode($ids, $type, $func);
                                 $strSql .= "<ql>\n\n";
                             }
                         } else {
                             $type = 'adding-list';
-                            $strSql .= $this->buildStrSql($idList, $type);
+                            $strSql .= $this->buildStrSqlToDataMode($idList, $type);
                         }
                     }
 
                     if($staGroupment == 'SG') {
                         $ids = array_keys($rowsFunc);
                         $func = $idList;
-                        $strSql .= $this->buildStrSql($ids, $type, $func);
+                        $strSql .= $this->buildStrSqlToDataMode($ids, $type, $func);
                         $strSql .= "<ql>\n\n";
                     }
+                }
+            }
+
+            //For model mode
+            foreach ($changes['model'] as $joint) {
+                foreach ($joint as $table => $columns) {
+                    $arrOpts = Array();
+                    $arrOpts[1] = $table;
+                    $arrOpts[2] = array_keys($columns);
+                    $type = 'added';
+                    $strSql .= $this->buildStrSqlToModelMode($type, $arrOpts);
+                    $strSql .= "<ql>\n\n";
                 }
             }
         }
 
         if($type == 'user_change') {
-            foreach($changes as $row) {
-                if($row[0] == 'PG' || $row[0] == 'SG') {
-                    $rows[$row[1]][$row[3]][] = $row[2];
+            //Separating the modes
+            $arrChanges = Array();
+            foreach ($changes as $key => $value) {
+                $arrChanges[$value[0]][] = $value;
+            }
+
+            //For data mode
+            foreach($arrChanges['data'] as $row) {
+                if($row[1] == 'PG' || $row[1] == 'SG') {
+                    $rows[$row[2]][$row[4]][] = $row[3];
                 }
             }
 
@@ -126,15 +146,22 @@ class AdministrativetoolsFEModelTool extends \Joomla\CMS\MVC\Model\ItemModel
                 foreach ($rowsMembers as $alteration => $values) {
                     $ids = array_values($values);
                     $typeSql = 'removing-member';
-                    $strSql .= $this->buildStrSql($ids, $typeSql, $func);
+                    $strSql .= $this->buildStrSqlToDataMode($ids, $typeSql, $func);
                     $strSql .= "<ql>\n\n";
 
                     if($alteration == 'changed') {
                         $typeSql = 'adding';
-                        $strSql .= $this->buildStrSql($ids, $typeSql, $func);
+                        $strSql .= $this->buildStrSqlToDataMode($ids, $typeSql, $func);
                         $strSql .= "<ql>\n\n";
                     }
                 }
+            }
+
+            //For model mode
+            foreach ($arrChanges['model'] as $change) {
+                $type = $change[3];
+                $strSql .= $this->buildStrSqlToModelMode($type, $change);
+                $strSql .= "<ql>\n\n";
             }
         }
 
@@ -155,7 +182,7 @@ class AdministrativetoolsFEModelTool extends \Joomla\CMS\MVC\Model\ItemModel
      * Method that build the string for sql file to API
      *
      */
-    private function buildStrSql($idEl, $type, $func='')
+    private function buildStrSqlToDataMode($idEl, $type, $func='')
     {
         $strQuery = '';
 
@@ -322,5 +349,113 @@ class AdministrativetoolsFEModelTool extends \Joomla\CMS\MVC\Model\ItemModel
             ->where('id IN ("' . $idEl . '")');
 
         return $query;
+    }
+
+    /**
+     * Fabrik sync lists 2.0
+     *
+     * Method that build the string to data mode for sql file to API
+     *
+     */
+    private function buildStrSqlToModelMode($type, $opts)
+    {
+        $table = $opts[1];
+        $column = $opts[2];
+
+        switch ($type) {
+            case 'changed':
+                $query = $this->buildQueryChangedColumn($table, $column);
+                break;
+            
+            case 'removed':
+                $query = $this->buildQueryRemovedColumn($table, $column);
+                break;
+
+            case 'added':
+                $query = $this->buildQueryAddedColumn($table, $column);
+                break;
+        }
+
+        return (string) $query;
+    }
+
+    /**
+     * Fabrik sync lists 2.0
+     *
+     * Method that build the query for sql file, in case of columns that were change
+     *
+     */
+    private function buildQueryChangedColumn($table, $column)
+    {
+        $db = JFactory::getDbo();
+        $query = $db->getQuery(true);
+
+        $query->clear()
+            ->select($db->qn('column_type') . ' AS column_type')
+            ->from($db->qn('information_schema') . '.' . $db->qn('columns'))
+            ->where($db->qn('table_schema') . ' = (SELECT DATABASE())')
+            ->where($db->qn('table_name') . ' = ' . $db->q($table))
+            ->where($db->qn('column_name') . ' = ' . $db->q($column));
+        $db->setQuery($query);
+        $typeColumn = $db->loadResult();
+
+        $query = "ALTER TABLE $table MODIFY $column $typeColumn;";
+
+        return $query;
+    }
+
+    /**
+     * Fabrik sync lists 2.0
+     *
+     * Method that build the query for sql file, in case of columns that were add
+     *
+     */
+    private function buildQueryAddedColumn($table, $column)
+    {
+        $db = JFactory::getDbo();
+        $query = $db->getQuery(true);
+
+        if(is_array($column)) {
+            $column = implode("','", $column);
+        }
+
+        $query->clear()
+            ->select($db->qn('column_name') . ' AS column_name')
+            ->select($db->qn('column_type') . ' AS column_type')
+            ->select($db->qn('is_nullable') . ' AS is_nullable')
+            ->select($db->qn('column_default') . ' AS column_default')
+            ->from($db->qn('information_schema') . '.' . $db->qn('columns'))
+            ->where($db->qn('table_schema') . ' = (SELECT DATABASE())')
+            ->where($db->qn('table_name') . ' = ' . $db->q($table))
+            ->where($db->qn('column_name') . " IN ('" . $column . "')");
+        $db->setQuery($query);
+        $columns = $db->loadObjectList('column_name');
+
+        $qtnColumns = count($columns);
+        if($qtnColumns > 0) {
+            $queryReturn = "ALTER TABLE `$table`\n";
+            $x = 0;
+            foreach ($columns as $column => $dataColumn) {
+                $queryReturn .= "ADD COLUMN `$column` " . $dataColumn->column_type;
+                isset($dataColumn->column_default) ? $queryReturn .= ' DEFAULT ' . $dataColumn->column_default : '';
+                $dataColumn->is_nullable == 'NO' ? $queryReturn .= ' NOT NULL' : '';
+
+                $x != $qtnColumns - 1 ? $queryReturn .= ",\n" : $queryReturn .= ';';
+                $x++;
+            }
+        }
+
+        return $queryReturn;
+    }
+
+    /**
+     * Fabrik sync lists 2.0
+     *
+     * Method that build the query for sql file, in case of columns that were remove
+     *
+     */
+    private function buildQueryRemovedColumn($table, $column)
+    {
+        return "ALTER TABLE `$table` DROP COLUMN `$column`;";
     }
 }

@@ -871,7 +871,7 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
                 }
             }
 
-            $changedModel = $this->verifyActualHashModel($arrHashs['model'], $getChanges);
+            $changedModel = $this->verifyActualHashModel($arrHashs['model'], $getChanges, $arrChanges);
         }
 
         if($getChanges) {
@@ -1102,7 +1102,7 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
                                     $rowsFunc = $actualHashFunc;
                                 }
                             } 
-                            
+
                             foreach ($rowsFunc as $nameColumn => &$hashMember) {
                                 $actualHashMember = $actualFuncs[$funcName][$key2][$nameColumn];
                                 if(hash_equals($hashMember, $actualHashMember) || !isset($actualHashMember)) {
@@ -1120,11 +1120,12 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
                                 if($getChanges) {
                                     if(is_array($removes) && !empty($removes)) {
                                         $arrRemoves = array_fill_keys(array_keys($removes), 'removed');
-                                        $arrActual = (array) $arrChanges['model'][$jointName][$funcName][$nameColumn];
+                                        $arrActual = $arrChanges['model'][$jointName][$funcName];
                                         $arrSum = $arrRemoves + $arrActual;
-                                        $arrChanges['model'][$jointName][$funcName][$nameColumn] = $arrSum;
+                                        $arrChanges['model'][$jointName][$funcName] = $arrSum;
                                     }
-                                        is_array($adds) && !empty($adds) ? $arrChanges['model'][$jointName]['add'][$funcName] =  array_fill_keys(array_keys($adds), 'added') : '';
+
+                                    is_array($adds) && !empty($adds) ? $arrChanges['model']['add'][$jointName][$funcName] =  array_fill_keys(array_keys($adds), 'added') : '';
                                 } else {
                                     if(!empty($removes) || !empty($adds)) {
                                         $changed = true;
@@ -1388,7 +1389,7 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
      * Method that read a file and verify if hash ok
      *
      */
-    private function readAndVerifyFile($pathName, $getChanges=false) 
+    private function readAndVerifyFile($pathName, $getChanges=false, $dataType=false, $modelType=false) 
     {
         $hashOk = true;
 
@@ -1399,7 +1400,16 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
                     $jsonFile .= $row;
                 }
             }
-            $arrHashs = (array) json_decode($jsonFile, true);
+            $arrHashs = json_decode($jsonFile, true);
+
+            //Analisar depois: Quando solicita para fazer merge de apenas um, sendo que o arquivo json já está mapeado os dois
+            /*if($dataType === false) {
+                unset($arrHashs['data']);
+            }
+            if($modelType === false) {
+                unset($arrHashs['model']);
+            }*/
+
             $changed = $this->verifyActualHash($arrHashs, $getChanges);
         } catch (\Throwable $th) {
             $hashOk = false;
@@ -1439,7 +1449,7 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
         }
         
         if(is_file($pathName)) {
-            $writeFile = $this->readAndVerifyFile($pathName);
+            $writeFile = $this->readAndVerifyFile($pathName, false, $dataType, $modelType);
             $writeFile ? '' : $hashOk = false;
             $baseFileExists = true;
         }
@@ -1587,7 +1597,7 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
 
     /**
      * Fabrik sync lists 2.0
-     * 
+     *
      * Method that hash the general joint
      *
      */
@@ -1616,14 +1626,13 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
 
             foreach ($generalJoint as $columnData) {
                 $joint = '';
-                $tableName = $columnData['TABLE_NAME'];
-                array_shift($columnData);
+                $tableName = $columnData['table_name'];
                 if($table == $tableName) {
                     $joint = 'J1';
                 } else if(strpos($tableName, '_repeat_')) {
-                    $joint = 'J3';
-                } else if(strpos($tableName, '_repeat')) {
                     $joint = 'J2';
+                } else if(strpos($tableName, '_repeat')) {
+                    $joint = 'J3';
                 }
 
                 $joint != '' ? $joints[$joint][$tableName][] = $columnData : ''; 
@@ -1637,7 +1646,7 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
                     $arrHashsModel[$table][$joint]['tables'][$tblName]['hash'] = hash($this->encripty, json_encode($columnInfo));
 
                     foreach ($columns as $column) {
-                        $arrHashsModel[$table][$joint]['tables'][$tblName]['members'][$column['COLUMN_NAME']] = hash($this->encripty, json_encode($column));
+                        $arrHashsModel[$table][$joint]['tables'][$tblName]['members'][$column['column_name']] = hash($this->encripty, json_encode($column));
                     }
                 }
             }
@@ -1655,9 +1664,14 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
         //Initial configurations
         $db = $this->getDbo();
         $query = $db->getQuery(true)->clear();
-        $columns = ['table_name', 'column_name', 'column_type', 'character_maximum_length'];
+        $columns = [
+            $db->qn('column_name') . ' AS column_name', 
+            $db->qn('table_name') . ' AS table_name',
+            $db->qn('column_type') . ' AS column_type',
+            'MD5(CONCAT(table_name, column_name)) AS row_hash'
+        ];
 
-        $query->select('`' . implode('`,`', $columns) . '`, MD5(CONCAT(table_name, column_name, ordinal_position)) AS row_hash')
+        $query->select($columns)
             ->from($db->qn('information_schema') . '.' . $db->qn('columns'))
             ->where($db->qn('table_schema') . ' = (SELECT DATABASE())')
             ->order($db->qn('row_hash') . ' ASC');
@@ -1726,8 +1740,7 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
 
         foreach ($rows as $columnData) {
             $joint = '';
-            $tableName = $columnData['TABLE_NAME'];
-            array_shift($columnData);
+            $tableName = $columnData['table_name'];
             if($table == $tableName) {
                 $joint = 'J1';
             } else if(strpos($tableName, '_repeat_')) {
@@ -1747,7 +1760,7 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
                 $gData[$joint]['tables'][$tblName]['hash'] = hash($this->encripty, json_encode($columnInfo));
 
                 foreach ($columns as $column) {
-                    $gData[$joint]['tables'][$tblName]['members'][$column['COLUMN_NAME']] = hash($this->encripty, json_encode($column));
+                    $gData[$joint]['tables'][$tblName]['members'][$column['column_name']] = hash($this->encripty, json_encode($column));
                 }
             }
         }
