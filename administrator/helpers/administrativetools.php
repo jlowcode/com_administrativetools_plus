@@ -26,7 +26,8 @@ class AdministrativetoolsHelper {
      * @return void
      * @since  1.6
      */
-    public static function addSubmenu(string $vName = '') {
+    public static function addSubmenu(string $vName = '') 
+    {
         JHtmlSidebar::addEntry(
                 JText::_('COM_ADMINISTRATIVETOOLS_TITLE_TOOLS'),
                 'index.php?option=com_administrativetools&view=tools', $vName == 'tools');
@@ -86,7 +87,8 @@ class AdministrativetoolsHelper {
      * Method that generate the configurations of data to show details for user
      *
      */
-    public function generateDataTable(&$changesToTable, $x, $opts) {
+    public function generateDataTable(&$changesToTable, $x, $opts) 
+    {
         foreach ((array) $opts as $var => $value) {
             $$var = $value;
         }
@@ -117,7 +119,7 @@ class AdministrativetoolsHelper {
         }
 
         $val === true ? $val = 'changed' : '';
-        $value = $mod . '--' . $funcionality . '--' . $idFunc . '--' . $val;
+        $value = $mode . '--' . $mod . '--' . $funcionality . '--' . $idFunc . '--' . $val;
         $urlPrefix = JUri::root();
         $urlPath = "administrator/index.php?option=com_fabrik&view=$view&layout=edit&id=$idFunc";
         $uri = $urlPrefix  . $urlPath;
@@ -146,7 +148,7 @@ class AdministrativetoolsHelper {
      * Method that construct the struct to generate the data table for data mod
      *
      */
-    public function constructDataTableDataMod($type, $value, &$changesToTable, &$x, $mod=false) 
+    public function constructDataTableDataMod($type, $value, &$changesToTable, &$x, $mod=false, $mode=false) 
     {
         $mod ? '' : $mod = $type;
 
@@ -161,6 +163,7 @@ class AdministrativetoolsHelper {
                         $opts->funcionality = $funcionality;
                         $opts->val = $val;
                         $opts->mod = $mod;
+                        $opts->mode = $mode;
                         $this->generateDataTable($changesToTable, $x, $opts);
                         $x++;
                     }
@@ -180,6 +183,7 @@ class AdministrativetoolsHelper {
                             $opts->funcionality = $funcionality;
                             $opts->val = $val;
                             $opts->mod = $mod;
+                            $opts->mode = $mode;
                             $this->generateDataTable($changesToTable, $x, $opts);
                             $x++;
                         }
@@ -206,6 +210,7 @@ class AdministrativetoolsHelper {
                     $opts->funcionality = $funcionality;
                     $opts->val = $val;
                     $opts->mod = $mod;
+                    $opts->mode = $mode;
                     $this->generateDataTable($changesToTable, $x, $opts);
                     $x++;
                 }
@@ -219,70 +224,72 @@ class AdministrativetoolsHelper {
      * Method that construct the struct to generate the data table for model mod
      *
      */
-    public function constructDataTableModelMod($type, $value, &$changesToTable, &$x, $mod=false) 
+    public function constructDataTableModelMod($type, $value, $joint, &$changesToTable, &$x, $mode=false) 
     {
-        $mod ? '' : $mod = $type;
-
-        if($type == 'add') {
-            foreach($value as $idList => $vals) {
+        if($joint === 'add') {
+            foreach($value as $table => $vals) {
                 if($x == 0) $first = $idList;
-                foreach($vals as $funcionality => $row) {
-                    foreach($row as $idFunc => $val) {
-                        $opts = new stdClass();
-                        $opts->idList = $idList;
-                        $opts->idFunc = $idFunc;
-                        $opts->funcionality = $funcionality;
-                        $opts->val = $val;
-                        $opts->mod = $mod;
-                        $this->generateDataTable($changesToTable, $x, $opts);
-                        $x++;
-                    }
-                }
-            }
-        }
-
-        if($type == 'PG') {
-            foreach($value as $idList => $groupments) {
-                if($x == 0) $first = $idList;
-                foreach($groupments as $groupment) {
-                    foreach($groupment as $funcionality => $row) {
-                        foreach($row as $idFunc => $val) {
-                            $opts = new stdClass();
-                            $opts->idList = $idList;
-                            $opts->idFunc = $idFunc;
-                            $opts->funcionality = $funcionality;
-                            $opts->val = $val;
-                            $opts->mod = $mod;
-                            $this->generateDataTable($changesToTable, $x, $opts);
-                            $x++;
-                        }
-                    }
-                }
-            }
-        }
-
-        if($type == 'SG') {
-            foreach($value as $groupment => $rows) {
-                switch ($groupment) {
-                    case 'G5':
-                        $funcionality = 'cron';
-                        break;
-                    case 'G6':
-                        $funcionality = 'visualization';
-                        break;
-                }
-                if($x == 0) $first = $idList;
-                foreach($rows as $idRow => $val) {
+                foreach($vals as $column => $mod) {
+                    if($x == 0) $first = $column;
                     $opts = new stdClass();
-                    $opts->idList = FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_NOT_APPLY');;
-                    $opts->idFunc = $idRow;
-                    $opts->funcionality = $funcionality;
-                    $opts->val = $val;
+                    $opts->table = $table;
+                    $opts->joint = $type;
+                    $opts->column = $column;
                     $opts->mod = $mod;
-                    $this->generateDataTable($changesToTable, $x, $opts);
+                    $opts->val = $mod;
+                    $opts->mode = $mode;
+                    $this->generateDataTableToModelMode($changesToTable, $x, $opts);
                     $x++;
                 }
             }
         }
+
+        if($joint != 'add') {
+            foreach($value as $column => $mod) {
+                $mod === true ? $val = 'changed' : $val = 'removed'; 
+                if($x == 0) $first = $column;
+                $opts = new stdClass();
+                $opts->table = $type;
+                $opts->joint = $joint;
+                $opts->column = $column;
+                $opts->mod = $mod;
+                $opts->val = $val;
+                $opts->mode = $mode;
+                $this->generateDataTableToModelMode($changesToTable, $x, $opts);
+                $x++;
+            }
+        }
+    }
+
+    /**
+     * Fabrik sync lists 2.0
+     * 
+     * Method that generate the configurations of data to show details for user
+     *
+     */
+    public function generateDataTableToModelMode(&$changesToTable, $x, $opts) 
+    {
+        foreach ((array) $opts as $var => $value) {
+            $$var = $value;
+        }
+
+        $mod === true ? $mod = 'changed' : '';
+        $value = $mode . '--' . $table . '--' . $column . '--' . $mod;
+        $checkbox = '<input type="checkbox" class="changes" name="changes[]" value="' . $value .'">';
+        if($val === 'removed') {
+            $msg = FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_COLUMN_REMOVED');
+        } else if($val === 'added') {
+            $msg = FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_COLUMN_ADDED');
+            $checkbox = 'Adicionado';
+        } else {
+            $msg = FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_COLUMN_CHANGED');
+        }
+
+        $changesToTable[$joint][$x][] = $joint;
+        $changesToTable[$joint][$x][] = $table;
+        $changesToTable[$joint][$x][] = $column;
+        $changesToTable[$joint][$x][] = $msg;
+        $changesToTable[$joint][$x][] = '';
+        $changesToTable[$joint][$x][] = '<p class="check">' . $checkbox . '</p>';
     }
 }
