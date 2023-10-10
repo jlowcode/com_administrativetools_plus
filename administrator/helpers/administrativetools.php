@@ -154,18 +154,32 @@ class AdministrativetoolsHelper {
 
         if($type == 'add') {
             foreach($value as $idList => $vals) {
-                if($x == 0) $first = $idList;
-                foreach($vals as $funcionality => $row) {
-                    foreach($row as $idFunc => $val) {
-                        $opts = new stdClass();
-                        $opts->idList = $idList;
-                        $opts->idFunc = $idFunc;
-                        $opts->funcionality = $funcionality;
-                        $opts->val = $val;
-                        $opts->mod = $mod;
-                        $opts->mode = $mode;
-                        $this->generateDataTable($changesToTable, $x, $opts);
-                        $x++;
+                $opts = new stdClass();
+                if($x == 0) $first = $idList;   
+                
+                if($mod == 'lists') {
+                    $opts->idList = $idList;
+                    $opts->idFunc = $idList;
+                    $opts->funcionality = 'lists';
+                    $opts->val = $vals;
+                    $opts->mod = 'PG';
+                    $opts->mode = $mode;
+                    $this->generateDataTable($changesToTable, $x, $opts);
+                    $x++;
+                }
+
+                if($mod != 'lists') {
+                    foreach($vals as $funcionality => $row) {
+                        foreach($row as $idFunc => $val) {
+                            $opts->idList = $idList;
+                            $opts->idFunc = $idFunc;
+                            $opts->funcionality = $funcionality;
+                            $opts->val = $val;
+                            $opts->mod = $mod;
+                            $opts->mode = $mode;
+                            $this->generateDataTable($changesToTable, $x, $opts);
+                            $x++;
+                        }
                     }
                 }
             }

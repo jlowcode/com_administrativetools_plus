@@ -100,9 +100,6 @@ class AdministrativetoolsFEModelTool extends \Joomla\CMS\MVC\Model\ItemModel
                                 $strSql .= $this->buildStrSqlToDataMode($ids, $type, $func);
                                 $strSql .= "<ql>\n\n";
                             }
-                        } else {
-                            $type = 'adding-list';
-                            $strSql .= $this->buildStrSqlToDataMode($idList, $type);
                         }
                     }
 
@@ -111,6 +108,11 @@ class AdministrativetoolsFEModelTool extends \Joomla\CMS\MVC\Model\ItemModel
                         $func = $idList;
                         $strSql .= $this->buildStrSqlToDataMode($ids, $type, $func);
                         $strSql .= "<ql>\n\n";
+                    }
+
+                    if($staGroupment == 'lists') {
+                        $type = 'adding-list';
+                        $strSql .= $this->buildStrSqlToDataMode($idList, $type);
                     }
                 }
             }
@@ -131,6 +133,7 @@ class AdministrativetoolsFEModelTool extends \Joomla\CMS\MVC\Model\ItemModel
         if($type == 'user_change') {
             //Separating the modes
             $arrChanges = Array();
+            $rows = Array();
             foreach ($changes as $key => $value) {
                 $arrChanges[$value[0]][] = $value;
             }
@@ -271,6 +274,13 @@ class AdministrativetoolsFEModelTool extends \Joomla\CMS\MVC\Model\ItemModel
         if(empty($list)) {
             return;
         }
+
+        //Getting the create table of main table
+        $tableName = $list[0]['db_table_name'];
+        $db->setQuery("SHOW CREATE TABLE " . $db->qn($tableName));
+        $createTable = $db->loadColumn(1)[0];
+        $strQuerys .= (string) $createTable;
+        $strQuerys .= "<ql>\n\n";
 
         $query->clear()
             ->insert($db->qn('#__fabrik_lists'));

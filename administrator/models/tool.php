@@ -832,17 +832,20 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
                 ->from($db->qn('#__fabrik_lists'))
                 ->order('id');
             $db->setQuery($query);
-            $actualLists = array_keys($db->loadAssocList('id'));
-            $oldLists = array_keys($arrHashs['data']['PG']);
-            $listsAdd = array_diff_key($oldLists, $actualLists);
+            $listsDb = array_keys($db->loadAssocList('id'));
+            $listsHash = array_keys($arrHashs['data']['PG']);
 
-            if(!empty($listsAdd)) {
-                if($getChanges) {
+            if($getChanges) {
+                $listsAdd = array_diff_key($listsHash, $listsDb);
+                if(!empty($listsAdd)) {
                     foreach ($listsAdd as $idList) {
-                        $arrChanges['data']['PG']['add'][$idList] = 'added';
+                        $arrChanges['data']['add']['lists'][$idList] = 'added';
                     }
-                } else {
-                    $this->hashGroupmentsDataType($arrHashs['data'], $listsAdd);
+                }
+            } else {
+                $listsAdd = array_diff_key($listsDb, $listsHash);
+                if(!empty($listsAdd)) {
+                    $this->hashGroupmentsDataType($arrHashs['data'], $listsAdd);                    
                 }
             }
 
@@ -850,27 +853,6 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
         }
 
         if($modelType) {
-            //Verifing name new tables were add
-            $query = $db->getQuery(true)
-                ->clear()
-                ->select($db->qn('db_table_name'))
-                ->from($db->qn('#__fabrik_lists'));
-
-            $db->setQuery($query);
-            $actualTablesModel = array_unique($db->loadColumn(), SORT_STRING);
-            $oldTablesModel = array_keys($arrHashs['model']);
-            $tablesAdded = array_diff($oldTablesModel, $actualTablesModel);
-
-            if(!empty($tablesAdded)) {
-                if($getChanges) {
-                    foreach ($tablesAdded as $nameTable) {
-                        $arrChanges['model']['add'][$nameTable] = 'added';
-                    }
-                } else {
-                    $this->hashJointModelType($arrHashs['model'], $tablesAdded);
-                }
-            }
-
             $changedModel = $this->verifyActualHashModel($arrHashs['model'], $getChanges, $arrChanges);
         }
 
