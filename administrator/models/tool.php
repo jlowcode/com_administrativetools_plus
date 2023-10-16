@@ -470,6 +470,9 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
         $writeFile = Array();
         $hashOk = true;
 
+        //Getting the others tables
+        $arrOthersTables = $this->othersTablesOnlyData($data);
+
         $path = '/media/com_administrativetools/merge/';
         $pathWithPrefix = JPATH_SITE . $path;
         $nameFile = 'fileHashBaseSourceEnv.json';
@@ -495,6 +498,7 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
         $opts->secret = $data->secretApi;
         $opts->data_type = $data->data_type;
         $opts->model_type = $data->model_type;
+        $opts->othersTables = json_encode($arrOthersTables);
         $opts->format = 'json';
         $opts->task = 'getBaseFile';
         $fileSourceEnv = $this->getBaseFileApi($pathWithPrefix, $opts);
@@ -503,7 +507,7 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
         }
 
         //Getting the changes from source environment
-        $changes = $this->readAndVerifyFile($pathName, true);
+        $changes = $this->readAndVerifyFile($pathName, true, false, false, $arrOthersTables);
         $changesFile = $this->writeFile(json_encode($changes), $pathNameChanges);
 
         //With mapped changes, sync the members adds
@@ -815,13 +819,14 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
      * Method that verify actual hash to update him
      *
      */
-    private function verifyActualHash(&$arrHashs, $getChanges)
+    private function verifyActualHash(&$arrHashs, $getChanges, $othersTables=Array())
     {
         $db = JFactory::getDbo();
         $changes = Array();
         $arrChanges = Array();
 
         isset($arrHashs['model']) ? $modelType = true : '';
+        isset($arrHashs['others']) ? $others = true : '';
         isset($arrHashs['data']) ? $dataType = true : '';
 
         if($dataType) {
@@ -856,9 +861,14 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
             $changedModel = $this->verifyActualHashModel($arrHashs['model'], $getChanges, $arrChanges);
         }
 
+        if($others) {
+            $changedOthers = $this->verifyActualHashOthers($arrHashs['others'], $getChanges, $arrChanges, $othersTables);
+        }
+
         if($getChanges) {
             $changes['data'] = $changedData['data'];
             $changes['model'] = $changedModel['model'];
+            $changes['others'] = $changedOthers['others'];
         }
 
         return $getChanges ? $changes : true;
@@ -1371,7 +1381,7 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
      * Method that read a file and verify if hash ok
      *
      */
-    private function readAndVerifyFile($pathName, $getChanges=false, $dataType=false, $modelType=false) 
+    private function readAndVerifyFile($pathName, $getChanges=false, $dataType=false, $modelType=false, $othersTables=Array()) 
     {
         $hashOk = true;
 
@@ -1392,7 +1402,7 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
                 unset($arrHashs['model']);
             }*/
 
-            $changed = $this->verifyActualHash($arrHashs, $getChanges);
+            $changed = $this->verifyActualHash($arrHashs, $getChanges, $othersTables);
         } catch (\Throwable $th) {
             $hashOk = false;
         }
@@ -1416,6 +1426,9 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
         $hashOk = true;
         $baseFileExists = false;
 
+        //Getting the others tables
+        $arrOthersTables = $data->othersTables;
+
         $path = '/media/com_administrativetools/merge/';
         $nameFile = 'fileHashBase.json';
         $fullUrl = JURI::base();
@@ -1431,7 +1444,7 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
         }
         
         if(is_file($pathName)) {
-            $writeFile = $this->readAndVerifyFile($pathName, false, $dataType, $modelType);
+            $writeFile = $this->readAndVerifyFile($pathName, false, $dataType, $modelType, $arrOthersTables);
             $writeFile ? '' : $hashOk = false;
             $baseFileExists = true;
         }
@@ -1452,17 +1465,30 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
                 $writeFile['data'] = $arrHashsData;
             }
 
+            //Encripting type model
             if($modelType == 'merge' || $modelType) {
                 $arrHashsModel = Array();
 
                 try {
                     $this->hashJointModelType($arrHashsModel);
-                    //$this->hashJointModelTypeSecondary($arrHashsModel);
                 } catch (\Throwable $th) {
                     $hashOk = false;
                 }
 
                 $writeFile['model'] = $arrHashsModel;
+            }
+
+            //Encripting the others tables
+            if(($modelType == 'merge' || $modelType) || ($dataType == 'merge' || $dataType) && !empty($arrOthersTables)) {
+                $arrHashsOthers = Array();
+
+                try {
+                    $this->hashOthersTables($arrHashsOthers, $arrOthersTables);
+                } catch (\Throwable $th) {
+                    $hashOk = false;
+                }
+
+                $writeFile['others'] = $arrHashsOthers;
             }
         }
 
@@ -1748,5 +1774,122 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
         }
 
         return $gData[$joint];
+    }
+
+    /**
+     * Fabrik sync lists 2.0
+     * 
+     * Method that verify actual others hash to update him
+     *
+     */
+    private function verifyActualHashOthers(&$generalData, $getChanges=false, $arrChanges=Array(), $othersTables=Array())
+    {
+        //Initial configurations
+        $changed = false;
+        $db = $this->getDbo();
+
+        foreach ($generalData as $table => &$valueF) {
+            if(!in_array($table, $othersTables)) {
+                unset($generalData[$table]);
+                continue;
+            }
+
+            foreach ($valueF as $key => &$value) {
+                if($key == 'hash' && !is_array($value)) {
+                    switch ($table) {
+                        case '#__modules_menu':
+                            $order = 'moduleid';
+                            break;
+                        case '#__extensions':
+                            $order = 'extension_id';
+                            break;
+                        default:
+                            $order = 'id';
+                            break;
+                    }
+                    $query = "SELECT * FROM $table ORDER BY `$order`";
+                    $db->setQuery($query);
+                    $rowsTable = $db->loadAssocList();
+                    $actualHash = hash($this->encripty, json_encode($rowsTable));
+
+                    if(hash_equals($value, $actualHash)) {
+                        break;
+                    } else {
+                        $value = $actualHash;
+                        foreach ($rowsTable as $row) {
+                            $actualMembers[$row[$order]] = hash($this->encripty, json_encode($row));
+                        }
+                    }
+                }
+
+                if($key == 'members') {
+                    $removes = array_diff_key($actualMembers, $value);
+                    $adds = array_diff_key($value, $actualMembers);
+
+                    if($getChanges) {
+                        if(is_array($removes) && !empty($removes)) {
+                            $arrRemoves = array_fill_keys(array_keys($removes), 'removed');
+                            $arrActual = $arrChanges['others'][$table];
+                            $arrSum = $arrRemoves + $arrActual;
+                            $arrChanges['others'][$table] = $arrSum;
+                        }
+
+                        is_array($adds) && !empty($adds) ? $arrChanges['others']['add'][$table] =  array_fill_keys(array_keys($adds), 'added') : '';
+                    } else {
+                        if(!empty($removes) || !empty($adds)) {
+                            $changed = true;
+                        }
+                    }
+                }
+
+                foreach ($value as $idMember => &$hashMember) {
+                    $actualHashMember = $actualMembers[$idMember];
+
+                    if(hash_equals($hashMember, $actualHashMember) || !isset($actualHashMember)) {
+                        continue;
+                    } else {
+                        $hashMember = $actualHashMember;
+                        $getChanges ? $arrChanges['others'][$table][$idMember] = true : $changed = true;
+                    }
+                }
+            }            
+        }
+
+        unset($valueF, $value, $hashMember);
+
+        return $getChanges ? $arrChanges : $changed;
+    }
+
+    /**
+     * Fabrik sync lists 2.0
+     *
+     * Method that hash others tables
+     *
+     */
+    private function hashOthersTables(&$arrHashsOthers, $othersTables=false)
+    {
+        $db = $this->getDbo();
+
+        foreach ($othersTables as $table) {
+            switch ($table) {
+                case '#__modules_menu':
+                    $order = 'moduleid';
+                    break;
+                case '#__extensions':
+                    $order = 'extension_id';
+                    break;
+                default:
+                    $order = 'id';
+                    break;
+            }
+            $query = "SELECT * FROM $table ORDER BY `$order`";
+            $db->setQuery($query);
+            $rowsTable = $db->loadAssocList();
+            $arrHashsOthers[$table]['hash'] = hash($this->encripty, json_encode($rowsTable));
+
+            foreach ($rowsTable as $row) {
+                $arrHashsOthers[$table]['members'][$row[$order]] = hash($this->encripty, json_encode($row));
+            }
+        }
     }
 }

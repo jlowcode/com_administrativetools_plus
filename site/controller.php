@@ -56,7 +56,7 @@ class AdministrativetoolsFEController extends \Joomla\CMS\MVC\Controller\BaseCon
 		$app = JFactory::getApplication();
 		$input = $app->input;
 		$response = Array();
-		$arrNeeded = ['format','key', 'secret', 'data_type', 'model_type'];
+		$arrNeeded = ['format','key', 'secret', 'data_type', 'model_type', 'othersTables'];
 
 		foreach ($arrNeeded as $value) {
 			$$value = $input->getString($value);
@@ -70,7 +70,7 @@ class AdministrativetoolsFEController extends \Joomla\CMS\MVC\Controller\BaseCon
 
 		if($auth) {
 			$model = $this->getModel('Tool', 'AdministrativetoolsFEModel');
-			$url = $model->generateBaseFile($data_type, $model_type);
+			$url = $model->generateBaseFile($data_type, $model_type, $othersTables);
 			if($url) {
 				$response['error'] = false;
 				$response['msg'] = JText::_('COM_ADMINISTRATIVETOOLS_SYNC_LISTS_FILE_GENERATED');

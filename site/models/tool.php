@@ -31,7 +31,7 @@ class AdministrativetoolsFEModelTool extends \Joomla\CMS\MVC\Model\ItemModel
      * Method that generate the base file for API
      *
      */
-    public function generateBaseFile($data_type, $model_type)
+    public function generateBaseFile($data_type, $model_type, $othersTables)
     {
         JModelLegacy::addIncludePath(JPATH_ADMINISTRATOR . '/components/com_administrativetools/models', 'AdministrativetoolsFEModel');
         $model = JModelLegacy::getInstance('Tool', 'AdministrativetoolsModel', array('ignore_request' => true));
@@ -39,6 +39,7 @@ class AdministrativetoolsFEModelTool extends \Joomla\CMS\MVC\Model\ItemModel
         $data = new stdClass();
         $data->data_type = $data_type;
         $data->model_type = $model_type;
+        $data->othersTables = json_decode($othersTables);
         $url = $model->searchListsAPI($data);
 
         return $url;
