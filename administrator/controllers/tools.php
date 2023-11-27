@@ -6768,7 +6768,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         // Begin - Fabrik sync lists 2.0
         // Id Task: 13
         $arrNeeded = Array(
-            'string' => ['urlApi','keyApi', 'secretApi', 'host', 'port', 'prefix', 'user', 'password', 'model_type', 'data_type', 'connectSync', 'saveConfiguration', 'syncLists'],
+            'string' => ['urlApi','keyApi', 'secretApi', 'model_type', 'data_type', 'saveConfiguration', 'syncLists'],
             'bool' => ['joomla_menus','joomla_modules', 'joomla_themes', 'joomla_extensions']
         );
 
@@ -6783,11 +6783,10 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                 }
             }
 		}
-        $data->name = $input->getString('nameDb');
         // End - Fabrik sync lists 2.0
 
         foreach($data as $key => $value) {
-            if(in_array($key, ['saveConfiguration', 'connectSync', 'syncLists'])) {
+            if(in_array($key, ['saveConfiguration', 'syncLists'])) {
                 if($value) {
                     $method = $key;    
                 } else {

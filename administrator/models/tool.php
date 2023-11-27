@@ -47,174 +47,63 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
      */
     public function syncLists($data)
     {
-        //Initial configurations
-        $db = $this->getDbo();
-        $resultReturn = true;
-
-        //Configuring the tables needed
-        $dbExternal = $this->connectSync($data);
-        $data->data_type == 'identical' ? $arrFabrikTables = FabrikAdminModelAdministrativetools::tablesVersions() : $arrFabrikTables = Array();
-        $data->model_type == 'identical' ? $arrModelTables = $this->tablesOnlyModel($dbExternal, $data->name) : $arrModelTables = Array('external' => Array(), 'internal' => Array());
+        $path = '/media/com_administrativetools/identical/';
+        $pathWithPrefix = JPATH_SITE . $path;
+        $nameFile = 'dumpSourceEnv.sql';
+        $nameFileChanges = 'dumpSourceEnv.sql';
+        $fullUrl = JURI::base();
+        $parsedUrl = parse_url($fullUrl);
         $arrOthersTables = $this->othersTablesOnlyData($data);
 
-        //Without external connection doesn't work
-        if(!$dbExternal) {
+        $pathUrl = $parsedUrl['scheme'] . '://' . $parsedUrl['host'] . $path . $nameFile;
+        $pathUrlChanges = $parsedUrl['scheme'] . '://' . $parsedUrl['host'] . $path . $nameFile;
+        $pathName = $pathWithPrefix . $nameFile;
+        $pathNameChanges = $pathWithPrefix . $nameFileChanges;
+
+        $data->data_type == 'identical' ? $dataType = true : $dataType = false;
+        $data->model_type == 'identical' ? $modelType = true : $modelType = false;
+        if(!$dataType && !$modelType) {
             return false;
         }
 
-        //Calling the fabrik version control
-        $nameVersion = FabrikAdminModelAdministrativetools::generateSql();
-        $idVersion = substr($nameVersion, strpos($nameVersion, '_')+1, strpos($nameVersion, '.sql')-strpos($nameVersion, '_')-1);
-        $newVersion = $this->newVersion($idVersion, $nameVersion);
-        $arrTables = array_merge($arrFabrikTables, $arrModelTables['external'], $arrOthersTables);
-
-        if(!empty($arrTables)) {
-            //Paths needed
-            $path = JPATH_SITE . '/media/com_administrativetools';
-            $pathVersion = $path . '/versions';
-            $pathNameVersion = $pathVersion . '/' . $nameVersion;
-
-            if(!is_dir($path)) {
-                mkdir($path);
-            }
-
-            if(!is_dir($pathVersion)) {
-                mkdir($pathVersion);
-            }
-            
-            if(is_file($pathNameVersion)) {
-                unlink($pathNameVersion);
-            }
-
-            $handle = fopen($pathNameVersion, 'x+');
-            $numtypes = array('tinyint', 'smallint', 'mediumint', 'int', 'bigint', 'float', 'double', 'decimal', 'real');
-            $sqlFile = "SET sql_mode = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';<ql>\n\n";
-
-            //Cycle through the table(s)
-            foreach ($arrTables as $table) {
-                //If the tables are only_data execute truncate and insert into like fabrik version control
-                if(substr($table, 0, strlen('#__')) == '#__') {
-                    $sqlFile .= "TRUNCATE TABLE " . $db->qn($table) . ";<ql>\n\n";
-                    $dbExternal->setQuery("SELECT * FROM $table");
-                    $result = $dbExternal->loadObjectList();
-
-                    if(!empty($result)) {
-                        $sqlFile .= 'INSERT INTO `' . $table . '` (';
-                        $dbExternal->setQuery("SHOW COLUMNS FROM $table");
-                        $pstm3 = $dbExternal->loadObjectList('Field');
-                        $count = 0;
-                        $type = array();
-                        $count3 = count($pstm3);
-
-                        foreach($pstm3 as $column => $rows) {
-                            if (stripos($column, '(')) {
-                                $type[$table][] = stristr($rows->Type, '(', true);
-                            } else {
-                                $type[$table][] = $rows->Type;
-                            }
-                            $sqlFile .= "`" . $column . "`";
-                            $count++;
-                            if ($count < $count3) {
-                                $sqlFile .= ", ";
-                            }
-                        }
-
-                        $sqlFile .= ")" . ' VALUES';
-                        fwrite($handle, $sqlFile);
-                        $sqlFile = "";
-
-                        $counter = 0;
-                        foreach($result as $j => $row) {
-                            $sqlFile = "\n\t(";
-                            $count4 = count((array) $row);
-                            $count5 = 0;
-                            $count6 = count((array) $result);
-                            foreach($row as $r) {
-                                if (isset($r)) {
-                                    //if number, take away "". else leave as string
-                                    if ((in_array($type[$table][$count5], $numtypes)) && (!empty($r))) {
-                                        $sqlFile .= $r;
-                                    } else {
-                                        $sqlFile .= $db->quote($r);
-                                    }
-                                } else {
-                                    $sqlFile .= 'NULL';
-                                }
-                                if ($count5 < $count4 - 1) {
-                                    $sqlFile .= ',';
-                                }
-                                $count5++;
-                            }
-
-                            $counter++;
-                            if ($counter < $count6) {
-                                $sqlFile .= "),";
-                            } else {
-                                $sqlFile .= ");<ql>\n\n";
-                            }
-
-                            fwrite($handle, $sqlFile);
-                            $sqlFile = "";
-                        }
-                    } else {
-                        $sqlFile = "TRUNCATE TABLE " . $db->qn($table) . ";<ql>\n\n";
-                        fwrite($handle, $sqlFile);
-                        $sqlFile = "";
-                    }
-                }
-
-                //If the tables are only_model execute drop temps, rename table, create table and insert into
-                if(substr($table, 0, strlen('#__')) != '#__') {
-                    $tempTable = 'ztmp_' . $table;
-                    $query = $db->getQuery(true)
-                        ->clear()
-                        ->select($db->qn('table_name'))
-                        ->from($db->qn('information_schema') . '.' . $db->qn('tables'))
-                        ->where($db->qn('table_schema') . ' = (SELECT DATABASE())')
-                        ->where($db->qn('table_name') . ' = ' . $db->q($tempTable));
-                    $db->setQuery($query);
-                    if($db->loadResult()) {
-                        $sqlFile .= "DROP TABLE " . $db->qn($tempTable) . ";<ql>\n\n";
-                    }
-
-                    if(in_array($table, $arrModelTables['internal'])) {
-                        $sqlFile .= "RENAME TABLE $table TO $tempTable;<ql>\n\n";
-                    }
-                    
-                    $dbExternal->setQuery("SHOW CREATE TABLE $table");
-                    $createTable = $dbExternal->loadColumn(1)[0];
-                    $sqlFile .= $createTable . ";<ql>\n\n";
-
-                    if(in_array($table, $arrModelTables['internal'])) {
-                        $dbExternal->setQuery(
-                            "SELECT column_name, column_type from INFORMATION_SCHEMA.COLUMNS WHERE table_schema = (SELECT DATABASE()) AND table_name = '$table';"
-                        );
-                        $columnsExternal = $dbExternal->loadAssocList('column_name', 'column_type');
-
-                        $db->setQuery(
-                            "SELECT column_name, column_type from INFORMATION_SCHEMA.COLUMNS WHERE table_schema = (SELECT DATABASE()) AND table_name = '$table';"
-                        );
-                        $columnsInternal = $db->loadAssocList('column_name', 'column_type');
-
-                        $samesColumns = array_intersect_assoc($columnsExternal, $columnsInternal);
-                        $columns = array_keys($samesColumns);
-
-                        $sqlFile .= "INSERT INTO " . $db->qn($table) . " (`" . implode("`,`", $columns) . "`)\n";
-                        $sqlFile .= "SELECT `" . implode("`,`", $columns) . "`\n";
-                        $sqlFile .= "FROM " . $db->qn($tempTable) . ";<ql>\n\n";
-                    }
-
-                    fwrite($handle, $sqlFile);
-                    $sqlFile = "";
-                }
-            }
-
-            fclose($handle);
-            $syncData = $this->syncSqlFile($pathNameVersion);
-            $resultReturn = $newVersion && $syncData;
+        //Getting the dump file from source environment
+        $opts = new stdClass();
+        $opts->url = $data->urlApi;
+        $opts->key = $data->keyApi;
+        $opts->secret = $data->secretApi;
+        $opts->data_type = $data->data_type;
+        $opts->model_type = $data->model_type;
+        $opts->othersTables = json_encode($arrOthersTables);
+        $opts->format = 'json';
+        $opts->task = 'syncListsIdentical';
+        $opts->path = $path;
+        
+        $response = $this->callApi($opts);
+        if($response->error) {
+            $return = false;
         }
 
-        return $resultReturn;
+        //Downloading the file
+        $urlToFile = $response->data;
+        $content = file_get_contents($urlToFile);
+        if ($content !== false) {
+            if(is_file($pathName)) {
+                unlink($pathName);
+            }
+
+            $save = file_put_contents($pathName, $content);
+            if (!$save) {
+                $return = false;
+            }
+        } else {
+            $return = false;
+        }
+
+        if(!$this->syncSqlFile($pathName, true)) {
+            $return = false;
+        }
+
+        return $return ? $pathName : $return;
     }
 
     /**
@@ -254,6 +143,8 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
     /**
      * Fabrik sync lists 1.0
      * 
+     * Descontinued since v2.0
+     * 
      * Method that test the connection of the configuration of sync list
      *
      */
@@ -289,7 +180,7 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
      *
      * @return boolean
      */
-    private function syncSqlFile($pathNameVersion) 
+    private function syncSqlFile($pathNameVersion, $special=false) 
     {
 		$db = JFactory::getDbo();
 		
@@ -378,85 +269,6 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
 
         return $tables;
     }
-    
-    /**
-     * Fabrik sync lists 1.0
-     * 
-     * Method that apply a new version in database to multiple lists of fabrik and joomla
-     *
-     */
-    private function newVersion($id, $name)
-    {
-        $newdb = JFactory::getDbo();
-		$user = JFactory::getUser();
-
-		$values = new stdClass();
-		$values->id = 'default';
-		$values->label = FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_LABEL_VERSION');
-		$values->link = '';
-		$values->date_creation = date('Y-m-d H:i:s');
-		$values->user_id = $user->id;
-		$values->text = FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_TEXT_VERSION');;
-		$values->sql = $name;
-
-		//Store the new version
-		$newQuery = $newdb->getQuery(true)
-            ->clear()
-            ->insert($newdb->qn('#__fabrik_version_control'))
-            ->values("'" . implode("','", (array)$values) . "'");
-
-        $newdb->setQuery($newQuery);
-        $newdb->execute();
-
-        return true;
-    }
-
-    /**
-     * Fabrik sync lists 1.0
-     * 
-     * Method that return the database tables that the sync will be only with model.
-     * 
-     */ 
-    private function tablesOnlyModel($dbExternal, $database)
-    {
-        $db = $this->getDbo();
-		$query = $dbExternal->getQuery(true)
-            ->clear()
-            ->select($dbExternal->qn('db_table_name'))
-            ->from($dbExternal->qn('#__fabrik_lists'));
-
-        $dbExternal->setQuery($query);
-        $tables['external'] = array_unique($dbExternal->loadColumn(), SORT_STRING);
-
-        foreach($tables['external'] as $table) {
-            $query = $dbExternal->getQuery(true)
-                ->clear()
-                ->select($dbExternal->qn('table_name'))
-                ->from($dbExternal->qn('information_schema') . '.' . $dbExternal->qn('tables'))
-                ->where($dbExternal->qn('table_schema') . ' = ' . $dbExternal->q($database))
-                ->where($dbExternal->qn('table_name') . ' LIKE ' . $dbExternal->q($table . '%'));
-            $dbExternal->setQuery($query);
-            $relationTables = $dbExternal->loadColumn();
-            foreach($relationTables as $relationTable) {
-                !in_array($relationTable, $tables['external']) ? $tables['external'][] = $relationTable : false;
-            }
-        }
-
-        foreach($tables['external'] as $tableExt) {
-            $query = $db->getQuery(true)
-                ->clear()
-                ->select($db->qn('table_name'))
-                ->from($db->qn('information_schema') . '.' . $db->qn('tables'))
-                ->where($db->qn('table_schema') . ' = (SELECT DATABASE())')
-                ->where($db->qn('table_name') . ' = ' . $db->q($tableExt));
-            $db->setQuery($query);
-            if($db->loadResult()) {
-                $tables['internal'][] = $tableExt;
-            }
-        }
-
-        return $tables;
-    }
 
     /**
      * Fabrik sync lists 2.0
@@ -533,7 +345,7 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
      *
      * @return boolean
      */
-    private function tablesVersions($others = Array(), $principals=false) 
+    public function tablesVersions($others = Array(), $principals=false) 
     {
 		//Defaults
 		$arrFabrik = Array(
@@ -788,16 +600,9 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
      */
     public function writeFile(&$string, $pathName) 
     {
-        $aux = explode('/', $pathName);
 
-        for ($i=1; $i < count($aux)-1; $i++) {
-            $path .= '/'.$aux[$i];
+        $this->cleanThePath($pathName);
 
-            if(!is_dir($path)) {
-                mkdir($path);
-            }
-        }
-        
         if(is_file($pathName)) {
             unlink($pathName);
         }
@@ -811,6 +616,25 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
         fclose($handle);
 
         return true;
+    }
+
+    /**
+     * Fabrik sync lists 2.0
+     * 
+     * Method that create the path to the file if the path does not exists
+     *
+     */
+    public function cleanThePath($pathName)
+    {
+        $aux = explode('/', $pathName);
+
+        for ($i=1; $i < count($aux)-1; $i++) {
+            $path .= '/'.$aux[$i];
+
+            if(!is_dir($path)) {
+                mkdir($path);
+            }
+        }
     }
 
     /**

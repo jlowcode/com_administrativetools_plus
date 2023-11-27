@@ -469,4 +469,233 @@ class AdministrativetoolsFEModelTool extends \Joomla\CMS\MVC\Model\ItemModel
     {
         return "ALTER TABLE `$table` DROP COLUMN `$column`;";
     }
+
+    /**
+     * Fabrik sync lists 2.0
+     * 
+     * Method that sync the lists.
+     *
+     */
+    public function syncListsIdentical($data)
+    {
+        //Initial configurations
+        JModelLegacy::addIncludePath(JPATH_ADMINISTRATOR . '/components/com_administrativetools/models', 'AdministrativetoolsFEModel');
+        JModelLegacy::addIncludePath(JPATH_ADMINISTRATOR . '/components/com_fabrik/models', 'FabrikAdminModelAdministrativetools');
+        $adminModel = JModelLegacy::getInstance('Tool', 'AdministrativetoolsModel', array('ignore_request' => true));
+        $adminFabrik = JModelLegacy::getInstance('Administrativetools', 'FabrikAdminModel', array('ignore_request' => true));
+        $db = $this->getDbo();
+
+        //Configuring the tables needed
+        $data->data_type == 'identical' ? $arrFabrikTables = $adminModel->tablesVersions() : $arrFabrikTables = Array();
+        $data->model_type == 'identical' ? $arrModelTables = $this->tablesOnlyModel() : $arrModelTables = Array();
+        $arrOthersTables = json_decode($data->othersTables);
+
+        //Calling the fabrik version control
+        if(method_exists('FabrikAdminModelAdministrativetools', 'generateSql')) {
+            $nameVersion = $adminFabrik->generateSql();
+            $idVersion = substr($nameVersion, strpos($nameVersion, '_')+1, strpos($nameVersion, '.sql')-strpos($nameVersion, '_')-1);
+            $newVersion = $this->newVersion($idVersion, $nameVersion);
+        }
+
+        $arrTables = array_merge($arrFabrikTables, $arrModelTables, $arrOthersTables);
+        if(!empty($arrTables)) {
+            //Paths needed
+            $nameFile = 'dumpEnv.sql';
+            $path = JPATH_SITE . $data->path;
+            $pathName = $path . '/' . $nameFile;
+
+            $adminModel->cleanThePath($pathName);
+
+            if(is_file($pathName)) {
+                unlink($pathName);
+            }
+
+            $handle = fopen($pathName, 'x+');
+            $numtypes = array('tinyint', 'smallint', 'mediumint', 'int', 'bigint', 'float', 'double', 'decimal', 'real');
+            $sqlFile = "SET sql_mode = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';<ql>\n\n";
+
+            //Cycle through the table(s)
+            foreach ($arrTables as $table) {
+                //If the tables are only_data execute truncate and insert into like fabrik version control
+                if(substr($table, 0, strlen('#__')) == '#__') {
+                    $sqlFile .= "TRUNCATE TABLE " . $db->qn($table) . ";<ql>\n\n";
+                    $db->setQuery("SELECT * FROM $table");
+                    $result = $db->loadObjectList();
+
+                    if(!empty($result)) {
+                        $sqlFile .= 'INSERT INTO `' . $table . '` (';
+                        $db->setQuery("SHOW COLUMNS FROM $table");
+                        $pstm3 = $db->loadObjectList('Field');
+                        $count = 0;
+                        $type = array();
+                        $count3 = count($pstm3);
+
+                        foreach($pstm3 as $column => $rows) {
+                            if (stripos($column, '(')) {
+                                $type[$table][] = stristr($rows->Type, '(', true);
+                            } else {
+                                $type[$table][] = $rows->Type;
+                            }
+                            $sqlFile .= "`" . $column . "`";
+                            $count++;
+                            if ($count < $count3) {
+                                $sqlFile .= ", ";
+                            }
+                        }
+
+                        $sqlFile .= ")" . ' VALUES';
+                        fwrite($handle, $sqlFile);
+                        $sqlFile = "";
+
+                        $counter = 0;
+                        foreach($result as $j => $row) {
+                            $sqlFile = "\n\t(";
+                            $count4 = count((array) $row);
+                            $count5 = 0;
+                            $count6 = count((array) $result);
+                            foreach($row as $r) {
+                                if (isset($r)) {
+                                    //if number, take away "". else leave as string
+                                    if ((in_array($type[$table][$count5], $numtypes)) && (!empty($r))) {
+                                        $sqlFile .= $r;
+                                    } else {
+                                        $sqlFile .= $db->quote($r);
+                                    }
+                                } else {
+                                    $sqlFile .= 'NULL';
+                                }
+                                if ($count5 < $count4 - 1) {
+                                    $sqlFile .= ',';
+                                }
+                                $count5++;
+                            }
+
+                            $counter++;
+                            if ($counter < $count6) {
+                                $sqlFile .= "),";
+                            } else {
+                                $sqlFile .= ");<ql>\n\n";
+                            }
+
+                            fwrite($handle, $sqlFile);
+                            $sqlFile = "";
+                        }
+                    } else {
+                        $sqlFile = "TRUNCATE TABLE " . $db->qn($table) . ";<ql>\n\n";
+                        fwrite($handle, $sqlFile);
+                        $sqlFile = "";
+                    }
+                }
+
+                //If the tables are only_model execute drop temps, rename table, create table and insert into
+                if(substr($table, 0, strlen('#__')) != '#__') {
+                    $tempTable = 'ztmp_' . $table;
+                    $sqlFile .= "DROP TABLE IF EXISTS " . $db->qn($tempTable) . ";<ql>\n\n";
+
+                    /* USAR NA SINCRONIZAÇÃO DO ARQUIVO SQL
+                    if(in_array($table, $arrModelTables['internal'])) {
+                        $sqlFile .= "RENAME TABLE $table TO $tempTable;<ql>\n\n";
+                    }*/
+
+                    $db->setQuery("SHOW CREATE TABLE $table");
+                    $createTable = $db->loadColumn(1)[0];
+                    $sqlFile .= $createTable . ";<ql>\n\n";
+                    $sqlFile .= "SINCRONIZACAO $table;<ql>\n\n";
+
+                    /* USAR NA SINCRONIZAÇÃO DO ARQUIVO SQL
+                    if(in_array($table, $arrMo;<ql>\n\ndelTables['internal'])) {
+                        $db->setQuery(
+                            "SELECT column_name AS column_name, column_type AS column_type from INFORMATION_SCHEMA.COLUMNS WHERE table_schema = (SELECT DATABASE()) AND table_name = '$table';"
+                        );
+                        $columnsExternal = $db->loadAssocList('column_name', 'column_type');
+
+                        $db->setQuery(
+                            "SELECT column_name AS column_name, column_type AS column_type from INFORMATION_SCHEMA.COLUMNS WHERE table_schema = (SELECT DATABASE()) AND table_name = '$table';"
+                        );
+                        $columnsInternal = $db->loadAssocList('column_name', 'column_type');
+
+                        $samesColumns = array_intersect_assoc($columnsExternal, $columnsInternal);
+                        $columns = array_keys($samesColumns);
+
+                        $sqlFile .= "INSERT INTO " . $db->qn($table) . " (`" . implode("`,`", $columns) . "`)\n";
+                        $sqlFile .= "SELECT `" . implode("`,`", $columns) . "`\n";
+                        $sqlFile .= "FROM " . $db->qn($tempTable) . ";<ql>\n\n";
+                    }*/
+
+                    fwrite($handle, $sqlFile);
+                    $sqlFile = "";
+                }
+            }
+
+            fclose($handle);
+        }
+
+        return JURI::base() . $path . $nameFile;
+    }
+
+    /**
+     * Fabrik sync lists 1.0
+     * 
+     * Method that return the database tables that the sync will be only with model.
+     * 
+     */ 
+    private function tablesOnlyModel()
+    {
+        $db = $this->getDbo();
+		$query = $db->getQuery(true)
+            ->clear()
+            ->select($db->qn('db_table_name'))
+            ->from($db->qn('#__fabrik_lists'));
+
+        $db->setQuery($query);
+        $tables = array_unique($db->loadColumn(), SORT_STRING);
+
+        foreach($tables as $table) {
+            $query = $db->getQuery(true)
+                ->clear()
+                ->select($db->qn('table_name'))
+                ->from($db->qn('information_schema') . '.' . $db->qn('tables'))
+                ->where($db->qn('table_schema') . ' = (SELECT DATABASE())')
+                ->where($db->qn('table_name') . ' LIKE ' . $db->q($table . '%'));
+            $db->setQuery($query);
+            $relationTables = $db->loadColumn();
+            foreach($relationTables as $relationTable) {
+                !in_array($relationTable, $tables) ? $tables[] = $relationTable : false;
+            }
+        }
+
+        return $tables;
+    }
+
+        /**
+     * Fabrik sync lists 1.0
+     * 
+     * Method that apply a new version in database to multiple lists of fabrik and joomla
+     *
+     */
+    private function newVersion($id, $name)
+    {
+        $newdb = JFactory::getDbo();
+		$user = JFactory::getUser();
+
+		$values = new stdClass();
+		$values->id = 'default';
+		$values->label = FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_LABEL_VERSION');
+		$values->link = '';
+		$values->date_creation = date('Y-m-d H:i:s');
+		$values->user_id = $user->id;
+		$values->text = FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_TEXT_VERSION');;
+		$values->sql = $name;
+
+		//Store the new version
+		$newQuery = $newdb->getQuery(true)
+            ->clear()
+            ->insert($newdb->qn('#__fabrik_version_control'))
+            ->values("'" . implode("','", (array)$values) . "'");
+
+        $newdb->setQuery($newQuery);
+        $newdb->execute();
+
+        return true;
+    }
 }

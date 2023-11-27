@@ -148,4 +148,47 @@ class AdministrativetoolsFEController extends \Joomla\CMS\MVC\Controller\BaseCon
 			die();
 		}
     }
+
+	/**
+     * Fabrik sync lists 2.0
+     * 
+     * Method that redirect to function to generate the dump file for API
+     *
+     */
+    public function syncListsIdentical()
+    {
+		$app = JFactory::getApplication();
+		$input = $app->input;
+		$response = Array();
+		$arrNeeded = ['format','key', 'secret', 'data_type', 'model_type', 'othersTables', 'path'];
+
+		foreach ($arrNeeded as $value) {
+			$$value = $input->getString($value);
+			$data->$value = $$value;
+		}
+		
+		$auth = $this->authenticateApi($key, $secret);
+		if (!$auth) {
+			$response['error'] = true;
+			$response['msg'] = 'Acesso não permitido, falha na autenticação';
+		}
+
+		if($auth) {
+			$model = $this->getModel('Tool', 'AdministrativetoolsFEModel');
+			$url = $model->syncListsIdentical($data);
+			if($url) {
+				$response['error'] = false;
+				$response['msg'] = JText::_('COM_ADMINISTRATIVETOOLS_SYNC_LISTS_FILE_GENERATED');
+				$response['data'] = $url;
+			} else {
+				$response['error'] = true;
+				$response['msg'] = JText::_('COM_ADMINISTRATIVETOOLS_SYNC_LISTS_FILE_NOT_GENERATED');
+			}
+		}
+
+		if($format == 'json') {
+			echo json_encode($response);
+			die();
+		}
+    }
 }
