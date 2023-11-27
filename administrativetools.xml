@@ -37,9 +37,14 @@
         <folder>models</folder>
         <folder>controllers</folder>
         <folder>helpers</folder>
-        <folder>administrator/language</folder>
     </files>
 
+    <languages folder="site/languages">            
+        <language tag="en-GB">en-GB/en-GB.com_administrativetools.ini</language>
+        <language tag="en-GB">en-GB/en-GB.com_administrativetools.sys.ini</language>
+        <language tag="pt-BR">pt-BR/pt-BR.com_administrativetools.ini</language>
+        <language tag="pt-BR">pt-BR/pt-BR.com_administrativetools.sys.ini</language>
+    </languages>
 
     <administration>
         <menu>COM_ADMINISTRATIVETOOLS</menu>
