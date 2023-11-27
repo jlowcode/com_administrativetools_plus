@@ -47,18 +47,12 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
      */
     public function syncLists($data)
     {
+        $nameFile = 'dumpSourceEnv.sql';
         $path = '/media/com_administrativetools/identical/';
         $pathWithPrefix = JPATH_SITE . $path;
-        $nameFile = 'dumpSourceEnv.sql';
-        $nameFileChanges = 'dumpSourceEnv.sql';
-        $fullUrl = JURI::base();
-        $parsedUrl = parse_url($fullUrl);
-        $arrOthersTables = $this->othersTablesOnlyData($data);
-
-        $pathUrl = $parsedUrl['scheme'] . '://' . $parsedUrl['host'] . $path . $nameFile;
-        $pathUrlChanges = $parsedUrl['scheme'] . '://' . $parsedUrl['host'] . $path . $nameFile;
         $pathName = $pathWithPrefix . $nameFile;
-        $pathNameChanges = $pathWithPrefix . $nameFileChanges;
+        $arrOthersTables = $this->othersTablesOnlyData($data);
+        $return = true;
 
         $data->data_type == 'identical' ? $dataType = true : $dataType = false;
         $data->model_type == 'identical' ? $modelType = true : $modelType = false;
@@ -103,7 +97,7 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
             $return = false;
         }
 
-        return $return ? $pathName : $return;
+        return $return;
     }
 
     /**
@@ -146,7 +140,7 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
      * Descontinued since v2.0
      * 
      * Method that test the connection of the configuration of sync list
-     *
+     * 
      */
     public function connectSync($data)
     {
@@ -200,11 +194,17 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
 						$qr .= $row;
 						$exec = str_replace('<ql>', '', $qr);
 					}
-					$db->setQuery($exec);
-					$qr = '';
-					if(!$db->execute()) {
-						continue;
-					}
+
+                    if(strpos($exec, '--SINCRONIZACAO--') !== false) {
+                        $exp = explode('--', $exec);
+                        $table = $exp[3];
+                        $mod = (int) $exp[2];
+                        $this->syncSpecialCasesIdentical(trim($table), $mod);
+                    } else {
+                        $db->setQuery($exec);
+                        $db->execute();
+                    }   
+                    $qr = '';
 				} else {
 					$qr .= $row;
 				}
@@ -212,6 +212,61 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
 		}
 
         return true;
+    }
+
+    /**
+	 * Fabrik sync lists 2.0
+	 * 
+     * Method that treat the special cases of sync identical
+     *
+     * @return null
+     */
+    private function syncSpecialCasesIdentical($table, $mod) 
+    {
+        $db = $this->getDbo();
+        $tempTable = 'ztmp_' . $table;
+
+        $query = $db->getQuery(true)
+            ->clear()
+            ->select($db->qn('table_name'))
+            ->from($db->qn('information_schema') . '.' . $db->qn('tables'))
+            ->where($db->qn('table_schema') . ' = (SELECT DATABASE())')
+            ->where($db->qn('table_name') . ' = ' . $db->q($table));
+        $db->setQuery($query);
+
+        if($db->loadResult() == null) {
+            return;
+        }
+
+        switch ($mod) {
+            case 1:
+                $db->setQuery("RENAME TABLE $table TO $tempTable;");
+                $db->execute();
+                break;
+            
+            case 2:
+                $db->setQuery(
+                    "SELECT column_name AS column_name, column_type AS column_type from INFORMATION_SCHEMA.COLUMNS WHERE table_schema = (SELECT DATABASE()) AND table_name = '$table';"
+                );
+                $columnsExternal = $db->loadAssocList('column_name', 'column_type');
+
+                $db->setQuery(
+                    "SELECT column_name AS column_name, column_type AS column_type from INFORMATION_SCHEMA.COLUMNS WHERE table_schema = (SELECT DATABASE()) AND table_name = '$tempTable';"
+                );
+                $columnsInternal = $db->loadAssocList('column_name', 'column_type');
+
+                $samesColumns = array_intersect_assoc($columnsExternal, $columnsInternal);
+                $columns = array_keys($samesColumns);
+
+                $db->setQuery(
+                    "INSERT INTO " . $db->qn($table) . " (`" . implode("`,`", $columns) . "`)
+                    SELECT `" . implode("`,`", $columns) . "`
+                    FROM " . $db->qn($tempTable)
+                );
+                $db->execute();
+
+                break;
+        }
     }
 
     /**

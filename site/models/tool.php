@@ -501,8 +501,9 @@ class AdministrativetoolsFEModelTool extends \Joomla\CMS\MVC\Model\ItemModel
         if(!empty($arrTables)) {
             //Paths needed
             $nameFile = 'dumpEnv.sql';
-            $path = JPATH_SITE . $data->path;
-            $pathName = $path . '/' . $nameFile;
+            $path = $data->path;
+            $pathFull = JPATH_SITE . $path;
+            $pathName = $pathFull . '/' . $nameFile;
 
             $adminModel->cleanThePath($pathName);
 
@@ -591,19 +592,15 @@ class AdministrativetoolsFEModelTool extends \Joomla\CMS\MVC\Model\ItemModel
                 if(substr($table, 0, strlen('#__')) != '#__') {
                     $tempTable = 'ztmp_' . $table;
                     $sqlFile .= "DROP TABLE IF EXISTS " . $db->qn($tempTable) . ";<ql>\n\n";
-
-                    /* USAR NA SINCRONIZAÇÃO DO ARQUIVO SQL
-                    if(in_array($table, $arrModelTables['internal'])) {
-                        $sqlFile .= "RENAME TABLE $table TO $tempTable;<ql>\n\n";
-                    }*/
+                    $sqlFile .= "--SINCRONIZACAO--1--$table<ql>\n\n";
 
                     $db->setQuery("SHOW CREATE TABLE $table");
                     $createTable = $db->loadColumn(1)[0];
                     $sqlFile .= $createTable . ";<ql>\n\n";
-                    $sqlFile .= "SINCRONIZACAO $table;<ql>\n\n";
+                    $sqlFile .= "--SINCRONIZACAO--2--$table<ql>\n\n";
 
                     /* USAR NA SINCRONIZAÇÃO DO ARQUIVO SQL
-                    if(in_array($table, $arrMo;<ql>\n\ndelTables['internal'])) {
+                    if(in_array($table, $arrModelTables['internal'])) {
                         $db->setQuery(
                             "SELECT column_name AS column_name, column_type AS column_type from INFORMATION_SCHEMA.COLUMNS WHERE table_schema = (SELECT DATABASE()) AND table_name = '$table';"
                         );
