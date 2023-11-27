@@ -599,26 +599,6 @@ class AdministrativetoolsFEModelTool extends \Joomla\CMS\MVC\Model\ItemModel
                     $sqlFile .= $createTable . ";<ql>\n\n";
                     $sqlFile .= "--SINCRONIZACAO--2--$table<ql>\n\n";
 
-                    /* USAR NA SINCRONIZAÇÃO DO ARQUIVO SQL
-                    if(in_array($table, $arrModelTables['internal'])) {
-                        $db->setQuery(
-                            "SELECT column_name AS column_name, column_type AS column_type from INFORMATION_SCHEMA.COLUMNS WHERE table_schema = (SELECT DATABASE()) AND table_name = '$table';"
-                        );
-                        $columnsExternal = $db->loadAssocList('column_name', 'column_type');
-
-                        $db->setQuery(
-                            "SELECT column_name AS column_name, column_type AS column_type from INFORMATION_SCHEMA.COLUMNS WHERE table_schema = (SELECT DATABASE()) AND table_name = '$table';"
-                        );
-                        $columnsInternal = $db->loadAssocList('column_name', 'column_type');
-
-                        $samesColumns = array_intersect_assoc($columnsExternal, $columnsInternal);
-                        $columns = array_keys($samesColumns);
-
-                        $sqlFile .= "INSERT INTO " . $db->qn($table) . " (`" . implode("`,`", $columns) . "`)\n";
-                        $sqlFile .= "SELECT `" . implode("`,`", $columns) . "`\n";
-                        $sqlFile .= "FROM " . $db->qn($tempTable) . ";<ql>\n\n";
-                    }*/
-
                     fwrite($handle, $sqlFile);
                     $sqlFile = "";
                 }
