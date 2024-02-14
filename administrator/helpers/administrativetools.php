@@ -11,6 +11,7 @@
 defined('_JEXEC') or die;
 
 use \Joomla\CMS\Factory;
+use \Joomla\CMS\Language\Text;
 
 /**
  * Administrativetools helper.
@@ -28,7 +29,7 @@ class AdministrativetoolsHelper {
      */
     public static function addSubmenu(string $vName = '') {
         JHtmlSidebar::addEntry(
-                JText::_('COM_ADMINISTRATIVETOOLS_TITLE_TOOLS'),
+                Text::_('COM_ADMINISTRATIVETOOLS_TITLE_TOOLS'),
                 'index.php?option=com_administrativetools&view=tools', $vName == 'tools');
     }
 

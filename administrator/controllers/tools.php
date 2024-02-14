@@ -131,13 +131,13 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
             foreach ($data["name"] as $key => $value) {
                 if (!move_uploaded_file($data['tmp_name'][$key], $folder . '/' . $value)) {
-                    $app->enqueueMessage(JText::_('COM_ADMINISTRATIVETOOLS_PACKAGES_UPLOAD_ERROR') . ' - ' . $value, 'error');
+                    $app->enqueueMessage(Text::_('COM_ADMINISTRATIVETOOLS_PACKAGES_UPLOAD_ERROR') . ' - ' . $value, 'error');
                 } else {
-                    $app->enqueueMessage(JText::_('COM_ADMINISTRATIVETOOLS_PACKAGES_UPLOAD_SUCCESS') . ' - ' . $value, 'message');
+                    $app->enqueueMessage(Text::_('COM_ADMINISTRATIVETOOLS_PACKAGES_UPLOAD_SUCCESS') . ' - ' . $value, 'message');
                 }
             }
         } else {
-            $app->enqueueMessage(JText::_('COM_ADMINISTRATIVETOOLS_PACKAGES_UPLOAD_FILE_ERROR'), 'error');
+            $app->enqueueMessage(Text::_('COM_ADMINISTRATIVETOOLS_PACKAGES_UPLOAD_FILE_ERROR'), 'error');
         }
 
         $this->setRedirect(JRoute::_('index.php?option=com_administrativetools&view=tools&tab=1', false)); //JUri::base() .
@@ -225,7 +225,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         unlink($folder . '/pkg_' . $data['name'] . '.xml');
 
         $this->insertPackagesDB($data['name'], $nm_package . '.zip', $data['record'], $files);
-        $app->enqueueMessage(FText::_('COM_ADMINISTRATIVETOOLS_PACKAGES_CONTROLLER_GENERATEPACKATE_SUCCESS') . ' - ' . $nm_package, 'message');
+        $app->enqueueMessage(Text::_('COM_ADMINISTRATIVETOOLS_PACKAGES_CONTROLLER_GENERATEPACKATE_SUCCESS') . ' - ' . $nm_package, 'message');
         $this->setRedirect(JRoute::_('index.php?option=com_administrativetools&view=tools&tab=1', false));
     }
 
@@ -277,17 +277,17 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
             $extension->appendChild($extension_att);
         }
 
-        $extension->appendChild($xml->createElement('name', ucfirst($data['name'] . FText::_('COM_ADMINISTRATIVETOOLS_PACKAGES_XML_NAME'))));
+        $extension->appendChild($xml->createElement('name', ucfirst($data['name'] . Text::_('COM_ADMINISTRATIVETOOLS_PACKAGES_XML_NAME'))));
         $extension->appendChild($xml->createElement('author', $user->name));
         $extension->appendChild($xml->createElement('creationDate', date('Y-m-d')));
         $extension->appendChild($xml->createElement('packagename', $data['name']));
         $extension->appendChild($xml->createElement('version', '3.9'));
-        $extension->appendChild($xml->createElement('url', FText::_('COM_ADMINISTRATIVETOOLS_PACKAGES_XML_URL')));
-        $extension->appendChild($xml->createElement('packager', FText::_('COM_ADMINISTRATIVETOOLS_PACKAGES_XML_PACKAGER')));
-        $extension->appendChild($xml->createElement('packagerurl', FText::_('COM_ADMINISTRATIVETOOLS_PACKAGES_XML_PACKAGER_URL')));
-        $extension->appendChild($xml->createElement('copyright', FText::_('COM_ADMINISTRATIVETOOLS_PACKAGES_XML_COPYRIGHT')));
-        $extension->appendChild($xml->createElement('license', FText::_('COM_ADMINISTRATIVETOOLS_PACKAGES_XML_LICENSE')));
-        $extension->appendChild($xml->createElement('description', FText::_('COM_ADMINISTRATIVETOOLS_PACKAGES_XML_DESCRIPTION')));
+        $extension->appendChild($xml->createElement('url', Text::_('COM_ADMINISTRATIVETOOLS_PACKAGES_XML_URL')));
+        $extension->appendChild($xml->createElement('packager', Text::_('COM_ADMINISTRATIVETOOLS_PACKAGES_XML_PACKAGER')));
+        $extension->appendChild($xml->createElement('packagerurl', Text::_('COM_ADMINISTRATIVETOOLS_PACKAGES_XML_PACKAGER_URL')));
+        $extension->appendChild($xml->createElement('copyright', Text::_('COM_ADMINISTRATIVETOOLS_PACKAGES_XML_COPYRIGHT')));
+        $extension->appendChild($xml->createElement('license', Text::_('COM_ADMINISTRATIVETOOLS_PACKAGES_XML_LICENSE')));
+        $extension->appendChild($xml->createElement('description', Text::_('COM_ADMINISTRATIVETOOLS_PACKAGES_XML_DESCRIPTION')));
 
         $files = $xml->createElement('files');
 
@@ -1275,13 +1275,13 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $data->validate = 0;
 
         if ($type === 0) {
-            $data->message = FText::_('COM_ADMINISTRATIVETOOLS_MESSAGE_ALERT_ERRO_NO_FIELD_FOR_EXECUTION') . ' ' .
-                FText::_('COM_ADMINISTRATIVETOOLS_ADMINISTRATIVETOOLS_SOURCE') . ' ' . $sourse . ' / ' .
-                FText::_('COM_ADMINISTRATIVETOOLS_ADMINISTRATIVETOOLS_TARGET') . ' ' . $target;
+            $data->message = Text::_('COM_ADMINISTRATIVETOOLS_MESSAGE_ALERT_ERRO_NO_FIELD_FOR_EXECUTION') . ' ' .
+                Text::_('COM_ADMINISTRATIVETOOLS_ADMINISTRATIVETOOLS_SOURCE') . ' ' . $sourse . ' / ' .
+                Text::_('COM_ADMINISTRATIVETOOLS_ADMINISTRATIVETOOLS_TARGET') . ' ' . $target;
         } else {
-            $data->message = FText::_('COM_ADMINISTRATIVETOOLS_MESSAGE_ALERT_ERRO_NO_FIELD_FOR_EXECUTION_TYPE') . ' ' .
-                FText::_('COM_ADMINISTRATIVETOOLS_ADMINISTRATIVETOOLS_SOURCE') . ' ' . $sourse . ' / ' .
-                FText::_('COM_ADMINISTRATIVETOOLS_ADMINISTRATIVETOOLS_TARGET') . ' ' . $target;
+            $data->message = Text::_('COM_ADMINISTRATIVETOOLS_MESSAGE_ALERT_ERRO_NO_FIELD_FOR_EXECUTION_TYPE') . ' ' .
+                Text::_('COM_ADMINISTRATIVETOOLS_ADMINISTRATIVETOOLS_SOURCE') . ' ' . $sourse . ' / ' .
+                Text::_('COM_ADMINISTRATIVETOOLS_ADMINISTRATIVETOOLS_TARGET') . ' ' . $target;
 
             if (($sourse === 'field') && ($target === 'databasejoin')) {
                 $data->field = 1;
@@ -1321,7 +1321,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
             return $db->loadAssocList();
         } catch (Exception $exc) {
-            $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
+            $message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
             $type_message = 'warning';
             $site_message = JUri::base() . 'index.php?option=com_administrativetools&view=tools&tab=3';
 
@@ -1349,7 +1349,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
             return $db->loadObject();
         } catch (Exception $exc) {
-            $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
+            $message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
             $type_message = 'warning';
             $site_message = JUri::base() . 'index.php?option=com_administrativetools&view=tools&tab=3';
 
@@ -1386,7 +1386,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
             return $db->loadObjectList();
         } catch (Exception $exc) {
-            $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
+            $message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
             $type_message = 'warning';
             $site_message = JUri::base() . 'index.php?option=com_administrativetools&view=tools&tab=3';
 
@@ -1421,7 +1421,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
             return $db->loadAssoc();
         } catch (Exception $exc) {
-            $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
+            $message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
             $type_message = 'warning';
             $site_message = JUri::base() . 'index.php?option=com_administrativetools&view=tools&tab=3';
 
@@ -1645,7 +1645,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
             return $db->loadObject();
         } catch (Exception $exc) {
-            $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
+            $message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
             $type_message = 'warning';
             $site_message = JUri::base() . 'index.php?option=com_administrativetools&view=tools&tab=3';
 
@@ -1690,7 +1690,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
             return $db->loadObject();
         } catch (Exception $exc) {
-            $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
+            $message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
             $type_message = 'warning';
             $site_message = JUri::base() . 'index.php?option=com_administrativetools&view=tools&tab=3';
 
@@ -2066,7 +2066,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
             return $db->loadObject();
         } catch (Exception $exc) {
-            $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
+            $message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
             $type_message = 'warning';
             $site_message = JUri::base() . 'index.php?option=com_administrativetools&view=tools';
 
@@ -2177,7 +2177,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
             return $db->loadObject();
         } catch (Exception $exc) {
-            $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
+            $message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
             $type_message = 'warning';
             $site_message = JUri::base() . 'index.php?option=com_administrativetools&view=tools';
 
@@ -2436,10 +2436,10 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     public function displayMessages($result_sql, $message_true, $message_false)
     {
         if ($result_sql) {
-            $ar_message['message'] = JText::_($message_true);
+            $ar_message['message'] = Text::_($message_true);
             $ar_message['type'] = 'Success';
         } else {
-            $ar_message['message'] = JText::_($message_false);
+            $ar_message['message'] = Text::_($message_false);
             $ar_message['type'] = 'info';
         }
 
@@ -2550,7 +2550,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
             return $db->loadAssocList();
         } catch (Exception $exc) {
-            $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
+            $message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
             $type_message = 'warning';
             $site_message = JUri::base() . 'index.php?option=com_administrativetools&view=tools';
 
@@ -2640,7 +2640,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     {
         switch ($code) {
             case 1064:
-                $text = FText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_1064');
+                $text = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_1064');
 
                 break;
             default:
@@ -2782,10 +2782,10 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                 $result = $this->saveHarvesting($data, NULL, $data['registerDate']);
 
                 if ($result['status']) {
-                    $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_SUCCESS1');
+                    $message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_SUCCESS1');
                     $type_message = 'success';
                 } else {
-                    $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR0');
+                    $message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR0');
                     $type_message = 'warning';
                 }
 
@@ -2800,7 +2800,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                 $result = $this->saveHarvesting($data, $data['registerDate'], $data['registerDate'], 1);
 
                 if (!$result['status']) {
-                    $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR0');
+                    $message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR0');
                     $type_message = 'warning';
 
                     break;
@@ -2811,12 +2811,12 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                 $result = $this->saveRunHarvesting($data);
 
                 if (!$result) {
-                    $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR4');
+                    $message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR4');
                     $type_message = 'warning';
 
                     break;
                 } else {
-                    $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_SUCCESS3');
+                    $message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_SUCCESS3');
                     $type_message = 'success';
                 }
 
@@ -2826,12 +2826,12 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                 $result = $this->runListHarvesting($data);
 
                 if (!$result) {
-                    $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
+                    $message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
                     $type_message = 'warning';
 
                     break;
                 } else {
-                    $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_SUCCESS3');
+                    $message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_SUCCESS3');
                     $type_message = 'success';
                 }
 
@@ -3891,7 +3891,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
             return $db->loadObject();
         } catch (Exception $exc) {
-            $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
+            $message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
             $type_message = 'warning';
             $site_message = JUri::base() . 'index.php?option=com_administrativetools&view=tools';
 
@@ -4028,7 +4028,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
             return $db->loadObject();
         } catch (Exception $exc) {
-            $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
+            $message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
             $type_message = 'warning';
             $site_message = JUri::base() . 'index.php?option=com_administrativetools&view=tools';
 
@@ -4097,7 +4097,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
             return $db->loadObject();
         } catch (Exception $exc) {
-            $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
+            $message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
             $type_message = 'warning';
             $site_message = JUri::base() . 'index.php?option=com_administrativetools&view=tools';
 
@@ -4210,7 +4210,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
             return $db->loadObject();
         } catch (Exception $exc) {
-            $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
+            $message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
             $type_message = 'warning';
             $site_message = JUri::base() . 'index.php?option=com_administrativetools&view=tools';
 
@@ -4267,7 +4267,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function repositoryValidator($link)
     {
-        $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR3');
+        $message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR3');
         $type_message = 'warning';
         $site_message = JUri::base() . 'index.php?option=com_administrativetools&view=tools&tab=3';
 
@@ -5210,7 +5210,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $xmlObj2 = simplexml_load_file($url2);
 
         if (!$xmlObj2) {
-            $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR3');
+            $message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR3');
             $site_message = JUri::base() . 'index.php?option=com_administrativetools&view=tools&tab=3';
             $type_message = 'warning';
 
@@ -5335,7 +5335,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
         JFile::delete($pathJson);
 
-        $app->enqueueMessage(FText::_('COM_ADMINISTRATIVETOOLS_PACKAGES_CONTROLLER_EXPORTLIST_SUCCESS'), 'message');
+        $app->enqueueMessage(Text::_('COM_ADMINISTRATIVETOOLS_PACKAGES_CONTROLLER_EXPORTLIST_SUCCESS'), 'message');
         $this->setRedirect(JRoute::_('index.php?option=com_administrativetools&view=tools&tab=4', false));
     }
 
@@ -5730,7 +5730,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $app = JFactory::getApplication();
 
         if ($_FILES["listFile"]["type"] !== 'application/json') {
-            $app->enqueueMessage(FText::_('COM_ADMINISTRATIVETOOLS_PACKAGES_CONTROLLER_IMPORTLIST_ERROR'), 'error');
+            $app->enqueueMessage(Text::_('COM_ADMINISTRATIVETOOLS_PACKAGES_CONTROLLER_IMPORTLIST_ERROR'), 'error');
             return;
         }
 
@@ -5741,7 +5741,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $listsToImport = json_decode($json);
 
         if (empty($listsToImport)) {
-            $app->enqueueMessage(FText::_('COM_ADMINISTRATIVETOOLS_PACKAGES_CONTROLLER_IMPORTLIST_ERROR'), 'error');
+            $app->enqueueMessage(Text::_('COM_ADMINISTRATIVETOOLS_PACKAGES_CONTROLLER_IMPORTLIST_ERROR'), 'error');
             return;
         }
 
@@ -5752,7 +5752,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         }
 
         $this->checkDatabaseJoins();
-        $app->enqueueMessage(FText::_('COM_ADMINISTRATIVETOOLS_PACKAGES_CONTROLLER_IMPORTLIST_SUCCESS'), 'message');
+        $app->enqueueMessage(Text::_('COM_ADMINISTRATIVETOOLS_PACKAGES_CONTROLLER_IMPORTLIST_SUCCESS'), 'message');
         $this->setRedirect(JRoute::_('index.php?option=com_administrativetools&view=tools&tab=4', false));
     }
 
@@ -6646,24 +6646,24 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                         $db->execute();
 
                         $db->transactionCommit();
-                        $message = JText::_("COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_SUCCESS5");
-                        $type_message = JText::_("COM_ADMINISTRATIVETOOLS_SUCCESS");
+                        $message = Text::_("COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_SUCCESS5");
+                        $type_message = Text::_("COM_ADMINISTRATIVETOOLS_SUCCESS");
                     } catch (Exception $exc) {
                         $db->transactionRollback();
-                        $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
-                        $type_message = JText::_("COM_ADMINISTRATIVETOOLS_ERROR");
+                        $message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
+                        $type_message = Text::_("COM_ADMINISTRATIVETOOLS_ERROR");
                     }
                 } else {
-                    $message = JText::_("COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR7");
-                    $type_message = JText::_("COM_ADMINISTRATIVETOOLS_ERROR");
+                    $message = Text::_("COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR7");
+                    $type_message = Text::_("COM_ADMINISTRATIVETOOLS_ERROR");
                 }
             } else {
-                $message = JText::_("COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR6");
-                $type_message = JText::_("COM_ADMINISTRATIVETOOLS_WARNING");
+                $message = Text::_("COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR6");
+                $type_message = Text::_("COM_ADMINISTRATIVETOOLS_WARNING");
             }
         } else {
-            $message = JText::_("COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR6");
-            $type_message = JText::_("COM_ADMINISTRATIVETOOLS_WARNING");
+            $message = Text::_("COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR6");
+            $type_message = Text::_("COM_ADMINISTRATIVETOOLS_WARNING");
         }
 
         $site_message = JUri::base() . "index.php?option=com_administrativetools&view=tools&tab=5";
@@ -6815,10 +6815,10 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $sync = $model->syncLists($data);
 
         if (!$sync) {
-            $resultSync->message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR_SYNC_LISTS');
+            $resultSync->message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR_SYNC_LISTS');
             $resultSync->type_message = 'error';
         } else {
-            $resultSync->message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_SUCCESS_SYNC_LISTS');
+            $resultSync->message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_SUCCESS_SYNC_LISTS');
             $resultSync->type_message = 'success';
         }
 
@@ -6843,10 +6843,10 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $saved = $model->saveConfiguration($data);
 
         if (!$saved) {
-            $resultSave->message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR_SAVE_CONFIGURATION');
+            $resultSave->message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR_SAVE_CONFIGURATION');
             $resultSave->type_message = 'error';
         } else {
-            $resultSave->message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_SUCCESS_SAVE_CONFIGURATION');
+            $resultSave->message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_SUCCESS_SAVE_CONFIGURATION');
             $resultSave->type_message = 'success';
         }
 
@@ -6871,10 +6871,10 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $connection = $model->connectSync($data);
 
         if (!$connection) {
-            $resultConnection->message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR_CONNECT_SYNC');
+            $resultConnection->message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR_CONNECT_SYNC');
             $resultConnection->type_message = 'error';
         } else {
-            $resultConnection->message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_SUCCESS_CONNECT_SYNC');
+            $resultConnection->message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_SUCCESS_CONNECT_SYNC');
             $resultConnection->type_message = 'success';
         }
 

@@ -9,6 +9,9 @@
  */
 defined('_JEXEC') or die;
 
+use Joomla\Component\Fields\Administrator\Helper\FieldsHelper;
+use Joomla\CMS\Language\Text;
+
 jimport('joomla.application.component.modellist');
 
 /**
@@ -100,7 +103,7 @@ class AdministrativetoolsModelTools extends \Joomla\CMS\MVC\Model\ListModel {
             if (JFile::exists($file)) {
                 $i->file = '<a href="' . $url . '"><span class="icon-download"></span> pkg_' . $n . '.zip</a>';
             } else {
-                $i->file = FText::_('COM_ADMINISTRATIVETOOLS_EXPORT_PACKAGE_TO_CREATE_ZIP');
+                $i->file = Text::_('COM_ADMINISTRATIVETOOLS_EXPORT_PACKAGE_TO_CREATE_ZIP');
             }
         }
 
@@ -228,7 +231,7 @@ class AdministrativetoolsModelTools extends \Joomla\CMS\MVC\Model\ListModel {
 
         $db->transactionStart();
 
-        $name = JText::_('COM_ADMINISTRATIVETOOLS_TABLE_NAME_HARVESTING');
+        $name = Text::_('COM_ADMINISTRATIVETOOLS_TABLE_NAME_HARVESTING');
 
         $query = "CREATE TABLE IF NOT EXISTS `#__fabrik_harvesting` (
                   `id` int(11) NOT NULL AUTO_INCREMENT,
