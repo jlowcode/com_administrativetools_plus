@@ -13,14 +13,14 @@ defined('_JEXEC') or die;
 jimport('joomla.application.component.controlleradmin');
 
 //BEGIN - Solved problem with menu
-include_once (JPATH_ADMINISTRATOR . '/components/com_menus/models/item.php');
-include_once (JPATH_ADMINISTRATOR . '/components/com_menus/tables/menu.php');
+use Joomla\Component\Menus\Administrator\Model\MenuModel;
 //END - Solved problem with menu
 
 use \Joomla\Utilities\ArrayHelper;
 use \Joomla\CMS\Session\session;
 use \Joomla\CMS\Factory;
 use \Joomla\CMS\Language\Text;
+use Joomla\Filesystem\File;
 
 /**
  * Tools list controller class.
@@ -260,7 +260,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     private function createXML($data, $folder)
     {
         date_default_timezone_set('America/Sao_Paulo');
-        $user = JFactory::getUser();
+        $user = Factory::getContainer()->get(UserFactoryInterface::class);
         $xml = new DOMDocument("1.0", "UTF-8");
 
         $xml->formatOutput = true;
@@ -390,8 +390,8 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     private function insertPackagesDB($name, $file, $record, $params)
     {
         date_default_timezone_set('America/Sao_Paulo');
-        $db = JFactory::getDbo();
-        $user = JFactory::getUser();
+        $db = Factory::getContainer()->get('DatabaseDriver');
+        $user = Factory::getContainer()->get(UserFactoryInterface::class);
 
         $columns = array('name', 'file', 'record', 'date_time', 'users_id', 'params');
         $values = array($db->quote($name), $db->quote($file), $record, $db->quote(date("Y-m-d H:i:s")),
@@ -418,7 +418,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $folder = $folder_path['dirname'] . '/components/com_administrativetools/generatepackages';
 
         $app = JFactory::getApplication();
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         $id = $app->input->getInt('id');
         $file = $app->input->getString('file');
@@ -509,7 +509,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     private function tableBDFabrikDefault()
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
         $config = JFactory::getConfig();
 
         $dbprefix = $config->get('dbprefix');
@@ -592,7 +592,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     private function tableBDFabrikListJoin(): string
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         $sql = "SELECT DISTINCT list.db_table_name
                 FROM #__fabrik_lists AS list ;";
@@ -685,7 +685,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $script_php .= "} \n\n";
 
         $script_php .= "public function postflight(\$type, \$parent){ \n";
-        $script_php .= "\$db = JFactory::getDbo(); \n";
+        $script_php .= "\$db = Factory::getContainer()->get('DatabaseDriver'); \n";
         $script_php .= "\$query = \$db->getQuery(true); \n\n";
         $script_php .= "\$query->clear(); \n";
         $script_php .= "\$query->update('#__extensions')->set('enabled = 1') \n";
@@ -728,7 +728,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     public function listElement()
     {
         $app = JFactory::getApplication();
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         $id = $app->input->getInt("idList");
 
@@ -1308,7 +1308,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function dataTableSource($table, $field_source, $field_target)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $query = "SELECT
@@ -1340,7 +1340,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function tableSource($id_form)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $query = "SELECT * FROM #__fabrik_lists AS `table` WHERE table.published = 1 AND `table`.id = {$id_form};";
@@ -1370,7 +1370,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function elementSourceTarget($id_form, $id_source, $id_target)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $sql = "SELECT element.* FROM
@@ -1407,7 +1407,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function existTargetTableData($table, $field, $search)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $query = "SELECT
@@ -1443,7 +1443,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function updateDataTableSource($table, $id_target, $id_source, $field_target)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $db->transactionStart();
@@ -1480,7 +1480,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function insertIntoTargetAndChargeSourceTable($table_taget, $field_target, $data_target, $table_source, $id_source, $field_source)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $db->transactionStart();
@@ -1517,7 +1517,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function insertMultipleSourceTable($join_source, $id_source, $id_target)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $db->transactionStart();
@@ -1551,7 +1551,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function insertInTargetAndSourceTable($table_taget, $field_target, $data_target, $join_source, $id_source)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $db->transactionStart();
@@ -1596,7 +1596,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function insertInTargetDropAndSourceMultTable($table_taget, $field_target, $data_target, $join_source, $id_source, $field_sychr_source)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $db->transactionStart();
@@ -1636,7 +1636,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function tableTaget($table_name_taget)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $query = "SELECT * FROM #__fabrik_lists AS `table` WHERE table.published = 1 AND `table`.db_table_name = '{$table_name_taget}';";
@@ -1666,7 +1666,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function elementTableTarget($table_target, $synchronism, $id_list_target)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $sql = "SELECT
@@ -1715,7 +1715,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function insertTargetChangesSourceInsertTargetRepeatTable($table_taget, $field_target, $data_target, $table_source, $id_source, $field_source, $join_target)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $db->transactionStart();
@@ -1766,7 +1766,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function updateTableSourceDropdownInsertTableTargetRepeat($table_source, $id_source, $field_source, $join_target, $id_target)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         $query = "SELECT repit.id
                     FROM {$join_target->table_join} AS repit
@@ -1818,7 +1818,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function insertTargetTableInsertRepeatTargetTableInsertRepeatSourceTable($table_taget, $field_target, $data_target, $join_source, $id_source, $join_target)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $db->transactionStart();
@@ -1867,7 +1867,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function insertSourceRepeatTableInsertTargetRepeatTable($join_source, $id_source, $id_target, $join_target)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $db->transactionStart();
@@ -1910,7 +1910,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function updateDataTableSourceUpdateTableElement($table, $field, $id, $id_element, $data, $element_params)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         $paramsDB = json_encode($element_params);
 
@@ -1954,7 +1954,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     {
         $app = JFactory::getApplication();
 
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         $id = $app->input->getInt("idList");
 
@@ -2007,7 +2007,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function checkEngineTypeTable($table)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         $sql = "select `engine` from information_schema.tables where table_name = '{$table}';";
 
@@ -2024,7 +2024,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function alterTableEngineType($table)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $db->transactionStart();
@@ -2057,7 +2057,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function joinTableFieldType($table, $field)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $sql = "SHOW COLUMNS FROM `{$table}` WHERE field = '{$field}';";
@@ -2084,7 +2084,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function alterTableColummDataType($table, $field)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $db->transactionStart();
@@ -2122,7 +2122,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function alterTableCreateForeignKeyRelatedFields2($table, $table_source, $field_source, $table_target, $field_target, $update, $delete)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         $name_fk1 = 'fk_' . $table . '_' . $field_source . '_' . $table_source;
 
@@ -2163,7 +2163,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function checkIfForeignKeyExists($table, $table_taget, $field)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $sql = "SELECT COUNT(column_name) as forkey
@@ -2260,7 +2260,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function alterTableCreateForeignKeyRelatedFields1($table, $table_target, $field_source, $update, $delete)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         $name_fk1 = 'fk_' . $table . '_' . $field_source . '_' . $table_target;
 
@@ -2323,7 +2323,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function alterTableCreateForeignKeyRelatedFields3($table, $table_source, $field_source, $field_source_parent, $table_target, $field_target, $update, $delete)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         $name_fk1 = 'fk_' . $table_target . '_' . $field_target . '_' . $table_source;
         $name_fk2 = 'fk_' . $table . '_' . $field_source_parent . '_' . $table_source;
@@ -2378,7 +2378,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function alterTableCreateForeignKeyRelatedFields4($table_join_source, $table_join_target, $table_source, $table_target, $field_source, $field_target, $update, $delete)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         $parent_id = 'parent_id';
 
@@ -2537,7 +2537,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function dataTableSourceFieldSingle($table, $field_source)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $query = "SELECT
@@ -2571,7 +2571,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function insertMultipleSourceTableFileupload($join_source, $id_source, $text)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $db->transactionStart();
@@ -2661,7 +2661,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     {
         $app = JFactory::getApplication();
 
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         $id = $app->input->getInt("id");
 
@@ -2696,7 +2696,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     public function deleteHarvesting()
     {
         $app = JFactory::getApplication();
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
         $id = $app->input->getInt("id");
 
         try {
@@ -2726,8 +2726,8 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     public function submitHarvesting()
     {
         $app = JFactory::getApplication();
-        $db = JFactory::getDbo();
-        $user = JFactory::getUser();
+        $db = Factory::getContainer()->get('DatabaseDriver');
+        $user = Factory::getContainer()->get(UserFactoryInterface::class);
 
         $data['link'] = $db->escape($app->input->getString("linkHarvest"));
         $btn = $db->escape($app->input->getString("btnSubmit"));
@@ -2849,7 +2849,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function saveHarvesting($data, $dateRum = NULL, $dateRecordLast = NULL, $line = NULL)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
         $header = $db->escape(json_encode($data['header']));
         $metadata = $db->escape(json_encode($data['metadata']));
 
@@ -2921,7 +2921,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     {
         set_time_limit(0);
 
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
         $config = JFactory::getConfig();
 
         $ext = $config->get('dbprefix');
@@ -3195,7 +3195,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                                                             date_default_timezone_set('America/Sao_Paulo');
                                                             $data['registerDate'] = date("Y-m-d H:i:s");
 
-                                                            $user = JFactory::getUser();
+                                                            $user = Factory::getContainer()->get(UserFactoryInterface::class);
                                                             $data['users'] = $user->get('id');
 
                                                             $tagInsertField = "`parent_id`, `level`, `path`, `title`, `alias`, `published`, `checked_out_time`, `access`, `created_user_id`,
@@ -3311,7 +3311,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                                                 $path_thumb = $path . '/' . $objParamsFile->thumb_dir . '/' . $nameIdentifier . '_' . basename($linkFileXML);
                                                 $path_thumb = str_replace('.pdf', '.png', $path_thumb);
 
-                                                if (!JFile::exists($path_thumb) && JFile::exists($dir)) {
+                                                if (!is_file($path_thumb) && is_file($dir)) {
                                                     $width_thumb = $objParamsFile->thumb_max_width;
                                                     $height_thumb = $objParamsFile->thumb_max_height;
 
@@ -3566,7 +3566,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                                                             date_default_timezone_set('America/Sao_Paulo');
                                                             $data['registerDate'] = date("Y-m-d H:i:s");
 
-                                                            $user = JFactory::getUser();
+                                                            $user = Factory::getContainer()->get(UserFactoryInterface::class);
                                                             $data['users'] = $user->get('id');
 
                                                             $tagInsertField = "`parent_id`, `level`, `path`, `title`, `alias`, `published`, `checked_out_time`, `access`, `created_user_id`,
@@ -3682,7 +3682,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                                                 $path_thumb = $path . '/' . $objParamsFile->thumb_dir . '/' . $nameIdentifier . '_' . basename($linkFileXML);
                                                 $path_thumb = str_replace('.pdf', '.png', $path_thumb);
 
-                                                if (!JFile::exists($path_thumb) && JFile::exists($dir)) {
+                                                if (!is_file($path_thumb) && is_file($dir)) {
                                                     $width_thumb = $objParamsFile->thumb_max_width;
                                                     $height_thumb = $objParamsFile->thumb_max_height;
 
@@ -3817,7 +3817,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     public function repositoryValidation()
     {
         $app = JFactory::getApplication();
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         $link = $db->escape($app->input->getString("link"));
 
@@ -3875,7 +3875,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function mappedElementsData($id_form, $arIdElementMap)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $sql = "SELECT element.* FROM
@@ -3908,7 +3908,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function updateTableElement($id_element, $element_params)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         $paramsDB = json_encode($element_params);
 
@@ -3944,7 +3944,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function insertTable($table, $field, $data)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $db->transactionStart();
@@ -3977,7 +3977,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function insertTableMultipleFieldsData($table, $field, $data)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $db->transactionStart();
@@ -4012,7 +4012,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function selectTableRepeat($table, $parent_id, $target, $parent_data, $target_data)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $sql = "SELECT
@@ -4046,7 +4046,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function insertTableRepeat($table, $parent_id, $target, $parent_data, $target_data)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $db->transactionStart();
@@ -4081,7 +4081,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function selectTableRepeatFileUpload($table, $parent_id, $target, $parent_data, $target_data)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $sql = "SELECT
@@ -4113,7 +4113,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     public function editHarvesting()
     {
         $app = JFactory::getApplication();
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         $id = $app->input->getInt("id");
 
@@ -4192,7 +4192,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function checkDataTableExist($table, $field, $data, $fieldDate = NULL, $date = NULL)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $sql = "SELECT
@@ -4228,7 +4228,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function updateTableMultipleFieldsData($table, $id, $field, $data)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $db->transactionStart();
@@ -4290,7 +4290,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     {
         set_time_limit(0);
 
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
         $config = JFactory::getConfig();
 
         $ext = $config->get('dbprefix');
@@ -4581,7 +4581,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                                                             date_default_timezone_set('America/Sao_Paulo');
                                                             $data['registerDate'] = date("Y-m-d H:i:s");
 
-                                                            $user = JFactory::getUser();
+                                                            $user = Factory::getContainer()->get(UserFactoryInterface::class);
                                                             $data['users'] = $user->get('id');
 
                                                             $tagInsertField = "`parent_id`, `level`, `path`, `title`, `alias`, `published`, `checked_out_time`, `access`, `created_user_id`,
@@ -4697,7 +4697,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                                                 $path_thumb = $path . '/' . $objParamsFile->thumb_dir . '/' . $nameIdentifier . '_' . basename($linkFileXML);
                                                 $path_thumb = str_replace('.pdf', '.png', $path_thumb);
 
-                                                if (!JFile::exists($path_thumb) && JFile::exists($dir)) {
+                                                if (!is_file($path_thumb) && is_file($dir)) {
                                                     $width_thumb = $objParamsFile->thumb_max_width;
                                                     $height_thumb = $objParamsFile->thumb_max_height;
 
@@ -4952,7 +4952,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                                                             date_default_timezone_set('America/Sao_Paulo');
                                                             $data['registerDate'] = date("Y-m-d H:i:s");
 
-                                                            $user = JFactory::getUser();
+                                                            $user = Factory::getContainer()->get(UserFactoryInterface::class);
                                                             $data['users'] = $user->get('id');
 
                                                             $tagInsertField = "`parent_id`, `level`, `path`, `title`, `alias`, `published`, `checked_out_time`, `access`, `created_user_id`,
@@ -5068,7 +5068,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                                                 $path_thumb = $path . '/' . $objParamsFile->thumb_dir . '/' . $nameIdentifier . '_' . basename($linkFileXML);
                                                 $path_thumb = str_replace('.pdf', '.png', $path_thumb);
 
-                                                if (!JFile::exists($path_thumb) && JFile::exists($dir)) {
+                                                if (!is_file($path_thumb) && is_file($dir)) {
                                                     $width_thumb = $objParamsFile->thumb_max_width;
                                                     $height_thumb = $objParamsFile->thumb_max_height;
 
@@ -5252,7 +5252,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
     protected function checkTableName($name)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         $name = $this->user->id . '_' . $name;
         $continue = false;
@@ -5273,7 +5273,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
     public function checkDatabaseJoins()
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         foreach ($this->elementsId as $elementId) {
             $query = $db->getQuery(true);
@@ -5298,7 +5298,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                 $query = $db->getQuery(true);
                 $query = 'DELETE FROM `#__fabrik_joins` WHERE table_join = '."'$params->join_db_name'". ' and element_id = '.$elementId;
                 $db->setQuery($query);
-                $db->query($query);
+                $db->execute();
             }
         }
     }
@@ -5316,9 +5316,9 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $jsonExport = json_encode($this->listsToExport);
 
         $pathJson = JPATH_BASE . '/components/com_administrativetools/exportLists/listsToExport.json';
-        JFile::write($pathJson, $jsonExport);
+        File::write($pathJson, $jsonExport);
 
-        if (JFile::exists($pathJson)) {
+        if (is_file($pathJson)) {
             header('Content-Description: File Transfer');
             header('Content-Type: application/octet-stream');
             header('Content-Disposition: attachment; filename="' . basename($pathJson) . '"');
@@ -5333,7 +5333,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
             http_response_code(404);
         }
 
-        JFile::delete($pathJson);
+        File::delete($pathJson);
 
         $app->enqueueMessage(Text::_('COM_ADMINISTRATIVETOOLS_PACKAGES_CONTROLLER_EXPORTLIST_SUCCESS'), 'message');
         $this->setRedirect(JRoute::_('index.php?option=com_administrativetools&view=tools&tab=4', false));
@@ -5461,7 +5461,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
     protected function exportCloneGroupsAndElements($groups, $listId)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
         $ordering = 1;
         $groupsData = array();
 
@@ -5614,7 +5614,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
     protected function exportCreateTable($listId)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
         $oldTableName = $this->clones_info[$listId]->old_db_table_name;
         $db->setQuery("SHOW CREATE TABLE $oldTableName");
         return $db->loadAssoc()["Create Table"];
@@ -5623,7 +5623,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     protected function exportTableData($listId)
     {
         $dataTable = array();
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
         $oldTableName = $this->clones_info[$listId]->old_db_table_name;
         $db->setQuery("SELECT * FROM $oldTableName");
         $data = [];
@@ -5642,7 +5642,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
     protected function exportCreateTablesRepeat($listId)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
         $oldTableName = $this->clones_info[$listId]->old_db_table_name;
         $elementsRepeat = $this->clones_info[$listId]->elementsRepeat;
 
@@ -5661,7 +5661,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     protected function exportGroupRepeatData($groups_repeat_data)
     {
         $data_group_repeat = [];
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
         foreach ($groups_repeat_data as $groupRepeat) {
             $groupRepeat = explode('`', $groupRepeat)[1];
             $db->setQuery("SELECT * FROM $groupRepeat");
@@ -5677,7 +5677,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     protected function exportTableRepeatData($tablesRepeatData)
     {
         $data_table_repeat = [];
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
         foreach ($tablesRepeatData as $tableRepeat) {
             $tableRepeat = explode('`', $tableRepeat)[1];
             $db->setQuery("SELECT * FROM $tableRepeat");
@@ -5693,7 +5693,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     protected function exportMenuFabrik($listId,$data)
     {   
         $menu = array();
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
         $query = $db->getQuery(true);
         
         $query = "SELECT * FROM `#__menu` WHERE link = 'index.php?option=com_fabrik&view=list&listid=". (int)$listId."'";
@@ -5735,9 +5735,9 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         }
 
         $path = JPATH_BASE . '/components/com_administrativetools/importFile.json';
-        JFile::move($_FILES["listFile"]["tmp_name"], $path);
+        File::move($_FILES["listFile"]["tmp_name"], $path);
         $json = file_get_contents($path);
-        JFile::delete($path);
+        File::delete($path);
         $listsToImport = json_decode($json);
 
         if (empty($listsToImport)) {
@@ -5745,7 +5745,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
             return;
         }
 
-        $this->user = JFactory::getUser();
+        $this->user = Factory::getContainer()->get(UserFactoryInterface::class);
 
         foreach ($listsToImport as $list) {
             $this->importClone_process($list);
@@ -5778,7 +5778,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
     protected function importCloneForm($data, $listId)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         $data->created_by = $this->user->id;
         $data->created_by_alias = $this->user->username;
@@ -5806,7 +5806,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
     protected function importCloneList($data, $listId)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         $data->form_id = $this->clones_info[$listId]->formId;
         $data->db_table_name = $this->clones_info[$listId]->db_table_name;
@@ -5836,7 +5836,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
     protected function importCloneGroupsAndElements($groups, $listId,$groups_repeat = null, $groups_repeat_data = null)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
         $ordering = 1;
 
         foreach ($groups as $group) {
@@ -5896,11 +5896,13 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                 $db->setQuery($query);
                 if($db->loadResult()) {
                     $db->setQuery("SHOW CREATE TABLE $newTableNameSql");
-                    $actualTable = $db->loadAssoc()["Create Table"];
-                    if($newSql != $actualTable) {
-                        $db->setQuery("RENAME TABLE $newTableNameSql TO " . $this->checkTableName($newTableNameSql));
-                        $db->execute();
-                    }
+                    try {
+                        $actualTable = $db->loadAssoc()["Create Table"];
+                        if($newSql != $actualTable) {
+                            $db->setQuery("RENAME TABLE $newTableNameSql TO " . $this->checkTableName($newTableNameSql));
+                            $db->execute();
+                        }
+                    } catch (\Throwable $th) {}
                 }
 
                 $newSql = str_replace('CREATE TABLE', 'CREATE TABLE IF NOT EXISTS', $newSql);
@@ -5971,7 +5973,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
     protected function importCloneElements($elements, $group_id, $listId)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         foreach ($elements as $element) {
             $cloneData = $element;
@@ -6041,7 +6043,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
     protected function importCloneJoin($data, $element_id, $element_name, $listId, $group_id, $type = '')
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
         $cloneData = new stdClass();
         $cloneData->id = 0;
 
@@ -6115,7 +6117,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
     protected function importCreateTable($listId, $tableSql)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
         $tableName = $this->clones_info[$listId]->db_table_name;
         $oldTableName = $this->clones_info[$listId]->old_db_table_name;
       
@@ -6126,11 +6128,13 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $db->setQuery($query);
         if($db->loadResult()) {
             $db->setQuery("SHOW CREATE TABLE $tableName");
-            $actualTable = $db->loadAssoc()["Create Table"];
-            if($tableSql != $actualTable) {
-                $db->setQuery("RENAME TABLE $tableName TO " . $this->checkTableName($tableName));
-                $db->execute();
-            }
+            try {
+                $actualTable = $db->loadAssoc()["Create Table"];
+                if($tableSql != $actualTable) {
+                    $db->setQuery("RENAME TABLE $tableName TO " . $this->checkTableName($tableName));
+                    $db->execute();
+                }
+            } catch (\Throwable $th) {}
         }
         $tableSql = str_replace("CREATE TABLE `$oldTableName`", "CREATE TABLE `$tableName`", $tableSql);
         $tableSql = str_replace("CREATE TABLE", "CREATE TABLE IF NOT EXISTS", $tableSql);
@@ -6152,7 +6156,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     protected function importCreateTableData($listId, $tableSql)
     {
         if ($tableSql){
-            $db = JFactory::getDbo();
+            $db = Factory::getContainer()->get('DatabaseDriver');
             $tableName = $this->clones_info[$listId]->db_table_name;
             $oldTableName = $this->clones_info[$listId]->old_db_table_name;
             $tableSql = str_replace("INSERT INTO $oldTableName", "INSERT INTO $tableName", $tableSql);
@@ -6172,7 +6176,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
     protected function importCreateTablesRepeat($listId, $tablesRepeatSql)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
         $tableName = $this->clones_info[$listId]->db_table_name;
         $oldTableName = $this->clones_info[$listId]->old_db_table_name;
 
@@ -6184,11 +6188,13 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
             $db->setQuery($query);
             if($db->loadResult()) {
                 $db->setQuery("SHOW CREATE TABLE $tableName");
-                $actualTable = $db->loadAssoc()["Create Table"];
-                if($tableRepeat != $actualTable) {
-                    $db->setQuery("RENAME TABLE $tableName TO " . $this->checkTableName($tableName));
-                    $db->execute();
-                }
+                try {
+                    $actualTable = $db->loadAssoc()["Create Table"];
+                    if($tableRepeat != $actualTable) {
+                        $db->setQuery("RENAME TABLE $tableName TO " . $this->checkTableName($tableName));
+                        $db->execute();
+                    }
+                } catch (\Throwable $th) {}
             }
             
             $sql = str_replace("CREATE TABLE `$oldTableName`", "CREATE TABLE `$tableName`", $tableRepeat);
@@ -6211,7 +6217,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     protected function importCreateTablesRepeatData($listId, $tablesRepeatSql)
     {
         if ($tablesRepeatSql){
-            $db = JFactory::getDbo();
+            $db = Factory::getContainer()->get('DatabaseDriver');
             $tableName = $this->clones_info[$listId]->db_table_name;
             $oldTableName = $this->clones_info[$listId]->old_db_table_name;
             foreach ($tablesRepeatSql as $tableRepeat) {
@@ -6232,10 +6238,10 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     }
 
     protected function importCreateMenuFabrik($listId, $menus){
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
         
         // BEGIN - Solved problem with menu
-        $menuItem = new MenusModelItem();
+        $menuItem = new MenuModel();
         // END - Solved problem with menu
 
         foreach ($menus as $menu){
@@ -6395,7 +6401,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $obj = new stdClass();
         $obj->id = $this->clones_info[$listId]->formId;
         $obj->params = json_encode($formParams);
-        $update = JFactory::getDbo()->updateObject('#__fabrik_forms', $obj, 'id');
+        $update = Factory::getContainer()->get('DatabaseDriver')->updateObject('#__fabrik_forms', $obj, 'id');
 
         if (!$update) {
             return false;
@@ -6505,9 +6511,9 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
         $obj = new stdClass();
         $obj->id = $this->clones_info[$listId]->listId;
-        $obj->order_by = JFactory::getDbo()->escape(json_encode($newOrder_by));
+        $obj->order_by = Factory::getContainer()->get('DatabaseDriver')->escape(json_encode($newOrder_by));
         $obj->params = json_encode($listParams);
-        $update = JFactory::getDbo()->updateObject('#__fabrik_lists', $obj, 'id');
+        $update = Factory::getContainer()->get('DatabaseDriver')->updateObject('#__fabrik_lists', $obj, 'id');
 
         if (!$update) {
             return false;
@@ -6526,7 +6532,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     protected function exportCreateGroupsRepeat($groups, $listId)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
         $groupsRepeat = array();
         $oldTableName = $this->clones_info[$listId]->old_db_table_name;
 
@@ -6544,7 +6550,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
     protected function importCreateGroupsRepeat($groups_repeat, $list)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         foreach ($groups_repeat as $groupRepeat) {
             $sql = 'SELECT * FROM `#__fabrik_groups` ORDER BY id DESC LIMIT 1';
@@ -6598,7 +6604,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function submitChangeList()
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
         $app = JFactory::getApplication();
         $id_list = $app->input->getInt("nameList", 0);
         $new_name = $app->input->getString("name", null);
@@ -6686,7 +6692,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     public function tableFabrikParams($col_name, $fabrik, $name_list, $new_name_treated, $list_id)
     {
         $config = JFactory::getConfig();
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $db->transactionStart();
@@ -6890,7 +6896,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     public function showDifferentTablesInDatabase()
     {
         $app    = JFactory::getApplication();
-        $db     = JFactory::getDbo();
+        $db     = Factory::getContainer()->get('DatabaseDriver');
         $config = JFactory::getConfig();
         
         $sql = "SELECT TABLE_NAME AS nome_tabela FROM INFORMATION_SCHEMA.TABLES 
@@ -6915,7 +6921,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     public function showDifferentFiledsInTables()
     {
         $app    = JFactory::getApplication();
-        $db     = JFactory::getDbo();
+        $db     = Factory::getContainer()->get('DatabaseDriver');
         $config = JFactory::getConfig();
         
         /* recupera os nomes de tabela no BANCO DE DADOS */
@@ -6992,7 +6998,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $retorno = [];
         try {
             $app    = JFactory::getApplication();
-            $db     = JFactory::getDbo();
+            $db     = Factory::getContainer()->get('DatabaseDriver');
             $config = JFactory::getConfig();
     
             $tbs = $app->input->getModel("tbs");
@@ -7019,7 +7025,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                 array_push($retorno, $value);
             }
     
-            $user       = JFactory::getUser();
+            $user       = Factory::getContainer()->get(UserFactoryInterface::class);
             $path       = getcwd() .'/components/com_administrativetools/logs/';
             $file_log   = 'cleandb.log';
  
@@ -7054,7 +7060,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     public function pluginsManagerListElement()
     {
         $app = JFactory::getApplication();
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         $tipo = $app->input->getInt("typeName");
 
@@ -7087,7 +7093,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     public function pluginsManagerTypeParams()
     {
         $app = JFactory::getApplication();
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         $typeName = $app->input->getInt("typeName");
         $idList = $app->input->getInt("idList");
@@ -7123,7 +7129,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     public function pluginsManagerListObjects()
     {
         $app    = JFactory::getApplication();
-        $db     = JFactory::getDbo();
+        $db     = Factory::getContainer()->get('DatabaseDriver');
         $config = JFactory::getConfig();
         
         $typeName    = $app->input->getInt("typeName");
@@ -7162,7 +7168,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     public function pluginsManagerModifyForms() 
     {
         $app    = JFactory::getApplication();
-        $db     = JFactory::getDbo();
+        $db     = Factory::getContainer()->get('DatabaseDriver');
         $config = JFactory::getConfig();
 
         //$typeName           = $app->input->getInt("typeName");
@@ -7378,7 +7384,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         }
 
         //geração do arquivo de LOG
-        $user       = JFactory::getUser();
+        $user       = Factory::getContainer()->get(UserFactoryInterface::class);
         $path       = getcwd() .'/components/com_administrativetools/logs/';
         $file_log   = 'pluginsManager.log';
 

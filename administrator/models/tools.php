@@ -300,7 +300,7 @@ class AdministrativetoolsModelTools extends \Joomla\CMS\MVC\Model\ListModel {
      */
     public function getConnectionSyncLists()
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 		$query = $db->getQuery(true)
 			->select('*')
 			->from($db->quoteName('#__fabrik_sync_lists_connections'))

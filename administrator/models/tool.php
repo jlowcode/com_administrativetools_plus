@@ -216,7 +216,7 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
      */
     public function saveConfiguration($data)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
         $arrColumns = Array();
         $arrValues = Array();
         $arrUseless = Array('model_type', 'data_type', 'saveConfiguration', 'joomla_menus', 'joomla_modules', 'joomla_themes','joomla_extensions');
@@ -282,7 +282,7 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
      */
     private function syncSqlFile($id, $fileSql, $pathNameVersion) 
     {
-		$db = JFactory::getDbo();
+		$db = Factory::getContainer()->get('DatabaseDriver');
 		
 		if(!file_exists($pathNameVersion)) {
 			return false;
@@ -378,8 +378,8 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
      */
     private function newVersion($id, $name)
     {
-        $newdb = JFactory::getDbo();
-		$user = JFactory::getUser();
+        $newdb = Factory::getContainer()->get('DatabaseDriver');
+		$user = Factory::getContainer()->get(UserFactoryInterface::class);
 
 		$values = new stdClass();
 		$values->id = 'default';

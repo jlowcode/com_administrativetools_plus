@@ -1,46 +1,51 @@
 <?php
-use \Joomla\CMS\Language\Text;
+
+use Joomla\CMS\Language\Text;
+use Joomla\CMS\Factory;
 
 // No direct access
 defined('_JEXEC') or die('Restricted access');
+
+Factory::getApplication()->getDocument()->getWebAssetManager()->useScript('bootstrap.tab');
+
 ?>
 <div class="col-md-12">
     <div class="row-fluid">
         <div class="col-md-12">
             <!-- Nav tabs -->
             <ul class="nav nav-tabs" role="tablist">
-                <li role="presentation" class="<?php echo $this->tab1; ?>"><a href="#package" aria-controls=""
-                                                                            role="tab" data-toggle="tab">
+                <li role="presentation" class="<?php echo $this->tab1; ?>"><a href="#package" aria-controls="package"
+                                                                            role="tab" data-bs-toggle="tab" id="tabPackage">
                         <?php echo Text::_('COM_ADMINISTRATIVETOOLS_TITLE_NAV_TABS_PACKEGE'); ?></a></li>
-                <li role="presentation" class="<?php echo $this->tab4; ?>"><a href="#importandexportlists" aria-controls=""
-                                                                            role="tab" data-toggle="tab">
+                <li role="presentation" class="<?php echo $this->tab4; ?>"><a href="#importandexportlists" aria-controls="importandexportlists"
+                                                                            role="tab" data-bs-toggle="tab" id="tabImportAndExportLists">
                         <?php echo Text::_('COM_ADMINISTRATIVETOOLS_TITLE_NAV_TABS_IMPORT_EXPORT_LISTS'); ?></a></li>
                 <li role="presentation" class="<?php echo $this->tab2; ?>"><a href="#transformation"
-                                                                            aria-controls="profile" role="tab"
-                                                                            data-toggle="tab">
+                                                                            aria-controls="transformation" role="tab"
+                                                                            data-bs-toggle="tab" id="tabTransformation">
                         <?php echo Text::_('COM_ADMINISTRATIVETOOLS_TITLE_NAV_TABS_TRANSFORMATION'); ?></a></li>
                 <li role="presentation" class="<?php echo $this->tab3; ?>"><a href="#haversting"
-                                                                            aria-controls="messages" role="tab"
-                                                                            data-toggle="tab">
+                                                                            aria-controls="haversting" role="tab"
+                                                                            data-bs-toggle="tab" id="tabHaversting">
                         <?php echo Text::_('COM_ADMINISTRATIVETOOLS_TITLE_NAV_TABS_HAVERSTING'); ?></a></li>
                 <li role="presentation" class="<?php echo $this->tab5; ?>"><a href="#chargelist"
-                                                                            aria-controls="messages" role="tab"
-                                                                            data-toggle="tab">
+                                                                            aria-controls="chargelist" role="tab"
+                                                                            data-bs-toggle="tab" id="tabChargeList">
                         <?php echo Text::_('COM_ADMINISTRATIVETOOLS_TITLE_NAV_TABS_CHANGE_LIST'); ?></a></li>
                 <!-- Fabrik sync lists 1.0 -->
                 <li role="presentation" class="<?php echo $this->tab6; ?>"><a href="#synclist"
-                                                                            aria-controls="messages" role="tab"
-                                                                            data-toggle="tab">
+                                                                            aria-controls="synclist" role="tab"
+                                                                            data-bs-toggle="tab" id="tabSyncList">
                         <?php echo Text::_('COM_ADMINISTRATIVETOOLS_TITLE_NAV_TABS_SYNC_LIST'); ?></a></li>
 
                 <li role="presentation" class="<?php echo $this->tab7; ?>"><a href="#cleandb"
-                                                                            aria-controls="messages" role="tab"
-                                                                            data-toggle="tab">
+                                                                            aria-controls="cleandb" role="tab"
+                                                                            data-bs-toggle="tab" id="tabCleanDb">
                         <?php echo Text::_('COM_ADMINISTRATIVETOOLS_TITLE_NAV_TABS_CLEANDB'); ?></a></li>
 
                 <li role="presentation" class="<?php echo $this->tab8; ?>"><a href="#pluginsmanager"
-                                                                            aria-controls="messages" role="tab"
-                                                                            data-toggle="tab" id="tabPluginsManager">
+                                                                            aria-controls="pluginsmanager" role="tab"
+                                                                            data-bs-toggle="tab" id="tabPluginsManager">
                         <?php echo Text::_('COM_ADMINISTRATIVETOOLS_TITLE_NAV_TABS_PLUGINSMANAGER'); ?></a></li>
             </ul>
 

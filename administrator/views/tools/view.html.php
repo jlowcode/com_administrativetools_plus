@@ -36,7 +36,7 @@ class AdministrativetoolsViewTools extends \Joomla\CMS\MVC\View\HtmlView
     public function display($tpl = null)
     {
         $this->state = $this->get('State');
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
         $config = JFactory::getConfig();
         $app = JFactory::getApplication();
         $doc = JFactory::getDocument();
@@ -99,9 +99,6 @@ class AdministrativetoolsViewTools extends \Joomla\CMS\MVC\View\HtmlView
         }
 
         $this->dados_tb_harvest = $this->get('ListTableHarvesting');
-
-        $tab = $input->getInt('tab', 1);
-        $this->activateTab($tab);
 
         $this->linksCssJs($doc);
         $this->jsScriptTranslation();
@@ -233,6 +230,7 @@ class AdministrativetoolsViewTools extends \Joomla\CMS\MVC\View\HtmlView
      * @param $id
      *
      * @since version
+     * @deprecated  4.0.0
      */
     function activateTab($id)
     {
