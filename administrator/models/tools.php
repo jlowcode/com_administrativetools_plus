@@ -11,6 +11,7 @@ defined('_JEXEC') or die;
 
 use Joomla\Component\Fields\Administrator\Helper\FieldsHelper;
 use Joomla\CMS\Language\Text;
+use \Joomla\CMS\Factory;
 
 jimport('joomla.application.component.modellist');
 

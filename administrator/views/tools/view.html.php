@@ -11,6 +11,7 @@ defined('_JEXEC') or die;
 jimport('joomla.application.component.view');
 
 use \Joomla\CMS\Language\Text;
+use \Joomla\CMS\Factory;
 
 /**
  * View class for a list of Administrativetools.

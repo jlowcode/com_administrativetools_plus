@@ -2600,7 +2600,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      * @param $value
      * @return bool
      */
-    public function performChangeThumbsCrops($params, $value, $key)
+    public function performChangeThumbsCrops($params, $value, $key=false)
     {
         $path = dirname(dirname($_SERVER['SCRIPT_FILENAME']));
 
