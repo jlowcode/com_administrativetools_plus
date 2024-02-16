@@ -260,7 +260,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     private function createXML($data, $folder)
     {
         date_default_timezone_set('America/Sao_Paulo');
-        $user = Factory::getContainer()->get(UserFactoryInterface::class);
+        $user = JFactory::getUser();
         $xml = new DOMDocument("1.0", "UTF-8");
 
         $xml->formatOutput = true;
@@ -391,7 +391,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     {
         date_default_timezone_set('America/Sao_Paulo');
         $db = Factory::getContainer()->get('DatabaseDriver');
-        $user = Factory::getContainer()->get(UserFactoryInterface::class);
+        $user = JFactory::getUser();
 
         $columns = array('name', 'file', 'record', 'date_time', 'users_id', 'params');
         $values = array($db->quote($name), $db->quote($file), $record, $db->quote(date("Y-m-d H:i:s")),
@@ -2727,7 +2727,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     {
         $app = JFactory::getApplication();
         $db = Factory::getContainer()->get('DatabaseDriver');
-        $user = Factory::getContainer()->get(UserFactoryInterface::class);
+        $user = JFactory::getUser();
 
         $data['link'] = $db->escape($app->input->getString("linkHarvest"));
         $btn = $db->escape($app->input->getString("btnSubmit"));
@@ -3195,7 +3195,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                                                             date_default_timezone_set('America/Sao_Paulo');
                                                             $data['registerDate'] = date("Y-m-d H:i:s");
 
-                                                            $user = Factory::getContainer()->get(UserFactoryInterface::class);
+                                                            $user = JFactory::getUser();
                                                             $data['users'] = $user->get('id');
 
                                                             $tagInsertField = "`parent_id`, `level`, `path`, `title`, `alias`, `published`, `checked_out_time`, `access`, `created_user_id`,
@@ -3566,7 +3566,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                                                             date_default_timezone_set('America/Sao_Paulo');
                                                             $data['registerDate'] = date("Y-m-d H:i:s");
 
-                                                            $user = Factory::getContainer()->get(UserFactoryInterface::class);
+                                                            $user = JFactory::getUser();
                                                             $data['users'] = $user->get('id');
 
                                                             $tagInsertField = "`parent_id`, `level`, `path`, `title`, `alias`, `published`, `checked_out_time`, `access`, `created_user_id`,
@@ -4581,7 +4581,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                                                             date_default_timezone_set('America/Sao_Paulo');
                                                             $data['registerDate'] = date("Y-m-d H:i:s");
 
-                                                            $user = Factory::getContainer()->get(UserFactoryInterface::class);
+                                                            $user = JFactory::getUser();
                                                             $data['users'] = $user->get('id');
 
                                                             $tagInsertField = "`parent_id`, `level`, `path`, `title`, `alias`, `published`, `checked_out_time`, `access`, `created_user_id`,
@@ -4952,7 +4952,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                                                             date_default_timezone_set('America/Sao_Paulo');
                                                             $data['registerDate'] = date("Y-m-d H:i:s");
 
-                                                            $user = Factory::getContainer()->get(UserFactoryInterface::class);
+                                                            $user = JFactory::getUser();
                                                             $data['users'] = $user->get('id');
 
                                                             $tagInsertField = "`parent_id`, `level`, `path`, `title`, `alias`, `published`, `checked_out_time`, `access`, `created_user_id`,
@@ -5745,7 +5745,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
             return;
         }
 
-        $this->user = Factory::getContainer()->get(UserFactoryInterface::class);
+        $this->user = JFactory::getUser();
 
         foreach ($listsToImport as $list) {
             $this->importClone_process($list);
@@ -7025,7 +7025,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                 array_push($retorno, $value);
             }
     
-            $user       = Factory::getContainer()->get(UserFactoryInterface::class);
+            $user       = JFactory::getUser();
             $path       = getcwd() .'/components/com_administrativetools/logs/';
             $file_log   = 'cleandb.log';
  
@@ -7384,7 +7384,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         }
 
         //geração do arquivo de LOG
-        $user       = Factory::getContainer()->get(UserFactoryInterface::class);
+        $user       = JFactory::getUser();
         $path       = getcwd() .'/components/com_administrativetools/logs/';
         $file_log   = 'pluginsManager.log';
 
