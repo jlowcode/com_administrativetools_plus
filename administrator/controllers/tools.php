@@ -6159,7 +6159,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
             $db = Factory::getContainer()->get('DatabaseDriver');
             $tableName = $this->clones_info[$listId]->db_table_name;
             $oldTableName = $this->clones_info[$listId]->old_db_table_name;
-            $tableSql = str_replace("INSERT INTO $oldTableName", "INSERT INTO $tableName", $tableSql);
+            $tableSql = str_replace("INSERT INTO `$oldTableName`", "INSERT IGNORE INTO $tableName", $tableSql);
             $tableSql = str_replace("\\\\", "\\", $tableSql);
             $db->setQuery($tableSql);
             try {
@@ -6181,6 +6181,8 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $oldTableName = $this->clones_info[$listId]->old_db_table_name;
 
         foreach ($tablesRepeatSql as $tableRepeat) {
+            preg_match("/CREATE TABLE `([^`]+)`/", $tableRepeat, $matches);
+            $tableName = $matches[1];
             $query = $db->getQuery(true);
             $query->clear()->select($db->qn('table_name'))
                 ->from($db->qn('information_schema.tables'))
@@ -6221,7 +6223,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
             $tableName = $this->clones_info[$listId]->db_table_name;
             $oldTableName = $this->clones_info[$listId]->old_db_table_name;
             foreach ($tablesRepeatSql as $tableRepeat) {
-                $sql = str_replace("INSERT INTO $oldTableName", "INSERT INTO $tableName", $tableRepeat);
+                $sql = str_replace("INSERT INTO `$oldTableName`", "INSERT IGNORE INTO $tableName", $tableRepeat);
                 $sql = str_replace("\\\\", "\\", $sql);
                 $db->setQuery($sql);
                 try {
