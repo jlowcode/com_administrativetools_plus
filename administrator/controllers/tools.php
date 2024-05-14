@@ -6177,6 +6177,8 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $oldTableName = $this->clones_info[$listId]->old_db_table_name;
 
         foreach ($tablesRepeatSql as $tableRepeat) {
+            preg_match("/CREATE TABLE `([^`]+)`/", $tableRepeat, $matches);
+            $tableName = $matches[1];
             $query = $db->getQuery(true);
             $query->clear()->select($db->qn('table_name'))
                 ->from($db->qn('information_schema.tables'))
