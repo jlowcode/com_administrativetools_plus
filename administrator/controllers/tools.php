@@ -469,7 +469,8 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
         $dir = $folder . '/' . $nm_sql;
 
-        $table = $this->tableBDFabrikDefault();
+        //$table = $this->tableBDFabrikDefault();
+        $table = "";
 
         $joomlaTables = $app->input->get('joomlaTables');
         $textJoomlaTables = '';
@@ -484,10 +485,12 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
             $table .= ' ' . $textJoomlaTables;
         }
 
-        if ($mysql_paht === NULL) {
-            exec("mysqldump --user={$user} --password={$pass} --host={$host} {$database} {$table} --skip-comments --skip-add-drop-table --result-file={$dir} 2>&1", $output);
-        } else {
-            exec("{$mysql_paht}/mysqldump --user={$user} --password={$pass} --host={$host} {$database} {$table} --skip-comments --skip-add-drop-table --result-file={$dir} 2>&1", $output);
+        if(!empty($table)) {
+            if ($mysql_paht === NULL) {
+                exec("mysqldump --user={$user} --password={$pass} --host={$host} {$database} {$table} --skip-comments --skip-add-drop-table --result-file={$dir} 2>&1", $output);
+            } else {
+                exec("{$mysql_paht}/mysqldump --user={$user} --password={$pass} --host={$host} {$database} {$table} --skip-comments --skip-add-drop-table --result-file={$dir} 2>&1", $output);
+            }
         }
 
         $text_file = file_get_contents($dir);
@@ -557,19 +560,21 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
         $dir = $folder . '/' . $nm_sql;
 
-        $table = $this->tableBDFabrikListJoin();
-
-        if ($mysql_paht === NULL) {
-            if ($record === 1) {
-                exec("mysqldump --user={$user} --password={$pass} --host={$host} {$database} {$table} --skip-comments --skip-add-drop-table --result-file={$dir} 2>&1", $output);
+        //$table = $this->tableBDFabrikListJoin();
+        $table = "";
+        if(!empty($table)) {
+            if ($mysql_paht === NULL) {
+                if ($record === 1) {
+                    exec("mysqldump --user={$user} --password={$pass} --host={$host} {$database} {$table} --skip-comments --skip-add-drop-table --result-file={$dir} 2>&1", $output);
+                } else {
+                    exec("mysqldump --user={$user} --password={$pass} --host={$host} {$database} {$table} -d --skip-comments --skip-add-drop-table --result-file={$dir} 2>&1", $output);
+                }
             } else {
-                exec("mysqldump --user={$user} --password={$pass} --host={$host} {$database} {$table} -d --skip-comments --skip-add-drop-table --result-file={$dir} 2>&1", $output);
-            }
-        } else {
-            if ($record === 1) {
-                exec("{$mysql_paht}/mysqldump --user={$user} --password={$pass} --host={$host} {$database} {$table} --skip-comments --skip-add-drop-table --result-file={$dir} 2>&1", $output);
-            } else {
-                exec("{$mysql_paht}/mysqldump --user={$user} --password={$pass} --host={$host} {$database} {$table} -d --skip-comments --skip-add-drop-table --result-file={$dir} 2>&1", $output);
+                if ($record === 1) {
+                    exec("{$mysql_paht}/mysqldump --user={$user} --password={$pass} --host={$host} {$database} {$table} --skip-comments --skip-add-drop-table --result-file={$dir} 2>&1", $output);
+                } else {
+                    exec("{$mysql_paht}/mysqldump --user={$user} --password={$pass} --host={$host} {$database} {$table} -d --skip-comments --skip-add-drop-table --result-file={$dir} 2>&1", $output);
+                }
             }
         }
 
@@ -662,6 +667,8 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $script_php = "<?php \n";
 
         $script_php .= "defined('_JEXEC') or die(); \n\n";
+
+        $script_php .= "use \Joomla\CMS\Factory; \n\n";
 
         $script_php .= "class Pkg_{$nm_file}InstallerScript { \n";
 
