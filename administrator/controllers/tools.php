@@ -184,7 +184,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
         $data['record'] = $app->input->getInt('recordDB');
         $data['file'] = $app->input->get('file', null, 'ARRAY');
-        $data['file'][] = 'date.zip';
+        //$data['file'][] = 'date.zip';
 
         $folder_path = pathinfo($_SERVER['SCRIPT_FILENAME']);
         $folder = $folder_path['dirname'] . '/components/com_administrativetools/generatepackages';
