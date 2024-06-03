@@ -359,7 +359,7 @@ jQuery(document).ready(function () {
     });
 
     jQuery("#btnDelCleanDB").click(function () {
-        alertify.confirm("Atenção", "Confirma excluir do banco de dados as tabelas e campos selecionados?", function () {
+        alertify.confirm(Joomla.JText._('COM_ADMINISTRATIVETOOLS_CLEANDB_ATTENCTION'), Joomla.JText._('COM_ADMINISTRATIVETOOLS_CLEANDB_CONFIRM_DELETE'), function () {
             var select_tables = jQuery('#selectTablesCleanDB option:selected').toArray().map(item => item.value);
             var select_fields = jQuery('#selectFieldsCleanDB option:selected').toArray().map(item => item.value);
 
