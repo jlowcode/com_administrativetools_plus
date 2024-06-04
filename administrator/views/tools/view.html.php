@@ -225,6 +225,8 @@ class AdministrativetoolsViewTools extends \Joomla\CMS\MVC\View\HtmlView
         Text::script('COM_ADMINISTRATIVETOOLS_DUBLIN_CORE_TYPE_OPTION56');
         Text::script('COM_ADMINISTRATIVETOOLS_CLEANDB_CONFIRM_DELETE');
         Text::script('COM_ADMINISTRATIVETOOLS_CLEANDB_ATTENCTION');
+        Text::script('COM_ADMINISTRATIVETOOLS_PLUGINS_MANAGER_CONFIRM');
+        Text::script('COM_ADMINISTRATIVETOOLS_PLUGINS_MANAGER_CHANGES');
     }
 
     /**

@@ -11,12 +11,13 @@ defined('_JEXEC') or die('Restricted access');
    </div>
 
 	<div class="panel-body">
-		<div class="control-group">
+		<div class="control-group" style="flex-direction: column">
 			<div class="controls">
 				<select id="pluginsManagerTypeList" name="pluginsManagerTypeList" required>
 					<option selected 	value="0"><?php echo Text::_('COM_ADMINISTRATIVETOOLS_PLUGINS_MANAGER_TYPE_VALUE0'); ?></option>
 					<option 				value="1"><?php echo Text::_('COM_ADMINISTRATIVETOOLS_PLUGINS_MANAGER_TYPE_VALUE1'); ?></option>
-					<option 				value="2"><?php echo Text::_('COM_ADMINISTRATIVETOOLS_PLUGINS_MANAGER_TYPE_VALUE2'); ?></option>
+					<!-- Funcao pluginsManagerModifyLists nao foi criada... -->
+					<!-- <option 				value="2"><?php //echo Text::_('COM_ADMINISTRATIVETOOLS_PLUGINS_MANAGER_TYPE_VALUE2'); ?></option> -->
 				</select>
 			</div>
 
@@ -29,7 +30,7 @@ defined('_JEXEC') or die('Restricted access');
 			<br>
 
 			
-			<div class="controls" id="divPluginsManagerTypeParams">
+			<div class="controls" id="divPluginsManagerTypeParams" style="display: flex; flex-direction: column; width: 300px;">
 				<label><strong>Configurações encontradas</strong></label>
 				<select id="pluginsManagerTypeParams" name="pluginsManagerTypeParams" required>
 					<option selected 	value="0"> --- </option>

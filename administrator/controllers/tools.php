@@ -7107,9 +7107,9 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
 
         if ($typeName == 1) {
-            $sql = "SELECT form.params FROM #_fabrik_forms AS form where form.id = $idList;";
+            $sql = "SELECT form.params FROM #__fabrik_forms AS form where form.id = $idList;";
         } elseif ($typeName == 2)  {
-            $sql = "SELECT list.params FROM #_fabrik_lists AS list where list.id = $idList;";
+            $sql = "SELECT list.params FROM #__fabrik_lists AS list where list.id = $idList;";
         } else {
             $sql = "SELECT 0 ;";
         }
@@ -7144,8 +7144,6 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $pluginName  = $app->input->getString("pluginName");
         $action      = $app->input->getString("action");
         
-        //echo($typeName);
-
         if($typeName == "1"){ 
             //formulário
             $sql = " SELECT id, label
@@ -7294,7 +7292,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
 
                 if( $qtdPlugins == 0){
-                    array_push($log, "Não possuia nenhum plugin!");
+                    array_push($log, Text::_("COM_ADMINISTRATIVETOOLS_PLUGINS_MANAGER_NOONE_PLUGIN"));
                 }else{
                     for ($i=0; $i < $qtdPlugins ; $i++) { 
                         $busca  = [];
@@ -7325,15 +7323,13 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                                 $remove[5] = "update #__fabrik_forms t1 set t1.params = JSON_REMOVE(t1.params,'$.plugins[$i]') WHERE  t1.id = $object_id";
                                 
 
-                                for ($j=0; $j < 6 ; $j++) { 
+                                for ($j=0; $j < 6 ; $j++) {
                                     $db->setQuery($busca[$j]);
                                     $result[$j] = $db->loadResult();
 
-                                    $db->transactionStart();
-                                    if (count($result[$j]) > 0) {
+                                    if ($result[$j] > 0) {
                                         $db->setQuery($remove[$j]);
                                         $campo_alterado = $db->execute();
-                                        
                                     }
                                 }
 
@@ -7371,9 +7367,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
 
 
-                                $db->transactionCommit();
                             } catch (Exception $exc) {
-                                $db->transactionRollback();
                                 print_r($exc);
                                 die();
                             }
@@ -7382,7 +7376,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                         }else{
 
                             if($i == $qtdPlugins - 1){
-                                array_push($log, "Não possuia.");
+                                array_push($log, Text::_("COM_ADMINISTRATIVETOOLS_PLUGINS_MANAGER_NOT_FIND"));
                             }
                         }
                     }
