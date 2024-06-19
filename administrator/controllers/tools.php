@@ -6467,10 +6467,12 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         if ($listParams['open_archive_elements']) {
             $data2 = json_decode($listParams['open_archive_elements']);
             $newData2 = array();
-            foreach ($data2->dublin_core_element as $item) {
-                $newData2[] = (string)$mappedElements[$item];
+            if(isset($data2->dublin_core_element)) {
+                foreach ($data2->dublin_core_element as $item) {
+                    $newData2[] = (string)$mappedElements[$item];
+                }
+                $data2->dublin_core_element = $newData2;
             }
-            $data2->dublin_core_element = $newData2;
             $listParams['open_archive_elements'] = json_encode($data2);
         }
 
