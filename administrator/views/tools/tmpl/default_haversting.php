@@ -1,4 +1,6 @@
 <?php
+use \Joomla\CMS\Language\Text;
+
 // No direct access
 defined('_JEXEC') or die('Restricted access');
 ?>
@@ -6,24 +8,24 @@ defined('_JEXEC') or die('Restricted access');
       action="<?php echo JRoute::_('index.php?option=com_administrativetools&task=tools.submitHarvesting'); ?>">
     <div class="control-group">
         <label class="control-label"
-               for="linkHarvest"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_HARVESTING_FIELD_LABEL0'); ?></label>
+               for="linkHarvest"><?php echo Text::_('COM_ADMINISTRATIVETOOLS_HARVESTING_FIELD_LABEL0'); ?></label>
         <div class="controls">
             <div class="span4">
                 <input required type="text" id="linkHarvest" name="linkHarvest" form="formHarvesting"
-                       placeholder="<?php echo FText::_('COM_ADMINISTRATIVETOOLS_HARVESTING_FIELD_PLACEHOLDER'); ?>"
+                       placeholder="<?php echo Text::_('COM_ADMINISTRATIVETOOLS_HARVESTING_FIELD_PLACEHOLDER'); ?>"
                        value="">
                 <button class="btn btn-warning" type="button"
-                        id="btnRepository"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_HARVESTING_BTN_TITLE0'); ?></button>
+                        id="btnRepository"><?php echo Text::_('COM_ADMINISTRATIVETOOLS_HARVESTING_BTN_TITLE0'); ?></button>
             </div>
 
         </div>
     </div>
 
     <div class="control-group">
-        <label class="control-label" for="listHarvert"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_LISTS'); ?></label>
+        <label class="control-label" for="listHarvert"><?php echo Text::_('COM_ADMINISTRATIVETOOLS_LISTS'); ?></label>
         <div class="controls">
             <select id="listHarvert" name="listHarvert" form="formHarvesting" required>
-                <option selected value=""><?php echo FText::_('COM_ADMINISTRATIVETOOLS_SELECT_LIST'); ?></option>
+                <option selected value=""><?php echo Text::_('COM_ADMINISTRATIVETOOLS_SELECT_LIST'); ?></option>
                 <?php
                 foreach ($this->list as $vl_list) {
                     ?>
@@ -38,92 +40,92 @@ defined('_JEXEC') or die('Restricted access');
 
     <div class="control-group">
         <label class="control-label"
-               for="listTrans"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_HARVESTING_FIELD_LABEL12'); ?></label>
+               for="listTrans"><?php echo Text::_('COM_ADMINISTRATIVETOOLS_HARVESTING_FIELD_LABEL12'); ?></label>
         <div class="controls">
             <button disabled data-toggle="modal" data-target="#mdHarvestHeader" type="button" id="btnMapHeader"
-                    class="btn" title="<?php echo FText::_('COM_ADMINISTRATIVETOOLS_HARVESTING_FIELD_LABEL1'); ?>">
+                    class="btn" title="<?php echo Text::_('COM_ADMINISTRATIVETOOLS_HARVESTING_FIELD_LABEL1'); ?>">
                 <i
-                        class="icon-list"></i> <?php echo FText::_('COM_ADMINISTRATIVETOOLS_HARVESTING_BTN_TITLE1'); ?>
+                        class="icon-list"></i> <?php echo Text::_('COM_ADMINISTRATIVETOOLS_HARVESTING_BTN_TITLE1'); ?>
             </button>
         </div>
     </div>
 
     <div class="control-group">
         <label class="control-label"
-               for="listTrans"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_HARVESTING_FIELD_LABEL1'); ?></label>
+               for="listTrans"><?php echo Text::_('COM_ADMINISTRATIVETOOLS_HARVESTING_FIELD_LABEL1'); ?></label>
         <div class="controls">
             <button disabled data-toggle="modal" data-target="#mdHarvestElement" type="button" id="btnMapElement"
                     class="btn"
-                    title="<?php echo FText::_('COM_ADMINISTRATIVETOOLS_HARVESTING_FIELD_LABEL1'); ?>"><i
-                        class="icon-list"></i> <?php echo FText::_('COM_ADMINISTRATIVETOOLS_HARVESTING_BTN_TITLE1'); ?>
+                    title="<?php echo Text::_('COM_ADMINISTRATIVETOOLS_HARVESTING_FIELD_LABEL1'); ?>"><i
+                        class="icon-list"></i> <?php echo Text::_('COM_ADMINISTRATIVETOOLS_HARVESTING_BTN_TITLE1'); ?>
             </button>
         </div>
     </div>
 
     <div class="control-group">
         <label class="control-label"
-               for="downloadHarvest"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_HARVESTING_FIELD_LABEL2'); ?></label>
+               for="downloadHarvest"><?php echo Text::_('COM_ADMINISTRATIVETOOLS_HARVESTING_FIELD_LABEL2'); ?></label>
         <div class="controls">
             <select id="downloadHarvest" name="downloadHarvest" form="formHarvesting" disabled>
-                <option selected value=""><?php echo FText::_('COM_MEDIA_PITT_OPTION_1'); ?></option>
+                <option selected value=""><?php echo Text::_('COM_MEDIA_PITT_OPTION_1'); ?></option>
             </select>
         </div>
     </div>
 
     <div class="control-group">
         <label class="control-label"
-               for="extractTextHarvert"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_HARVESTING_FIELD_LABEL4'); ?></label>
+               for="extractTextHarvert"><?php echo Text::_('COM_ADMINISTRATIVETOOLS_HARVESTING_FIELD_LABEL4'); ?></label>
         <div class="controls">
             <select id="extractTextHarvert" name="extractTextHarvert" form="formHarvesting" disabled>
-                <option selected value=""><?php echo FText::_('COM_MEDIA_PITT_OPTION_1'); ?></option>
+                <option selected value=""><?php echo Text::_('COM_MEDIA_PITT_OPTION_1'); ?></option>
             </select>
         </div>
     </div>
 
     <div class="control-group">
-        <label class="control-label"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_HARVESTING_FIELD_LABEL5'); ?></label>
+        <label class="control-label"><?php echo Text::_('COM_ADMINISTRATIVETOOLS_HARVESTING_FIELD_LABEL5'); ?></label>
     </div>
 
     <div class="control-group">
         <label class="radio">
             <input required checked type="radio" name="syncHarvest" id="syncHarvest0" value="0" form="formHarvesting">
-            <?php echo FText::_('COM_ADMINISTRATIVETOOLS_HARVESTING_FIELD_LABEL6'); ?>
+            <?php echo Text::_('COM_ADMINISTRATIVETOOLS_HARVESTING_FIELD_LABEL6'); ?>
         </label>
     </div>
 
     <div class="control-group">
         <div class="controls">
-            <label><strong><?php echo FText::_('COM_ADMINISTRATIVETOOLS_HARVESTING_FIELD_LABEL7'); ?></strong></label>
+            <label><strong><?php echo Text::_('COM_ADMINISTRATIVETOOLS_HARVESTING_FIELD_LABEL7'); ?></strong></label>
         </div>
     </div>
 
     <div class="control-group">
         <label class="radio control-label">
             <input required type="radio" name="syncHarvest" id="syncHarvest1" value="1" form="formHarvesting">
-            <?php echo FText::_('COM_ADMINISTRATIVETOOLS_HARVESTING_FIELD_LABEL8'); ?>
+            <?php echo Text::_('COM_ADMINISTRATIVETOOLS_HARVESTING_FIELD_LABEL8'); ?>
         </label>
 
         <div class="controls">
             <div class="row">
                 <div class="span3">
                     <select id="dateListHarvest" name="dateListHarvest" form="formHarvesting" disabled>
-                        <option selected value=""><?php echo FText::_('COM_MEDIA_PITT_OPTION_1'); ?></option>
+                        <option selected value=""><?php echo Text::_('COM_MEDIA_PITT_OPTION_1'); ?></option>
                     </select>
                 </div>
 
                 <div class="span2 text-right">
-                    <label class="control-label"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_HARVESTING_FIELD_LABEL9'); ?></label>
+                    <label class="control-label"><?php echo Text::_('COM_ADMINISTRATIVETOOLS_HARVESTING_FIELD_LABEL9'); ?></label>
                 </div>
 
                 <div class="span4">
                     <select id="dateRepositoryHarvest" name="dateRepositoryHarvest" form="formHarvesting" disabled>
                         <option selected
-                                value=""><?php echo FText::_('COM_ADMINISTRATIVETOOLS_DUBLIN_CORE_TYPE_LABEL'); ?></option>
+                                value=""><?php echo Text::_('COM_ADMINISTRATIVETOOLS_DUBLIN_CORE_TYPE_LABEL'); ?></option>
                         <optgroup label="Header">
-                            <option value="<?php echo FText::_('COM_ADMINISTRATIVETOOLS_DUBLIN_CORE_TYPE_OPTION55'); ?>"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_DUBLIN_CORE_TYPE_OPTION55'); ?></option>
+                            <option value="<?php echo Text::_('COM_ADMINISTRATIVETOOLS_DUBLIN_CORE_TYPE_OPTION55'); ?>"><?php echo Text::_('COM_ADMINISTRATIVETOOLS_DUBLIN_CORE_TYPE_OPTION55'); ?></option>
                         </optgroup>
                         <optgroup label="Metadata">
-                            <option value="dc:date"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_DUBLIN_CORE_TYPE_OPTION4'); ?></option>
+                            <option value="dc:date"><?php echo Text::_('COM_ADMINISTRATIVETOOLS_DUBLIN_CORE_TYPE_OPTION4'); ?></option>
                         </optgroup>
                     </select>
                 </div>
@@ -136,10 +138,10 @@ defined('_JEXEC') or die('Restricted access');
             <input type="hidden" name="idHarvest" id="idHarvest" value="" form="formHarvesting">
             <button type="submit" id="btnSave" name="btnSubmit" form="formHarvesting" class="btn btn-success"
                     value="btnSave">
-                <i class="icon-apply icon-white"></i> <?php echo FText::_('COM_ADMINISTRATIVETOOLS_HARVESTING_BTN_TITLE2'); ?>
+                <i class="icon-apply icon-white"></i> <?php echo Text::_('COM_ADMINISTRATIVETOOLS_HARVESTING_BTN_TITLE2'); ?>
             </button>
             <button type="submit" id="btnSaveRun" name="btnSubmit" form="formHarvesting" class="btn" value="btnSaveRun">
-                <i class="icon-play text-success"></i> <?php echo FText::_('COM_ADMINISTRATIVETOOLS_HARVESTING_BTN_TITLE3'); ?>
+                <i class="icon-play text-success"></i> <?php echo Text::_('COM_ADMINISTRATIVETOOLS_HARVESTING_BTN_TITLE3'); ?>
             </button>
         </div>
     </div>
@@ -148,13 +150,13 @@ defined('_JEXEC') or die('Restricted access');
 <table class="table">
     <thead>
     <tr>
-        <th width="5%"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_HARVESTING_TABLE_TH_FIELD_NAME1'); ?></th>
-        <th width="35%"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_HARVESTING_TABLE_TH_FIELD_NAME2'); ?></th>
-        <th width="30%"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_LIST'); ?></th>
-        <th width="5%"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_HARVESTING_TABLE_TH_FIELD_NAME3'); ?></th>
-        <th width="15%"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_HARVESTING_TABLE_TH_FIELD_NAME4'); ?></th>
-        <th width="5%"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_HARVESTING_TABLE_TH_FIELD_NAME6'); ?></th>
-        <th width="10%"><?php echo FText::_('COM_ADMINISTRATIVETOOLS_HARVESTING_TABLE_TH_FIELD_NAME5'); ?></th>
+        <th width="5%"><?php echo Text::_('COM_ADMINISTRATIVETOOLS_HARVESTING_TABLE_TH_FIELD_NAME1'); ?></th>
+        <th width="35%"><?php echo Text::_('COM_ADMINISTRATIVETOOLS_HARVESTING_TABLE_TH_FIELD_NAME2'); ?></th>
+        <th width="30%"><?php echo Text::_('COM_ADMINISTRATIVETOOLS_LIST'); ?></th>
+        <th width="5%"><?php echo Text::_('COM_ADMINISTRATIVETOOLS_HARVESTING_TABLE_TH_FIELD_NAME3'); ?></th>
+        <th width="15%"><?php echo Text::_('COM_ADMINISTRATIVETOOLS_HARVESTING_TABLE_TH_FIELD_NAME4'); ?></th>
+        <th width="5%"><?php echo Text::_('COM_ADMINISTRATIVETOOLS_HARVESTING_TABLE_TH_FIELD_NAME6'); ?></th>
+        <th width="10%"><?php echo Text::_('COM_ADMINISTRATIVETOOLS_HARVESTING_TABLE_TH_FIELD_NAME5'); ?></th>
     </tr>
     </thead>
     <tbody>
@@ -209,9 +211,9 @@ defined('_JEXEC') or die('Restricted access');
 <div class="modal hide fade" id="mdHarvestHeader" role="dialog">
     <div class="modal-header">
         <div class="row">
-            <div class="span4"><strong><?php echo FText::_('COM_ADMINISTRATIVETOOLS_ELEMENT'); ?></strong></div>
+            <div class="span4"><strong><?php echo Text::_('COM_ADMINISTRATIVETOOLS_ELEMENT'); ?></strong></div>
             <div class="span4 text-center">
-                <strong><?php echo FText::_('COM_ADMINISTRATIVETOOLS_DUBLIN_CORE_TYPE_LABEL'); ?></strong></div>
+                <strong><?php echo Text::_('COM_ADMINISTRATIVETOOLS_DUBLIN_CORE_TYPE_LABEL'); ?></strong></div>
             <div class="span4 text-right">
                 <button id="btnAddHarvestingHeader" class="add btn button btn-success"><i class="icon-plus"></i>
                 </button>
@@ -227,9 +229,9 @@ defined('_JEXEC') or die('Restricted access');
 <div class="modal hide fade" id="mdHarvestElement" role="dialog">
     <div class="modal-header">
         <div class="row">
-            <div class="span4"><strong><?php echo FText::_('COM_ADMINISTRATIVETOOLS_ELEMENT'); ?></strong></div>
+            <div class="span4"><strong><?php echo Text::_('COM_ADMINISTRATIVETOOLS_ELEMENT'); ?></strong></div>
             <div class="span4 text-center">
-                <strong><?php echo FText::_('COM_ADMINISTRATIVETOOLS_DUBLIN_CORE_TYPE_LABEL'); ?></strong></div>
+                <strong><?php echo Text::_('COM_ADMINISTRATIVETOOLS_DUBLIN_CORE_TYPE_LABEL'); ?></strong></div>
             <div class="span4 text-right">
                 <button id="btnAddHarvesting" class="add btn button btn-success"><i class="icon-plus"></i></button>
             </div>

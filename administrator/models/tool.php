@@ -216,7 +216,7 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
      */
     public function saveConfiguration($data)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
         $arrColumns = Array();
         $arrValues = Array();
         $arrUseless = Array('model_type', 'data_type', 'saveConfiguration', 'joomla_menus', 'joomla_modules', 'joomla_themes','joomla_extensions');
@@ -282,7 +282,7 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
      */
     private function syncSqlFile($id, $fileSql, $pathNameVersion) 
     {
-		$db = JFactory::getDbo();
+		$db = Factory::getContainer()->get('DatabaseDriver');
 		
 		if(!file_exists($pathNameVersion)) {
 			return false;
@@ -378,16 +378,16 @@ class AdministrativetoolsModelTool extends \Joomla\CMS\MVC\Model\AdminModel
      */
     private function newVersion($id, $name)
     {
-        $newdb = JFactory::getDbo();
-		$user = JFactory::getUser();
+        $newdb = Factory::getContainer()->get('DatabaseDriver');
+		$user = Factory::getContainer()->get(UserFactoryInterface::class);
 
 		$values = new stdClass();
 		$values->id = 'default';
-		$values->label = FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_LABEL_VERSION');
+		$values->label = Text::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_LABEL_VERSION');
 		$values->link = '';
 		$values->date_creation = date('Y-m-d H:i:s');
 		$values->user_id = $user->id;
-		$values->text = FText::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_TEXT_VERSION');;
+		$values->text = Text::_('COM_ADMINISTRATIVETOOLS_SYNC_LIST_TEXT_VERSION');;
 		$values->sql = $name;
 
 		//Store the new version

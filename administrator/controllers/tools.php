@@ -13,14 +13,14 @@ defined('_JEXEC') or die;
 jimport('joomla.application.component.controlleradmin');
 
 //BEGIN - Solved problem with menu
-include_once (JPATH_ADMINISTRATOR . '/components/com_menus/models/item.php');
-include_once (JPATH_ADMINISTRATOR . '/components/com_menus/tables/menu.php');
+use Joomla\Component\Menus\Administrator\Model\MenuModel;
 //END - Solved problem with menu
 
 use \Joomla\Utilities\ArrayHelper;
 use \Joomla\CMS\Session\session;
 use \Joomla\CMS\Factory;
 use \Joomla\CMS\Language\Text;
+use Joomla\Filesystem\File;
 
 /**
  * Tools list controller class.
@@ -131,13 +131,13 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
             foreach ($data["name"] as $key => $value) {
                 if (!move_uploaded_file($data['tmp_name'][$key], $folder . '/' . $value)) {
-                    $app->enqueueMessage(JText::_('COM_ADMINISTRATIVETOOLS_PACKAGES_UPLOAD_ERROR') . ' - ' . $value, 'error');
+                    $app->enqueueMessage(Text::_('COM_ADMINISTRATIVETOOLS_PACKAGES_UPLOAD_ERROR') . ' - ' . $value, 'error');
                 } else {
-                    $app->enqueueMessage(JText::_('COM_ADMINISTRATIVETOOLS_PACKAGES_UPLOAD_SUCCESS') . ' - ' . $value, 'message');
+                    $app->enqueueMessage(Text::_('COM_ADMINISTRATIVETOOLS_PACKAGES_UPLOAD_SUCCESS') . ' - ' . $value, 'message');
                 }
             }
         } else {
-            $app->enqueueMessage(JText::_('COM_ADMINISTRATIVETOOLS_PACKAGES_UPLOAD_FILE_ERROR'), 'error');
+            $app->enqueueMessage(Text::_('COM_ADMINISTRATIVETOOLS_PACKAGES_UPLOAD_FILE_ERROR'), 'error');
         }
 
         $this->setRedirect(JRoute::_('index.php?option=com_administrativetools&view=tools&tab=1', false)); //JUri::base() .
@@ -184,7 +184,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
         $data['record'] = $app->input->getInt('recordDB');
         $data['file'] = $app->input->get('file', null, 'ARRAY');
-        $data['file'][] = 'date.zip';
+        //$data['file'][] = 'date.zip';
 
         $folder_path = pathinfo($_SERVER['SCRIPT_FILENAME']);
         $folder = $folder_path['dirname'] . '/components/com_administrativetools/generatepackages';
@@ -225,7 +225,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         unlink($folder . '/pkg_' . $data['name'] . '.xml');
 
         $this->insertPackagesDB($data['name'], $nm_package . '.zip', $data['record'], $files);
-        $app->enqueueMessage(FText::_('COM_ADMINISTRATIVETOOLS_PACKAGES_CONTROLLER_GENERATEPACKATE_SUCCESS') . ' - ' . $nm_package, 'message');
+        $app->enqueueMessage(Text::_('COM_ADMINISTRATIVETOOLS_PACKAGES_CONTROLLER_GENERATEPACKATE_SUCCESS') . ' - ' . $nm_package, 'message');
         $this->setRedirect(JRoute::_('index.php?option=com_administrativetools&view=tools&tab=1', false));
     }
 
@@ -277,17 +277,17 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
             $extension->appendChild($extension_att);
         }
 
-        $extension->appendChild($xml->createElement('name', ucfirst($data['name'] . FText::_('COM_ADMINISTRATIVETOOLS_PACKAGES_XML_NAME'))));
+        $extension->appendChild($xml->createElement('name', ucfirst($data['name'] . Text::_('COM_ADMINISTRATIVETOOLS_PACKAGES_XML_NAME'))));
         $extension->appendChild($xml->createElement('author', $user->name));
         $extension->appendChild($xml->createElement('creationDate', date('Y-m-d')));
         $extension->appendChild($xml->createElement('packagename', $data['name']));
         $extension->appendChild($xml->createElement('version', '3.9'));
-        $extension->appendChild($xml->createElement('url', FText::_('COM_ADMINISTRATIVETOOLS_PACKAGES_XML_URL')));
-        $extension->appendChild($xml->createElement('packager', FText::_('COM_ADMINISTRATIVETOOLS_PACKAGES_XML_PACKAGER')));
-        $extension->appendChild($xml->createElement('packagerurl', FText::_('COM_ADMINISTRATIVETOOLS_PACKAGES_XML_PACKAGER_URL')));
-        $extension->appendChild($xml->createElement('copyright', FText::_('COM_ADMINISTRATIVETOOLS_PACKAGES_XML_COPYRIGHT')));
-        $extension->appendChild($xml->createElement('license', FText::_('COM_ADMINISTRATIVETOOLS_PACKAGES_XML_LICENSE')));
-        $extension->appendChild($xml->createElement('description', FText::_('COM_ADMINISTRATIVETOOLS_PACKAGES_XML_DESCRIPTION')));
+        $extension->appendChild($xml->createElement('url', Text::_('COM_ADMINISTRATIVETOOLS_PACKAGES_XML_URL')));
+        $extension->appendChild($xml->createElement('packager', Text::_('COM_ADMINISTRATIVETOOLS_PACKAGES_XML_PACKAGER')));
+        $extension->appendChild($xml->createElement('packagerurl', Text::_('COM_ADMINISTRATIVETOOLS_PACKAGES_XML_PACKAGER_URL')));
+        $extension->appendChild($xml->createElement('copyright', Text::_('COM_ADMINISTRATIVETOOLS_PACKAGES_XML_COPYRIGHT')));
+        $extension->appendChild($xml->createElement('license', Text::_('COM_ADMINISTRATIVETOOLS_PACKAGES_XML_LICENSE')));
+        $extension->appendChild($xml->createElement('description', Text::_('COM_ADMINISTRATIVETOOLS_PACKAGES_XML_DESCRIPTION')));
 
         $files = $xml->createElement('files');
 
@@ -390,7 +390,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     private function insertPackagesDB($name, $file, $record, $params)
     {
         date_default_timezone_set('America/Sao_Paulo');
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
         $user = JFactory::getUser();
 
         $columns = array('name', 'file', 'record', 'date_time', 'users_id', 'params');
@@ -418,7 +418,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $folder = $folder_path['dirname'] . '/components/com_administrativetools/generatepackages';
 
         $app = JFactory::getApplication();
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         $id = $app->input->getInt('id');
         $file = $app->input->getString('file');
@@ -469,7 +469,8 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
         $dir = $folder . '/' . $nm_sql;
 
-        $table = $this->tableBDFabrikDefault();
+        //$table = $this->tableBDFabrikDefault();
+        $table = "";
 
         $joomlaTables = $app->input->get('joomlaTables');
         $textJoomlaTables = '';
@@ -484,10 +485,12 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
             $table .= ' ' . $textJoomlaTables;
         }
 
-        if ($mysql_paht === NULL) {
-            exec("mysqldump --user={$user} --password={$pass} --host={$host} {$database} {$table} --skip-comments --skip-add-drop-table --result-file={$dir} 2>&1", $output);
-        } else {
-            exec("{$mysql_paht}/mysqldump --user={$user} --password={$pass} --host={$host} {$database} {$table} --skip-comments --skip-add-drop-table --result-file={$dir} 2>&1", $output);
+        if(!empty($table)) {
+            if ($mysql_paht === NULL) {
+                exec("mysqldump --user={$user} --password={$pass} --host={$host} {$database} {$table} --skip-comments --skip-add-drop-table --result-file={$dir} 2>&1", $output);
+            } else {
+                exec("{$mysql_paht}/mysqldump --user={$user} --password={$pass} --host={$host} {$database} {$table} --skip-comments --skip-add-drop-table --result-file={$dir} 2>&1", $output);
+            }
         }
 
         $text_file = file_get_contents($dir);
@@ -509,7 +512,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     private function tableBDFabrikDefault()
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
         $config = JFactory::getConfig();
 
         $dbprefix = $config->get('dbprefix');
@@ -557,19 +560,21 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
         $dir = $folder . '/' . $nm_sql;
 
-        $table = $this->tableBDFabrikListJoin();
-
-        if ($mysql_paht === NULL) {
-            if ($record === 1) {
-                exec("mysqldump --user={$user} --password={$pass} --host={$host} {$database} {$table} --skip-comments --skip-add-drop-table --result-file={$dir} 2>&1", $output);
+        //$table = $this->tableBDFabrikListJoin();
+        $table = "";
+        if(!empty($table)) {
+            if ($mysql_paht === NULL) {
+                if ($record === 1) {
+                    exec("mysqldump --user={$user} --password={$pass} --host={$host} {$database} {$table} --skip-comments --skip-add-drop-table --result-file={$dir} 2>&1", $output);
+                } else {
+                    exec("mysqldump --user={$user} --password={$pass} --host={$host} {$database} {$table} -d --skip-comments --skip-add-drop-table --result-file={$dir} 2>&1", $output);
+                }
             } else {
-                exec("mysqldump --user={$user} --password={$pass} --host={$host} {$database} {$table} -d --skip-comments --skip-add-drop-table --result-file={$dir} 2>&1", $output);
-            }
-        } else {
-            if ($record === 1) {
-                exec("{$mysql_paht}/mysqldump --user={$user} --password={$pass} --host={$host} {$database} {$table} --skip-comments --skip-add-drop-table --result-file={$dir} 2>&1", $output);
-            } else {
-                exec("{$mysql_paht}/mysqldump --user={$user} --password={$pass} --host={$host} {$database} {$table} -d --skip-comments --skip-add-drop-table --result-file={$dir} 2>&1", $output);
+                if ($record === 1) {
+                    exec("{$mysql_paht}/mysqldump --user={$user} --password={$pass} --host={$host} {$database} {$table} --skip-comments --skip-add-drop-table --result-file={$dir} 2>&1", $output);
+                } else {
+                    exec("{$mysql_paht}/mysqldump --user={$user} --password={$pass} --host={$host} {$database} {$table} -d --skip-comments --skip-add-drop-table --result-file={$dir} 2>&1", $output);
+                }
             }
         }
 
@@ -592,7 +597,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     private function tableBDFabrikListJoin(): string
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         $sql = "SELECT DISTINCT list.db_table_name
                 FROM #__fabrik_lists AS list ;";
@@ -663,6 +668,8 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
         $script_php .= "defined('_JEXEC') or die(); \n\n";
 
+        $script_php .= "use \Joomla\CMS\Factory; \n\n";
+
         $script_php .= "class Pkg_{$nm_file}InstallerScript { \n";
 
         $script_php .= "protected \$name = '{$name}'; \n";
@@ -685,7 +692,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $script_php .= "} \n\n";
 
         $script_php .= "public function postflight(\$type, \$parent){ \n";
-        $script_php .= "\$db = JFactory::getDbo(); \n";
+        $script_php .= "\$db = Factory::getContainer()->get('DatabaseDriver'); \n";
         $script_php .= "\$query = \$db->getQuery(true); \n\n";
         $script_php .= "\$query->clear(); \n";
         $script_php .= "\$query->update('#__extensions')->set('enabled = 1') \n";
@@ -728,7 +735,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     public function listElement()
     {
         $app = JFactory::getApplication();
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         $id = $app->input->getInt("idList");
 
@@ -1275,13 +1282,13 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $data->validate = 0;
 
         if ($type === 0) {
-            $data->message = FText::_('COM_ADMINISTRATIVETOOLS_MESSAGE_ALERT_ERRO_NO_FIELD_FOR_EXECUTION') . ' ' .
-                FText::_('COM_ADMINISTRATIVETOOLS_ADMINISTRATIVETOOLS_SOURCE') . ' ' . $sourse . ' / ' .
-                FText::_('COM_ADMINISTRATIVETOOLS_ADMINISTRATIVETOOLS_TARGET') . ' ' . $target;
+            $data->message = Text::_('COM_ADMINISTRATIVETOOLS_MESSAGE_ALERT_ERRO_NO_FIELD_FOR_EXECUTION') . ' ' .
+                Text::_('COM_ADMINISTRATIVETOOLS_ADMINISTRATIVETOOLS_SOURCE') . ' ' . $sourse . ' / ' .
+                Text::_('COM_ADMINISTRATIVETOOLS_ADMINISTRATIVETOOLS_TARGET') . ' ' . $target;
         } else {
-            $data->message = FText::_('COM_ADMINISTRATIVETOOLS_MESSAGE_ALERT_ERRO_NO_FIELD_FOR_EXECUTION_TYPE') . ' ' .
-                FText::_('COM_ADMINISTRATIVETOOLS_ADMINISTRATIVETOOLS_SOURCE') . ' ' . $sourse . ' / ' .
-                FText::_('COM_ADMINISTRATIVETOOLS_ADMINISTRATIVETOOLS_TARGET') . ' ' . $target;
+            $data->message = Text::_('COM_ADMINISTRATIVETOOLS_MESSAGE_ALERT_ERRO_NO_FIELD_FOR_EXECUTION_TYPE') . ' ' .
+                Text::_('COM_ADMINISTRATIVETOOLS_ADMINISTRATIVETOOLS_SOURCE') . ' ' . $sourse . ' / ' .
+                Text::_('COM_ADMINISTRATIVETOOLS_ADMINISTRATIVETOOLS_TARGET') . ' ' . $target;
 
             if (($sourse === 'field') && ($target === 'databasejoin')) {
                 $data->field = 1;
@@ -1308,7 +1315,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function dataTableSource($table, $field_source, $field_target)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $query = "SELECT
@@ -1321,7 +1328,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
             return $db->loadAssocList();
         } catch (Exception $exc) {
-            $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
+            $message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
             $type_message = 'warning';
             $site_message = JUri::base() . 'index.php?option=com_administrativetools&view=tools&tab=3';
 
@@ -1340,7 +1347,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function tableSource($id_form)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $query = "SELECT * FROM #__fabrik_lists AS `table` WHERE table.published = 1 AND `table`.id = {$id_form};";
@@ -1349,7 +1356,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
             return $db->loadObject();
         } catch (Exception $exc) {
-            $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
+            $message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
             $type_message = 'warning';
             $site_message = JUri::base() . 'index.php?option=com_administrativetools&view=tools&tab=3';
 
@@ -1370,7 +1377,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function elementSourceTarget($id_form, $id_source, $id_target)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $sql = "SELECT element.* FROM
@@ -1386,7 +1393,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
             return $db->loadObjectList();
         } catch (Exception $exc) {
-            $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
+            $message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
             $type_message = 'warning';
             $site_message = JUri::base() . 'index.php?option=com_administrativetools&view=tools&tab=3';
 
@@ -1407,7 +1414,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function existTargetTableData($table, $field, $search)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $query = "SELECT
@@ -1421,7 +1428,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
             return $db->loadAssoc();
         } catch (Exception $exc) {
-            $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
+            $message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
             $type_message = 'warning';
             $site_message = JUri::base() . 'index.php?option=com_administrativetools&view=tools&tab=3';
 
@@ -1443,7 +1450,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function updateDataTableSource($table, $id_target, $id_source, $field_target)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $db->transactionStart();
@@ -1480,7 +1487,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function insertIntoTargetAndChargeSourceTable($table_taget, $field_target, $data_target, $table_source, $id_source, $field_source)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $db->transactionStart();
@@ -1517,7 +1524,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function insertMultipleSourceTable($join_source, $id_source, $id_target)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $db->transactionStart();
@@ -1551,7 +1558,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function insertInTargetAndSourceTable($table_taget, $field_target, $data_target, $join_source, $id_source)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $db->transactionStart();
@@ -1596,7 +1603,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function insertInTargetDropAndSourceMultTable($table_taget, $field_target, $data_target, $join_source, $id_source, $field_sychr_source)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $db->transactionStart();
@@ -1636,7 +1643,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function tableTaget($table_name_taget)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $query = "SELECT * FROM #__fabrik_lists AS `table` WHERE table.published = 1 AND `table`.db_table_name = '{$table_name_taget}';";
@@ -1645,7 +1652,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
             return $db->loadObject();
         } catch (Exception $exc) {
-            $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
+            $message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
             $type_message = 'warning';
             $site_message = JUri::base() . 'index.php?option=com_administrativetools&view=tools&tab=3';
 
@@ -1666,7 +1673,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function elementTableTarget($table_target, $synchronism, $id_list_target)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $sql = "SELECT
@@ -1690,7 +1697,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
             return $db->loadObject();
         } catch (Exception $exc) {
-            $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
+            $message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
             $type_message = 'warning';
             $site_message = JUri::base() . 'index.php?option=com_administrativetools&view=tools&tab=3';
 
@@ -1715,7 +1722,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function insertTargetChangesSourceInsertTargetRepeatTable($table_taget, $field_target, $data_target, $table_source, $id_source, $field_source, $join_target)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $db->transactionStart();
@@ -1766,7 +1773,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function updateTableSourceDropdownInsertTableTargetRepeat($table_source, $id_source, $field_source, $join_target, $id_target)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         $query = "SELECT repit.id
                     FROM {$join_target->table_join} AS repit
@@ -1818,7 +1825,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function insertTargetTableInsertRepeatTargetTableInsertRepeatSourceTable($table_taget, $field_target, $data_target, $join_source, $id_source, $join_target)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $db->transactionStart();
@@ -1867,7 +1874,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function insertSourceRepeatTableInsertTargetRepeatTable($join_source, $id_source, $id_target, $join_target)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $db->transactionStart();
@@ -1910,7 +1917,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function updateDataTableSourceUpdateTableElement($table, $field, $id, $id_element, $data, $element_params)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         $paramsDB = json_encode($element_params);
 
@@ -1954,7 +1961,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     {
         $app = JFactory::getApplication();
 
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         $id = $app->input->getInt("idList");
 
@@ -2007,7 +2014,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function checkEngineTypeTable($table)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         $sql = "select `engine` from information_schema.tables where table_name = '{$table}';";
 
@@ -2024,7 +2031,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function alterTableEngineType($table)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $db->transactionStart();
@@ -2057,7 +2064,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function joinTableFieldType($table, $field)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $sql = "SHOW COLUMNS FROM `{$table}` WHERE field = '{$field}';";
@@ -2066,7 +2073,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
             return $db->loadObject();
         } catch (Exception $exc) {
-            $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
+            $message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
             $type_message = 'warning';
             $site_message = JUri::base() . 'index.php?option=com_administrativetools&view=tools';
 
@@ -2084,7 +2091,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function alterTableColummDataType($table, $field)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $db->transactionStart();
@@ -2122,7 +2129,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function alterTableCreateForeignKeyRelatedFields2($table, $table_source, $field_source, $table_target, $field_target, $update, $delete)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         $name_fk1 = 'fk_' . $table . '_' . $field_source . '_' . $table_source;
 
@@ -2163,7 +2170,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function checkIfForeignKeyExists($table, $table_taget, $field)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $sql = "SELECT COUNT(column_name) as forkey
@@ -2177,7 +2184,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
             return $db->loadObject();
         } catch (Exception $exc) {
-            $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
+            $message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
             $type_message = 'warning';
             $site_message = JUri::base() . 'index.php?option=com_administrativetools&view=tools';
 
@@ -2260,7 +2267,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function alterTableCreateForeignKeyRelatedFields1($table, $table_target, $field_source, $update, $delete)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         $name_fk1 = 'fk_' . $table . '_' . $field_source . '_' . $table_target;
 
@@ -2323,7 +2330,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function alterTableCreateForeignKeyRelatedFields3($table, $table_source, $field_source, $field_source_parent, $table_target, $field_target, $update, $delete)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         $name_fk1 = 'fk_' . $table_target . '_' . $field_target . '_' . $table_source;
         $name_fk2 = 'fk_' . $table . '_' . $field_source_parent . '_' . $table_source;
@@ -2378,7 +2385,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function alterTableCreateForeignKeyRelatedFields4($table_join_source, $table_join_target, $table_source, $table_target, $field_source, $field_target, $update, $delete)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         $parent_id = 'parent_id';
 
@@ -2436,10 +2443,10 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     public function displayMessages($result_sql, $message_true, $message_false)
     {
         if ($result_sql) {
-            $ar_message['message'] = JText::_($message_true);
+            $ar_message['message'] = Text::_($message_true);
             $ar_message['type'] = 'Success';
         } else {
-            $ar_message['message'] = JText::_($message_false);
+            $ar_message['message'] = Text::_($message_false);
             $ar_message['type'] = 'info';
         }
 
@@ -2537,7 +2544,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function dataTableSourceFieldSingle($table, $field_source)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $query = "SELECT
@@ -2550,7 +2557,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
             return $db->loadAssocList();
         } catch (Exception $exc) {
-            $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
+            $message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
             $type_message = 'warning';
             $site_message = JUri::base() . 'index.php?option=com_administrativetools&view=tools';
 
@@ -2571,7 +2578,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function insertMultipleSourceTableFileupload($join_source, $id_source, $text)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $db->transactionStart();
@@ -2600,7 +2607,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      * @param $value
      * @return bool
      */
-    public function performChangeThumbsCrops($params, $value, $key)
+    public function performChangeThumbsCrops($params, $value, $key=false)
     {
         $path = dirname(dirname($_SERVER['SCRIPT_FILENAME']));
 
@@ -2640,7 +2647,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     {
         switch ($code) {
             case 1064:
-                $text = FText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_1064');
+                $text = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_1064');
 
                 break;
             default:
@@ -2661,7 +2668,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     {
         $app = JFactory::getApplication();
 
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         $id = $app->input->getInt("id");
 
@@ -2696,7 +2703,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     public function deleteHarvesting()
     {
         $app = JFactory::getApplication();
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
         $id = $app->input->getInt("id");
 
         try {
@@ -2726,7 +2733,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     public function submitHarvesting()
     {
         $app = JFactory::getApplication();
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
         $user = JFactory::getUser();
 
         $data['link'] = $db->escape($app->input->getString("linkHarvest"));
@@ -2782,10 +2789,10 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                 $result = $this->saveHarvesting($data, NULL, $data['registerDate']);
 
                 if ($result['status']) {
-                    $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_SUCCESS1');
+                    $message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_SUCCESS1');
                     $type_message = 'success';
                 } else {
-                    $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR0');
+                    $message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR0');
                     $type_message = 'warning';
                 }
 
@@ -2800,7 +2807,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                 $result = $this->saveHarvesting($data, $data['registerDate'], $data['registerDate'], 1);
 
                 if (!$result['status']) {
-                    $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR0');
+                    $message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR0');
                     $type_message = 'warning';
 
                     break;
@@ -2811,12 +2818,12 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                 $result = $this->saveRunHarvesting($data);
 
                 if (!$result) {
-                    $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR4');
+                    $message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR4');
                     $type_message = 'warning';
 
                     break;
                 } else {
-                    $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_SUCCESS3');
+                    $message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_SUCCESS3');
                     $type_message = 'success';
                 }
 
@@ -2826,12 +2833,12 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                 $result = $this->runListHarvesting($data);
 
                 if (!$result) {
-                    $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
+                    $message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
                     $type_message = 'warning';
 
                     break;
                 } else {
-                    $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_SUCCESS3');
+                    $message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_SUCCESS3');
                     $type_message = 'success';
                 }
 
@@ -2849,7 +2856,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function saveHarvesting($data, $dateRum = NULL, $dateRecordLast = NULL, $line = NULL)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
         $header = $db->escape(json_encode($data['header']));
         $metadata = $db->escape(json_encode($data['metadata']));
 
@@ -2921,7 +2928,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     {
         set_time_limit(0);
 
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
         $config = JFactory::getConfig();
 
         $ext = $config->get('dbprefix');
@@ -3311,7 +3318,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                                                 $path_thumb = $path . '/' . $objParamsFile->thumb_dir . '/' . $nameIdentifier . '_' . basename($linkFileXML);
                                                 $path_thumb = str_replace('.pdf', '.png', $path_thumb);
 
-                                                if (!JFile::exists($path_thumb) && JFile::exists($dir)) {
+                                                if (!is_file($path_thumb) && is_file($dir)) {
                                                     $width_thumb = $objParamsFile->thumb_max_width;
                                                     $height_thumb = $objParamsFile->thumb_max_height;
 
@@ -3682,7 +3689,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                                                 $path_thumb = $path . '/' . $objParamsFile->thumb_dir . '/' . $nameIdentifier . '_' . basename($linkFileXML);
                                                 $path_thumb = str_replace('.pdf', '.png', $path_thumb);
 
-                                                if (!JFile::exists($path_thumb) && JFile::exists($dir)) {
+                                                if (!is_file($path_thumb) && is_file($dir)) {
                                                     $width_thumb = $objParamsFile->thumb_max_width;
                                                     $height_thumb = $objParamsFile->thumb_max_height;
 
@@ -3817,7 +3824,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     public function repositoryValidation()
     {
         $app = JFactory::getApplication();
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         $link = $db->escape($app->input->getString("link"));
 
@@ -3875,7 +3882,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function mappedElementsData($id_form, $arIdElementMap)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $sql = "SELECT element.* FROM
@@ -3891,7 +3898,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
             return $db->loadObject();
         } catch (Exception $exc) {
-            $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
+            $message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
             $type_message = 'warning';
             $site_message = JUri::base() . 'index.php?option=com_administrativetools&view=tools';
 
@@ -3908,7 +3915,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function updateTableElement($id_element, $element_params)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         $paramsDB = json_encode($element_params);
 
@@ -3944,7 +3951,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function insertTable($table, $field, $data)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $db->transactionStart();
@@ -3977,7 +3984,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function insertTableMultipleFieldsData($table, $field, $data)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $db->transactionStart();
@@ -4012,7 +4019,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function selectTableRepeat($table, $parent_id, $target, $parent_data, $target_data)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $sql = "SELECT
@@ -4028,7 +4035,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
             return $db->loadObject();
         } catch (Exception $exc) {
-            $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
+            $message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
             $type_message = 'warning';
             $site_message = JUri::base() . 'index.php?option=com_administrativetools&view=tools';
 
@@ -4046,7 +4053,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function insertTableRepeat($table, $parent_id, $target, $parent_data, $target_data)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $db->transactionStart();
@@ -4081,7 +4088,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function selectTableRepeatFileUpload($table, $parent_id, $target, $parent_data, $target_data)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $sql = "SELECT
@@ -4097,7 +4104,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
             return $db->loadObject();
         } catch (Exception $exc) {
-            $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
+            $message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
             $type_message = 'warning';
             $site_message = JUri::base() . 'index.php?option=com_administrativetools&view=tools';
 
@@ -4113,7 +4120,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     public function editHarvesting()
     {
         $app = JFactory::getApplication();
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         $id = $app->input->getInt("id");
 
@@ -4192,7 +4199,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function checkDataTableExist($table, $field, $data, $fieldDate = NULL, $date = NULL)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $sql = "SELECT
@@ -4210,7 +4217,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
             return $db->loadObject();
         } catch (Exception $exc) {
-            $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
+            $message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
             $type_message = 'warning';
             $site_message = JUri::base() . 'index.php?option=com_administrativetools&view=tools';
 
@@ -4228,7 +4235,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function updateTableMultipleFieldsData($table, $id, $field, $data)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $db->transactionStart();
@@ -4267,7 +4274,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function repositoryValidator($link)
     {
-        $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR3');
+        $message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR3');
         $type_message = 'warning';
         $site_message = JUri::base() . 'index.php?option=com_administrativetools&view=tools&tab=3';
 
@@ -4290,7 +4297,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     {
         set_time_limit(0);
 
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
         $config = JFactory::getConfig();
 
         $ext = $config->get('dbprefix');
@@ -4697,7 +4704,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                                                 $path_thumb = $path . '/' . $objParamsFile->thumb_dir . '/' . $nameIdentifier . '_' . basename($linkFileXML);
                                                 $path_thumb = str_replace('.pdf', '.png', $path_thumb);
 
-                                                if (!JFile::exists($path_thumb) && JFile::exists($dir)) {
+                                                if (!is_file($path_thumb) && is_file($dir)) {
                                                     $width_thumb = $objParamsFile->thumb_max_width;
                                                     $height_thumb = $objParamsFile->thumb_max_height;
 
@@ -5068,7 +5075,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                                                 $path_thumb = $path . '/' . $objParamsFile->thumb_dir . '/' . $nameIdentifier . '_' . basename($linkFileXML);
                                                 $path_thumb = str_replace('.pdf', '.png', $path_thumb);
 
-                                                if (!JFile::exists($path_thumb) && JFile::exists($dir)) {
+                                                if (!is_file($path_thumb) && is_file($dir)) {
                                                     $width_thumb = $objParamsFile->thumb_max_width;
                                                     $height_thumb = $objParamsFile->thumb_max_height;
 
@@ -5210,7 +5217,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $xmlObj2 = simplexml_load_file($url2);
 
         if (!$xmlObj2) {
-            $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR3');
+            $message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR3');
             $site_message = JUri::base() . 'index.php?option=com_administrativetools&view=tools&tab=3';
             $type_message = 'warning';
 
@@ -5252,7 +5259,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
     protected function checkTableName($name)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         $name = $this->user->id . '_' . $name;
         $continue = false;
@@ -5273,7 +5280,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
     public function checkDatabaseJoins()
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         foreach ($this->elementsId as $elementId) {
             $query = $db->getQuery(true);
@@ -5298,7 +5305,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                 $query = $db->getQuery(true);
                 $query = 'DELETE FROM `#__fabrik_joins` WHERE table_join = '."'$params->join_db_name'". ' and element_id = '.$elementId;
                 $db->setQuery($query);
-                $db->query($query);
+                $db->execute();
             }
         }
     }
@@ -5316,9 +5323,9 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $jsonExport = json_encode($this->listsToExport);
 
         $pathJson = JPATH_BASE . '/components/com_administrativetools/exportLists/listsToExport.json';
-        JFile::write($pathJson, $jsonExport);
+        File::write($pathJson, $jsonExport);
 
-        if (JFile::exists($pathJson)) {
+        if (is_file($pathJson)) {
             header('Content-Description: File Transfer');
             header('Content-Type: application/octet-stream');
             header('Content-Disposition: attachment; filename="' . basename($pathJson) . '"');
@@ -5333,9 +5340,9 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
             http_response_code(404);
         }
 
-        JFile::delete($pathJson);
+        File::delete($pathJson);
 
-        $app->enqueueMessage(FText::_('COM_ADMINISTRATIVETOOLS_PACKAGES_CONTROLLER_EXPORTLIST_SUCCESS'), 'message');
+        $app->enqueueMessage(Text::_('COM_ADMINISTRATIVETOOLS_PACKAGES_CONTROLLER_EXPORTLIST_SUCCESS'), 'message');
         $this->setRedirect(JRoute::_('index.php?option=com_administrativetools&view=tools&tab=4', false));
     }
 
@@ -5461,7 +5468,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
     protected function exportCloneGroupsAndElements($groups, $listId)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
         $ordering = 1;
         $groupsData = array();
 
@@ -5614,7 +5621,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
     protected function exportCreateTable($listId)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
         $oldTableName = $this->clones_info[$listId]->old_db_table_name;
         $db->setQuery("SHOW CREATE TABLE $oldTableName");
         return $db->loadAssoc()["Create Table"];
@@ -5623,7 +5630,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     protected function exportTableData($listId)
     {
         $dataTable = array();
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
         $oldTableName = $this->clones_info[$listId]->old_db_table_name;
         $db->setQuery("SELECT * FROM $oldTableName");
         $data = [];
@@ -5642,7 +5649,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
     protected function exportCreateTablesRepeat($listId)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
         $oldTableName = $this->clones_info[$listId]->old_db_table_name;
         $elementsRepeat = $this->clones_info[$listId]->elementsRepeat;
 
@@ -5661,7 +5668,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     protected function exportGroupRepeatData($groups_repeat_data)
     {
         $data_group_repeat = [];
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
         foreach ($groups_repeat_data as $groupRepeat) {
             $groupRepeat = explode('`', $groupRepeat)[1];
             $db->setQuery("SELECT * FROM $groupRepeat");
@@ -5677,7 +5684,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     protected function exportTableRepeatData($tablesRepeatData)
     {
         $data_table_repeat = [];
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
         foreach ($tablesRepeatData as $tableRepeat) {
             $tableRepeat = explode('`', $tableRepeat)[1];
             $db->setQuery("SELECT * FROM $tableRepeat");
@@ -5693,7 +5700,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     protected function exportMenuFabrik($listId,$data)
     {   
         $menu = array();
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
         $query = $db->getQuery(true);
         
         $query = "SELECT * FROM `#__menu` WHERE link = 'index.php?option=com_fabrik&view=list&listid=". (int)$listId."'";
@@ -5730,18 +5737,18 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $app = JFactory::getApplication();
 
         if ($_FILES["listFile"]["type"] !== 'application/json') {
-            $app->enqueueMessage(FText::_('COM_ADMINISTRATIVETOOLS_PACKAGES_CONTROLLER_IMPORTLIST_ERROR'), 'error');
+            $app->enqueueMessage(Text::_('COM_ADMINISTRATIVETOOLS_PACKAGES_CONTROLLER_IMPORTLIST_ERROR'), 'error');
             return;
         }
 
         $path = JPATH_BASE . '/components/com_administrativetools/importFile.json';
-        JFile::move($_FILES["listFile"]["tmp_name"], $path);
+        File::move($_FILES["listFile"]["tmp_name"], $path);
         $json = file_get_contents($path);
-        JFile::delete($path);
+        File::delete($path);
         $listsToImport = json_decode($json);
 
         if (empty($listsToImport)) {
-            $app->enqueueMessage(FText::_('COM_ADMINISTRATIVETOOLS_PACKAGES_CONTROLLER_IMPORTLIST_ERROR'), 'error');
+            $app->enqueueMessage(Text::_('COM_ADMINISTRATIVETOOLS_PACKAGES_CONTROLLER_IMPORTLIST_ERROR'), 'error');
             return;
         }
 
@@ -5752,7 +5759,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         }
 
         $this->checkDatabaseJoins();
-        $app->enqueueMessage(FText::_('COM_ADMINISTRATIVETOOLS_PACKAGES_CONTROLLER_IMPORTLIST_SUCCESS'), 'message');
+        $app->enqueueMessage(Text::_('COM_ADMINISTRATIVETOOLS_PACKAGES_CONTROLLER_IMPORTLIST_SUCCESS'), 'message');
         $this->setRedirect(JRoute::_('index.php?option=com_administrativetools&view=tools&tab=4', false));
     }
 
@@ -5778,7 +5785,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
     protected function importCloneForm($data, $listId)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         $data->created_by = $this->user->id;
         $data->created_by_alias = $this->user->username;
@@ -5806,7 +5813,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
     protected function importCloneList($data, $listId)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         $data->form_id = $this->clones_info[$listId]->formId;
         $data->db_table_name = $this->clones_info[$listId]->db_table_name;
@@ -5836,7 +5843,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
     protected function importCloneGroupsAndElements($groups, $listId,$groups_repeat = null, $groups_repeat_data = null)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
         $ordering = 1;
 
         foreach ($groups as $group) {
@@ -5896,11 +5903,13 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                 $db->setQuery($query);
                 if($db->loadResult()) {
                     $db->setQuery("SHOW CREATE TABLE $newTableNameSql");
-                    $actualTable = $db->loadAssoc()["Create Table"];
-                    if($newSql != $actualTable) {
-                        $db->setQuery("RENAME TABLE $newTableNameSql TO " . $this->checkTableName($newTableNameSql));
-                        $db->execute();
-                    }
+                    try {
+                        $actualTable = $db->loadAssoc()["Create Table"];
+                        if($newSql != $actualTable) {
+                            $db->setQuery("RENAME TABLE $newTableNameSql TO " . $this->checkTableName($newTableNameSql));
+                            $db->execute();
+                        }
+                    } catch (\Throwable $th) {}
                 }
 
                 $newSql = str_replace('CREATE TABLE', 'CREATE TABLE IF NOT EXISTS', $newSql);
@@ -5971,7 +5980,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
     protected function importCloneElements($elements, $group_id, $listId)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         foreach ($elements as $element) {
             $cloneData = $element;
@@ -6041,7 +6050,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
     protected function importCloneJoin($data, $element_id, $element_name, $listId, $group_id, $type = '')
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
         $cloneData = new stdClass();
         $cloneData->id = 0;
 
@@ -6115,7 +6124,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
     protected function importCreateTable($listId, $tableSql)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
         $tableName = $this->clones_info[$listId]->db_table_name;
         $oldTableName = $this->clones_info[$listId]->old_db_table_name;
       
@@ -6126,11 +6135,13 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $db->setQuery($query);
         if($db->loadResult()) {
             $db->setQuery("SHOW CREATE TABLE $tableName");
-            $actualTable = $db->loadAssoc()["Create Table"];
-            if($tableSql != $actualTable) {
-                $db->setQuery("RENAME TABLE $tableName TO " . $this->checkTableName($tableName));
-                $db->execute();
-            }
+            try {
+                $actualTable = $db->loadAssoc()["Create Table"];
+                if($tableSql != $actualTable) {
+                    $db->setQuery("RENAME TABLE $tableName TO " . $this->checkTableName($tableName));
+                    $db->execute();
+                }
+            } catch (\Throwable $th) {}
         }
         $tableSql = str_replace("CREATE TABLE `$oldTableName`", "CREATE TABLE `$tableName`", $tableSql);
         $tableSql = str_replace("CREATE TABLE", "CREATE TABLE IF NOT EXISTS", $tableSql);
@@ -6152,10 +6163,10 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     protected function importCreateTableData($listId, $tableSql)
     {
         if ($tableSql){
-            $db = JFactory::getDbo();
+            $db = Factory::getContainer()->get('DatabaseDriver');
             $tableName = $this->clones_info[$listId]->db_table_name;
             $oldTableName = $this->clones_info[$listId]->old_db_table_name;
-            $tableSql = str_replace("INSERT INTO $oldTableName", "INSERT INTO $tableName", $tableSql);
+            $tableSql = str_replace("INSERT INTO `$oldTableName`", "INSERT IGNORE INTO $tableName", $tableSql);
             $tableSql = str_replace("\\\\", "\\", $tableSql);
             $db->setQuery($tableSql);
             try {
@@ -6172,7 +6183,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
     protected function importCreateTablesRepeat($listId, $tablesRepeatSql)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
         $tableName = $this->clones_info[$listId]->db_table_name;
         $oldTableName = $this->clones_info[$listId]->old_db_table_name;
 
@@ -6186,11 +6197,13 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
             $db->setQuery($query);
             if($db->loadResult()) {
                 $db->setQuery("SHOW CREATE TABLE $tableName");
-                $actualTable = $db->loadAssoc()["Create Table"];
-                if($tableRepeat != $actualTable) {
-                    $db->setQuery("RENAME TABLE $tableName TO " . $this->checkTableName($tableName));
-                    $db->execute();
-                }
+                try {
+                    $actualTable = $db->loadAssoc()["Create Table"];
+                    if($tableRepeat != $actualTable) {
+                        $db->setQuery("RENAME TABLE $tableName TO " . $this->checkTableName($tableName));
+                        $db->execute();
+                    }
+                } catch (\Throwable $th) {}
             }
             
             $sql = str_replace("CREATE TABLE `$oldTableName`", "CREATE TABLE `$tableName`", $tableRepeat);
@@ -6213,11 +6226,11 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     protected function importCreateTablesRepeatData($listId, $tablesRepeatSql)
     {
         if ($tablesRepeatSql){
-            $db = JFactory::getDbo();
+            $db = Factory::getContainer()->get('DatabaseDriver');
             $tableName = $this->clones_info[$listId]->db_table_name;
             $oldTableName = $this->clones_info[$listId]->old_db_table_name;
             foreach ($tablesRepeatSql as $tableRepeat) {
-                $sql = str_replace("INSERT INTO $oldTableName", "INSERT INTO $tableName", $tableRepeat);
+                $sql = str_replace("INSERT INTO `$oldTableName`", "INSERT IGNORE INTO $tableName", $tableRepeat);
                 $sql = str_replace("\\\\", "\\", $sql);
                 $db->setQuery($sql);
                 try {
@@ -6234,10 +6247,10 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     }
 
     protected function importCreateMenuFabrik($listId, $menus){
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
         
         // BEGIN - Solved problem with menu
-        $menuItem = new MenusModelItem();
+        $menuItem = new MenuModel();
         // END - Solved problem with menu
 
         foreach ($menus as $menu){
@@ -6397,7 +6410,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $obj = new stdClass();
         $obj->id = $this->clones_info[$listId]->formId;
         $obj->params = json_encode($formParams);
-        $update = JFactory::getDbo()->updateObject('#__fabrik_forms', $obj, 'id');
+        $update = Factory::getContainer()->get('DatabaseDriver')->updateObject('#__fabrik_forms', $obj, 'id');
 
         if (!$update) {
             return false;
@@ -6454,10 +6467,12 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         if ($listParams['open_archive_elements']) {
             $data2 = json_decode($listParams['open_archive_elements']);
             $newData2 = array();
-            foreach ($data2->dublin_core_element as $item) {
-                $newData2[] = (string)$mappedElements[$item];
+            if(isset($data2->dublin_core_element)) {
+                foreach ($data2->dublin_core_element as $item) {
+                    $newData2[] = (string)$mappedElements[$item];
+                }
+                $data2->dublin_core_element = $newData2;
             }
-            $data2->dublin_core_element = $newData2;
             $listParams['open_archive_elements'] = json_encode($data2);
         }
 
@@ -6507,9 +6522,9 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
         $obj = new stdClass();
         $obj->id = $this->clones_info[$listId]->listId;
-        $obj->order_by = JFactory::getDbo()->escape(json_encode($newOrder_by));
+        $obj->order_by = Factory::getContainer()->get('DatabaseDriver')->escape(json_encode($newOrder_by));
         $obj->params = json_encode($listParams);
-        $update = JFactory::getDbo()->updateObject('#__fabrik_lists', $obj, 'id');
+        $update = Factory::getContainer()->get('DatabaseDriver')->updateObject('#__fabrik_lists', $obj, 'id');
 
         if (!$update) {
             return false;
@@ -6528,7 +6543,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     protected function exportCreateGroupsRepeat($groups, $listId)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
         $groupsRepeat = array();
         $oldTableName = $this->clones_info[$listId]->old_db_table_name;
 
@@ -6546,7 +6561,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
     protected function importCreateGroupsRepeat($groups_repeat, $list)
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         foreach ($groups_repeat as $groupRepeat) {
             $sql = 'SELECT * FROM `#__fabrik_groups` ORDER BY id DESC LIMIT 1';
@@ -6600,7 +6615,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
      */
     public function submitChangeList()
     {
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
         $app = JFactory::getApplication();
         $id_list = $app->input->getInt("nameList", 0);
         $new_name = $app->input->getString("name", null);
@@ -6648,24 +6663,24 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                         $db->execute();
 
                         $db->transactionCommit();
-                        $message = JText::_("COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_SUCCESS5");
-                        $type_message = JText::_("COM_ADMINISTRATIVETOOLS_SUCCESS");
+                        $message = Text::_("COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_SUCCESS5");
+                        $type_message = Text::_("COM_ADMINISTRATIVETOOLS_SUCCESS");
                     } catch (Exception $exc) {
                         $db->transactionRollback();
-                        $message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
-                        $type_message = JText::_("COM_ADMINISTRATIVETOOLS_ERROR");
+                        $message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR5');
+                        $type_message = Text::_("COM_ADMINISTRATIVETOOLS_ERROR");
                     }
                 } else {
-                    $message = JText::_("COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR7");
-                    $type_message = JText::_("COM_ADMINISTRATIVETOOLS_ERROR");
+                    $message = Text::_("COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR7");
+                    $type_message = Text::_("COM_ADMINISTRATIVETOOLS_ERROR");
                 }
             } else {
-                $message = JText::_("COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR6");
-                $type_message = JText::_("COM_ADMINISTRATIVETOOLS_WARNING");
+                $message = Text::_("COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR6");
+                $type_message = Text::_("COM_ADMINISTRATIVETOOLS_WARNING");
             }
         } else {
-            $message = JText::_("COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR6");
-            $type_message = JText::_("COM_ADMINISTRATIVETOOLS_WARNING");
+            $message = Text::_("COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR6");
+            $type_message = Text::_("COM_ADMINISTRATIVETOOLS_WARNING");
         }
 
         $site_message = JUri::base() . "index.php?option=com_administrativetools&view=tools&tab=5";
@@ -6688,7 +6703,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     public function tableFabrikParams($col_name, $fabrik, $name_list, $new_name_treated, $list_id)
     {
         $config = JFactory::getConfig();
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         try {
             $db->transactionStart();
@@ -6817,10 +6832,10 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $sync = $model->syncLists($data);
 
         if (!$sync) {
-            $resultSync->message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR_SYNC_LISTS');
+            $resultSync->message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR_SYNC_LISTS');
             $resultSync->type_message = 'error';
         } else {
-            $resultSync->message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_SUCCESS_SYNC_LISTS');
+            $resultSync->message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_SUCCESS_SYNC_LISTS');
             $resultSync->type_message = 'success';
         }
 
@@ -6845,10 +6860,10 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $saved = $model->saveConfiguration($data);
 
         if (!$saved) {
-            $resultSave->message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR_SAVE_CONFIGURATION');
+            $resultSave->message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR_SAVE_CONFIGURATION');
             $resultSave->type_message = 'error';
         } else {
-            $resultSave->message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_SUCCESS_SAVE_CONFIGURATION');
+            $resultSave->message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_SUCCESS_SAVE_CONFIGURATION');
             $resultSave->type_message = 'success';
         }
 
@@ -6873,10 +6888,10 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $connection = $model->connectSync($data);
 
         if (!$connection) {
-            $resultConnection->message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR_CONNECT_SYNC');
+            $resultConnection->message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_ERROR_CONNECT_SYNC');
             $resultConnection->type_message = 'error';
         } else {
-            $resultConnection->message = JText::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_SUCCESS_CONNECT_SYNC');
+            $resultConnection->message = Text::_('COM_ADMINISTRATIVETOOLS_EXCEPTION_MESSAGE_SUCCESS_CONNECT_SYNC');
             $resultConnection->type_message = 'success';
         }
 
@@ -6892,13 +6907,13 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     public function showDifferentTablesInDatabase()
     {
         $app    = JFactory::getApplication();
-        $db     = JFactory::getDbo();
+        $db     = Factory::getContainer()->get('DatabaseDriver');
         $config = JFactory::getConfig();
         
-        $sql = "SELECT TABLE_NAME AS nome_tabela FROM INFORMATION_SCHEMA.TABLES 
-                WHERE TABLE_SCHEMA = 'devcett' 
-                AND table_name NOT IN (SELECT db_table_name FROM joomla_fabrik_lists) 
-                AND table_name NOT like 'joomla_%' 
+        $sql = "SELECT TABLE_NAME AS nome_tabela FROM INFORMATION_SCHEMA.TABLES
+                WHERE TABLE_SCHEMA = (SELECT DATABASE())
+                AND table_name NOT IN (SELECT db_table_name FROM #__fabrik_lists)
+                AND table_name NOT like '{$db->getPrefix()}%'
                 ORDER BY 1";
         
         $db->setQuery($sql);
@@ -6917,14 +6932,14 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     public function showDifferentFiledsInTables()
     {
         $app    = JFactory::getApplication();
-        $db     = JFactory::getDbo();
+        $db     = Factory::getContainer()->get('DatabaseDriver');
         $config = JFactory::getConfig();
         
         /* recupera os nomes de tabela no BANCO DE DADOS */
         $sql = " SELECT  d1.TABLE_NAME nome_tabela  
                 FROM INFORMATION_SCHEMA.TABLES d1  
-                WHERE TABLE_schema ='devcett'  
-                AND table_name NOT like 'joomla_%' 
+                WHERE TABLE_schema =(SELECT DATABASE())  
+                AND table_name NOT like '{$db->getPrefix()}%' 
                 and d1.table_name != ''  
                 ORDER BY 1 ";
 
@@ -6933,8 +6948,8 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
         /* recupera os nomes de tabela no FABRIK */
         $sql = " SELECT db_table_name nome_tabela 
-        FROM joomla_fabrik_lists 
-        where db_table_name NOT like 'joomla_%'   
+        FROM #__fabrik_lists 
+        where db_table_name NOT like '{$db->getPrefix()}%'   
         and db_table_name != ''  
         ORDER BY 1 ;";
 
@@ -6953,7 +6968,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                 /* recupera as colunas da tabela seleciona no banco de dados */
                 $sql1 = "SELECT d1.COLUMN_NAME
                     FROM information_schema.columns d1 
-                    WHERE TABLE_schema ='devcett' 
+                    WHERE TABLE_schema =(SELECT DATABASE()) 
                     AND d1.TABLE_NAME =  '$nome_tabela_banco' ORDER BY 1";
                 $db->setQuery($sql1);
                 $colunas_bd = $db->loadColumn();
@@ -6962,10 +6977,10 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
                 /* recupera as colunas da tabela seleciona no fabrik */
                 $sql2 = "SELECT t1.name
-                        FROM joomla_fabrik_elements t1, joomla_fabrik_lists t2
-                        WHERE t1.group_id = t2.id
+                        FROM #__fabrik_elements t1, #__fabrik_lists t2, #__fabrik_groups t3, #__fabrik_forms t4, #__fabrik_formgroup t5
+                        WHERE t1.group_id = t3.id AND t5.form_id = t4.id AND t5.group_id = t3.id AND t2.form_id = t4.id
                         AND t2.db_table_name =  '$nome_tabela_banco' ORDER BY 1";
-                        
+
                 $db->setQuery($sql2);
                 $colunas_fabrik = $db->loadColumn();
 
@@ -6975,7 +6990,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                 foreach ($colunas_bd as $key => $nome_coluna_banco) {
 
                     /* se a coluna da tabela do banco existir no fabrik continua, senão registra a diferença */
-                    if ( ! array_search($nome_coluna_banco, $colunas_fabrik)) {
+                    if (!in_array($nome_coluna_banco, $colunas_fabrik)) {
                 
                         array_push($colunasNaoExistentes,$nome_tabela_banco ."." .$nome_coluna_banco) ;
                     }
@@ -6994,31 +7009,29 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $retorno = [];
         try {
             $app    = JFactory::getApplication();
-            $db     = JFactory::getDbo();
+            $db     = Factory::getContainer()->get('DatabaseDriver');
             $config = JFactory::getConfig();
     
             $tbs = $app->input->getModel("tbs");
             $fds = $app->input->getModel("fds");
 
-            array_push($retorno, "===== TABELAS =====");
+            array_push($retorno, "===== " . Text::_('COM_ADMINISTRATIVETOOLS_CLEANDB_LABEL_TABLES') . " =====");
             foreach ($tbs as $key => $value) {
-                if( $db->dropTable($value) ){
+                if($db->dropTable($value)) {
                     array_push($retorno, $value);
                 };
-                array_push($retorno, $value);
             }
 
-            array_push($retorno, "===== CAMPOS =====");
+            array_push($retorno, "===== " . Text::_('COM_ADMINISTRATIVETOOLS_CLEANDB_LABEL_FIELDS') . " =====");
             foreach ($fds as $key => $value) {
                 
                 $tab_field = explode(".",$value);
 
                 $query = "ALTER TABLE $tab_field[0] DROP COLUMN $tab_field[1];";
                 $db->setQuery($query);
-                if( $db->execute() ){
+                if($db->execute()) {
                     array_push($retorno, $value);
                 };
-                array_push($retorno, $value);
             }
     
             $user       = JFactory::getUser();
@@ -7056,14 +7069,14 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     public function pluginsManagerListElement()
     {
         $app = JFactory::getApplication();
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         $tipo = $app->input->getInt("typeName");
 
         if ($tipo == 1) {
-            $sql = "SELECT form.id,form.label FROM joomla_fabrik_forms AS form ORDER BY form.label ASC;";
+            $sql = "SELECT form.id,form.label FROM #__fabrik_forms AS form ORDER BY form.label ASC;";
         } elseif ($tipo == 2)  {
-            $sql = "SELECT list.id, list.label FROM joomla_fabrik_lists AS list ORDER BY list.label ASC;";
+            $sql = "SELECT list.id, list.label FROM #__fabrik_lists AS list ORDER BY list.label ASC;";
         } else {
             $sql = "SELECT 0 ;";
         }
@@ -7089,16 +7102,16 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     public function pluginsManagerTypeParams()
     {
         $app = JFactory::getApplication();
-        $db = JFactory::getDbo();
+        $db = Factory::getContainer()->get('DatabaseDriver');
 
         $typeName = $app->input->getInt("typeName");
         $idList = $app->input->getInt("idList");
 
 
         if ($typeName == 1) {
-            $sql = "SELECT form.params FROM joomla_fabrik_forms AS form where form.id = $idList;";
+            $sql = "SELECT form.params FROM #__fabrik_forms AS form where form.id = $idList;";
         } elseif ($typeName == 2)  {
-            $sql = "SELECT list.params FROM joomla_fabrik_lists AS list where list.id = $idList;";
+            $sql = "SELECT list.params FROM #__fabrik_lists AS list where list.id = $idList;";
         } else {
             $sql = "SELECT 0 ;";
         }
@@ -7125,7 +7138,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     public function pluginsManagerListObjects()
     {
         $app    = JFactory::getApplication();
-        $db     = JFactory::getDbo();
+        $db     = Factory::getContainer()->get('DatabaseDriver');
         $config = JFactory::getConfig();
         
         $typeName    = $app->input->getInt("typeName");
@@ -7133,18 +7146,16 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $pluginName  = $app->input->getString("pluginName");
         $action      = $app->input->getString("action");
         
-        //echo($typeName);
-
         if($typeName == "1"){ 
             //formulário
             $sql = " SELECT id, label
-            FROM joomla_fabrik_forms 
+            FROM #__fabrik_forms 
             ORDER BY 2 ;";
         }elseif($typeName == "2"){ 
             //Lista
             $sql = " SELECT id, label
-            FROM joomla_fabrik_lists 
-            where db_table_name NOT like 'joomla_%'   
+            FROM #__fabrik_lists 
+            where db_table_name NOT like '{$db->getPrefix()}%'
             and db_table_name != ''  
             ORDER BY 2 ;";
         }
@@ -7164,7 +7175,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     public function pluginsManagerModifyForms() 
     {
         $app    = JFactory::getApplication();
-        $db     = JFactory::getDbo();
+        $db     = Factory::getContainer()->get('DatabaseDriver');
         $config = JFactory::getConfig();
 
         //$typeName           = $app->input->getInt("typeName");
@@ -7189,7 +7200,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         //busca todos os objetos da tabela
         if($selected_objects[0] == 0){
             $selected_objects = [];
-            $sql = " SELECT t1.id FROM joomla_fabrik_forms as t1 order by t1.label ;";
+            $sql = " SELECT t1.id FROM #__fabrik_forms as t1 order by t1.label ;";
             $db->setQuery($sql);
             $resultado = $db->loadObjectList();
             foreach ($resultado as $key => $object) {
@@ -7205,13 +7216,13 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
             }
             
             //busca o nome do objeto para colocar na log
-            $sql = " SELECT t1.label FROM joomla_fabrik_forms as t1 where t1.id = $object_id ;";
+            $sql = " SELECT t1.label FROM #__fabrik_forms as t1 where t1.id = $object_id ;";
             $db->setQuery($sql);
             $objeto = $db->loadObject();
             array_push($log, $objeto->label);
 
             
-            $sql = " SELECT t1.params FROM joomla_fabrik_forms as t1 where t1.id = $object_id ;";
+            $sql = " SELECT t1.params FROM #__fabrik_forms as t1 where t1.id = $object_id ;";
             $db->setQuery($sql);
             $return_params = $db->loadObjectList();
 
@@ -7229,7 +7240,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
             if($action == 1){ //opção ADICIONAR plugin
                 if( $qtdPlugins == 0){
-                    $query = "UPDATE joomla_fabrik_forms t1 
+                    $query = "UPDATE #__fabrik_forms t1 
                             SET t1.params = 
                             JSON_INSERT(t1.params, 
                                 '$.plugin_condition[$qtdPlugins]',      '$plugin_selecionado[0]',
@@ -7257,7 +7268,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                     
                     if($adiciona == TRUE){
         
-                        $query = "UPDATE joomla_fabrik_forms t1 
+                        $query = "UPDATE #__fabrik_forms t1 
                                 SET t1.params = 
                                 JSON_INSERT(t1.params, 
                                     '$.plugin_condition[$qtdPlugins]',      '$plugin_selecionado[0]',
@@ -7283,13 +7294,13 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
 
                 if( $qtdPlugins == 0){
-                    array_push($log, "Não possuia nenhum plugin!");
+                    array_push($log, Text::_("COM_ADMINISTRATIVETOOLS_PLUGINS_MANAGER_NOONE_PLUGIN"));
                 }else{
                     for ($i=0; $i < $qtdPlugins ; $i++) { 
                         $busca  = [];
                         $remove = [];
 
-                        $sql = "SELECT t1.params from joomla_fabrik_forms t1 WHERE  t1.id = $object_id;";
+                        $sql = "SELECT t1.params from #__fabrik_forms t1 WHERE  t1.id = $object_id;";
                         $db->setQuery($sql);
                         $campo_params = $db->loadObjectList();
 
@@ -7297,52 +7308,50 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                             try {
 
                                 
-                                $busca[0]  = "SELECT JSON_CONTAINS_PATH(t1.params,'one', '$.plugin_condition') from joomla_fabrik_forms t1 WHERE  t1.id = $object_id";
-                                $busca[1]  = "SELECT JSON_CONTAINS_PATH(t1.params,'one', '$.plugin_description') from joomla_fabrik_forms t1 WHERE  t1.id = $object_id";
-                                $busca[2]  = "SELECT JSON_CONTAINS_PATH(t1.params,'one', '$.plugin_events') from joomla_fabrik_forms t1 WHERE  t1.id = $object_id";
-                                $busca[3]  = "SELECT JSON_CONTAINS_PATH(t1.params,'one', '$.plugin_locations') from joomla_fabrik_forms t1 WHERE  t1.id = $object_id";
-                                $busca[4]  = "SELECT JSON_CONTAINS_PATH(t1.params,'one', '$.plugin_state') from joomla_fabrik_forms t1 WHERE  t1.id = $object_id";
-                                $busca[5]  = "SELECT JSON_CONTAINS_PATH(t1.params,'one', '$.plugins') from joomla_fabrik_forms t1 WHERE  t1.id = $object_id";
+                                $busca[0]  = "SELECT JSON_CONTAINS_PATH(t1.params,'one', '$.plugin_condition') from #__fabrik_forms t1 WHERE  t1.id = $object_id";
+                                $busca[1]  = "SELECT JSON_CONTAINS_PATH(t1.params,'one', '$.plugin_description') from #__fabrik_forms t1 WHERE  t1.id = $object_id";
+                                $busca[2]  = "SELECT JSON_CONTAINS_PATH(t1.params,'one', '$.plugin_events') from #__fabrik_forms t1 WHERE  t1.id = $object_id";
+                                $busca[3]  = "SELECT JSON_CONTAINS_PATH(t1.params,'one', '$.plugin_locations') from #__fabrik_forms t1 WHERE  t1.id = $object_id";
+                                $busca[4]  = "SELECT JSON_CONTAINS_PATH(t1.params,'one', '$.plugin_state') from #__fabrik_forms t1 WHERE  t1.id = $object_id";
+                                $busca[5]  = "SELECT JSON_CONTAINS_PATH(t1.params,'one', '$.plugins') from #__fabrik_forms t1 WHERE  t1.id = $object_id";
         
 
 
-                                $remove[0] = "update joomla_fabrik_forms t1 set t1.params = JSON_REMOVE(t1.params,'$.plugin_condition[$i]') WHERE  t1.id = $object_id";
-                                $remove[1] = "update joomla_fabrik_forms t1 set t1.params = JSON_REMOVE(t1.params,'$.plugin_description[$i]') WHERE  t1.id = $object_id";
-                                $remove[2] = "update joomla_fabrik_forms t1 set t1.params = JSON_REMOVE(t1.params,'$.plugin_events[$i]') WHERE  t1.id = $object_id";
-                                $remove[3] = "update joomla_fabrik_forms t1 set t1.params = JSON_REMOVE(t1.params,'$.plugin_locations[$i]') WHERE  t1.id = $object_id";
-                                $remove[4] = "update joomla_fabrik_forms t1 set t1.params = JSON_REMOVE(t1.params,'$.plugin_state[$i]') WHERE  t1.id = $object_id";
-                                $remove[5] = "update joomla_fabrik_forms t1 set t1.params = JSON_REMOVE(t1.params,'$.plugins[$i]') WHERE  t1.id = $object_id";
+                                $remove[0] = "update #__fabrik_forms t1 set t1.params = JSON_REMOVE(t1.params,'$.plugin_condition[$i]') WHERE  t1.id = $object_id";
+                                $remove[1] = "update #__fabrik_forms t1 set t1.params = JSON_REMOVE(t1.params,'$.plugin_description[$i]') WHERE  t1.id = $object_id";
+                                $remove[2] = "update #__fabrik_forms t1 set t1.params = JSON_REMOVE(t1.params,'$.plugin_events[$i]') WHERE  t1.id = $object_id";
+                                $remove[3] = "update #__fabrik_forms t1 set t1.params = JSON_REMOVE(t1.params,'$.plugin_locations[$i]') WHERE  t1.id = $object_id";
+                                $remove[4] = "update #__fabrik_forms t1 set t1.params = JSON_REMOVE(t1.params,'$.plugin_state[$i]') WHERE  t1.id = $object_id";
+                                $remove[5] = "update #__fabrik_forms t1 set t1.params = JSON_REMOVE(t1.params,'$.plugins[$i]') WHERE  t1.id = $object_id";
                                 
 
-                                for ($j=0; $j < 6 ; $j++) { 
+                                for ($j=0; $j < 6 ; $j++) {
                                     $db->setQuery($busca[$j]);
                                     $result[$j] = $db->loadResult();
 
-                                    $db->transactionStart();
-                                    if (count($result[$j]) > 0) {
+                                    if ($result[$j] > 0) {
                                         $db->setQuery($remove[$j]);
                                         $campo_alterado = $db->execute();
-                                        
                                     }
                                 }
 
 
                                 //monta os sqls para verificar se o obleto contem o path a ser removido o json
                                 // $busca = [];
-                                // $busca[0]  = "SELECT JSON_CONTAINS_PATH(t1.params,'one', '$.plugin_condition') from joomla_fabrik_forms t1 WHERE  t1.id = $object_id";
-                                // $busca[1]  = "SELECT JSON_CONTAINS_PATH(t1.params,'one', '$.plugin_description') from joomla_fabrik_forms t1 WHERE  t1.id = $object_id";
-                                // $busca[2]  = "SELECT JSON_CONTAINS_PATH(t1.params,'one', '$.plugin_events') from joomla_fabrik_forms t1 WHERE  t1.id = $object_id";
-                                // $busca[3]  = "SELECT JSON_CONTAINS_PATH(t1.params,'one', '$.plugin_locations') from joomla_fabrik_forms t1 WHERE  t1.id = $object_id";
-                                // $busca[4]  = "SELECT JSON_CONTAINS_PATH(t1.params,'one', '$.plugin_state') from joomla_fabrik_forms t1 WHERE  t1.id = $object_id";
-                                // $busca[5]  = "SELECT JSON_CONTAINS_PATH(t1.params,'one', '$.plugins') from joomla_fabrik_forms t1 WHERE  t1.id = $object_id";
+                                // $busca[0]  = "SELECT JSON_CONTAINS_PATH(t1.params,'one', '$.plugin_condition') from #__fabrik_forms t1 WHERE  t1.id = $object_id";
+                                // $busca[1]  = "SELECT JSON_CONTAINS_PATH(t1.params,'one', '$.plugin_description') from #__fabrik_forms t1 WHERE  t1.id = $object_id";
+                                // $busca[2]  = "SELECT JSON_CONTAINS_PATH(t1.params,'one', '$.plugin_events') from #__fabrik_forms t1 WHERE  t1.id = $object_id";
+                                // $busca[3]  = "SELECT JSON_CONTAINS_PATH(t1.params,'one', '$.plugin_locations') from #__fabrik_forms t1 WHERE  t1.id = $object_id";
+                                // $busca[4]  = "SELECT JSON_CONTAINS_PATH(t1.params,'one', '$.plugin_state') from #__fabrik_forms t1 WHERE  t1.id = $object_id";
+                                // $busca[5]  = "SELECT JSON_CONTAINS_PATH(t1.params,'one', '$.plugins') from #__fabrik_forms t1 WHERE  t1.id = $object_id";
         
                                 // $remove = [];
-                                // $remove[0] = "UPDATE joomla_fabrik_forms t1 SET t1.params = JSON_REMOVE(t1.params,'$.plugin_condition[$i]') WHERE t1.id = $object_id";
-                                // $remove[1] = "UPDATE joomla_fabrik_forms t1 SET t1.params = JSON_REMOVE(t1.params,'$.plugin_description[$i]') WHERE t1.id = $object_id";
-                                // $remove[2] = "UPDATE joomla_fabrik_forms t1 SET t1.params = JSON_REMOVE(t1.params,'$.plugin_events[$i]') WHERE t1.id = $object_id";
-                                // $remove[3] = "UPDATE joomla_fabrik_forms t1 SET t1.params = JSON_REMOVE(t1.params,'$.plugin_locations[$i]') WHERE t1.id = $object_id";
-                                // $remove[4] = "UPDATE joomla_fabrik_forms t1 SET t1.params = JSON_REMOVE(t1.params,'$.plugin_state[$i]') WHERE t1.id = $object_id";
-                                // $remove[5] = "UPDATE joomla_fabrik_forms t1 SET t1.params = JSON_REMOVE(t1.params,'$.plugins[$i]') WHERE t1.id = $object_id";
+                                // $remove[0] = "UPDATE #__fabrik_forms t1 SET t1.params = JSON_REMOVE(t1.params,'$.plugin_condition[$i]') WHERE t1.id = $object_id";
+                                // $remove[1] = "UPDATE #__fabrik_forms t1 SET t1.params = JSON_REMOVE(t1.params,'$.plugin_description[$i]') WHERE t1.id = $object_id";
+                                // $remove[2] = "UPDATE #__fabrik_forms t1 SET t1.params = JSON_REMOVE(t1.params,'$.plugin_events[$i]') WHERE t1.id = $object_id";
+                                // $remove[3] = "UPDATE #__fabrik_forms t1 SET t1.params = JSON_REMOVE(t1.params,'$.plugin_locations[$i]') WHERE t1.id = $object_id";
+                                // $remove[4] = "UPDATE #__fabrik_forms t1 SET t1.params = JSON_REMOVE(t1.params,'$.plugin_state[$i]') WHERE t1.id = $object_id";
+                                // $remove[5] = "UPDATE #__fabrik_forms t1 SET t1.params = JSON_REMOVE(t1.params,'$.plugins[$i]') WHERE t1.id = $object_id";
 
 
 
@@ -7360,9 +7369,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
 
 
-                                $db->transactionCommit();
                             } catch (Exception $exc) {
-                                $db->transactionRollback();
                                 print_r($exc);
                                 die();
                             }
@@ -7371,7 +7378,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                         }else{
 
                             if($i == $qtdPlugins - 1){
-                                array_push($log, "Não possuia.");
+                                array_push($log, Text::_("COM_ADMINISTRATIVETOOLS_PLUGINS_MANAGER_NOT_FIND"));
                             }
                         }
                     }

@@ -329,12 +329,10 @@ jQuery(document).ready(function () {
         let ar_bd_tables = [];
         let ar_fa_tables = [];
              
-        //console.log("clicou");
         jQuery.post('./index.php?option=com_administrativetools&task=tools.showDifferentTablesInDatabase', {
         }, function (recebido) {
             jQuery('#selectTablesCleanDB').empty();
 
-            //console.log((recebido));
             const arrAgain = JSON.parse(recebido);
             arrAgain.forEach(element => {
                 if (element.nome_tabela != "") {
@@ -345,10 +343,8 @@ jQuery(document).ready(function () {
 
         jQuery.post('./index.php?option=com_administrativetools&task=tools.showDifferentFiledsInTables', {
         }, function (recebido) {
-            //console.log((recebido));
             jQuery('#selectFieldsCleanDB').empty();
 
-            //console.log((recebido));
             const arrAgain = JSON.parse(recebido);
             arrAgain.forEach(element => {
                 if (element.nome_tabela != "") {
@@ -359,7 +355,7 @@ jQuery(document).ready(function () {
     });
 
     jQuery("#btnDelCleanDB").click(function () {
-        alertify.confirm("Atenção", "Confirma excluir do banco de dados as tabelas e campos selecionados?", function () {
+        alertify.confirm(Joomla.JText._('COM_ADMINISTRATIVETOOLS_CLEANDB_ATTENCTION'), Joomla.JText._('COM_ADMINISTRATIVETOOLS_CLEANDB_CONFIRM_DELETE'), function () {
             var select_tables = jQuery('#selectTablesCleanDB option:selected').toArray().map(item => item.value);
             var select_fields = jQuery('#selectFieldsCleanDB option:selected').toArray().map(item => item.value);
 
@@ -382,7 +378,6 @@ jQuery(document).ready(function () {
                         });
 
                         alertify.alert("O que foi excluido", mostrar) ;
-                        //console.log(mensagem);
                     }
                     jQuery('#selectTablesCleanDB').empty();
                     jQuery('#selectFieldsCleanDB').empty();
@@ -421,7 +416,6 @@ jQuery(document).ready(function () {
             jQuery.post('./index.php?option=com_administrativetools&task=tools.pluginsManagerListElement', {
                 typeName: typeName
             }, function (res) {
-                //console.log (res)
                 if (res !== '0') {
                     var json = jQuery.parseJSON(res);
 
@@ -457,14 +451,12 @@ jQuery(document).ready(function () {
                 idList: idList,
                 typeName: typeName
             }, function (res) {
-                //console.log (res)
                 jQuery("#pluginsManagerTypeParams").empty();
 
                 if (res !== '0') {
                     var json = jQuery.parseJSON(res);
 
                     const arrAgain = JSON.parse(res);
-                    //console.log (arrAgain);
                     arrAgain.forEach(element => {
                         const qtd_plgs = element.params.plugin_description.length;
                         if(qtd_plgs > 0){
@@ -574,7 +566,7 @@ jQuery(document).ready(function () {
         const action      = jQuery("#pluginsManagerAction").val();
         const pluginName  = jQuery("#pluginsManagerTypeParams").val();
         
-        alertify.confirm( Joomla.JText._("COM_ADMINISTRATIVETOOLS_MESSAGE_TITLE_ALERT"), "Confirma a modificação dos objetos selecionados?", function () {
+        alertify.confirm(Joomla.JText._("COM_ADMINISTRATIVETOOLS_MESSAGE_TITLE_ALERT"), Joomla.JText._("COM_ADMINISTRATIVETOOLS_PLUGINS_MANAGER_CONFIRM"), function () {
             const selected_objects = jQuery('#selectFieldsPluginsManager option:selected').toArray().map(item => item.value);
     
             
@@ -582,7 +574,6 @@ jQuery(document).ready(function () {
                 alertify.alert(Joomla.JText._('COM_ADMINISTRATIVETOOLS_MESSAGE_TITLE_ALERT'), Joomla.JText._('COM_ADMINISTRATIVETOOLS_MESSAGE_LABEL_ALERT_REQUIRED_FIELDS'));
             }else{
             
-                console.log(typeName);
                 if (typeName == 1) {
                     jQuery.post('./index.php?option=com_administrativetools&task=tools.pluginsManagerModifyForms', {
                         typeName: typeName,
@@ -598,7 +589,7 @@ jQuery(document).ready(function () {
                                 mostrar = mostrar + element + "</br>";
                             });
 
-                            alertify.alert("O que foi alterado", mostrar) ;
+                            alertify.alert(Joomla.JText._("COM_ADMINISTRATIVETOOLS_PLUGINS_MANAGER_CHANGES"), mostrar) ;
                         }
                         
                         jQuery('#pluginsManagerChooseList').css('display', 'none');
@@ -1098,8 +1089,6 @@ function editHarvesting(id) {
 
             jQuery.each(json.map_metadata, function (index, value) {
                 jQuery.each(value, function (index1, value1) {
-                    console.log(index);
-                    console.log(value1);
                     var vrSelect = '';
 
                     vrSelect = '<select id="mapRarvest' + value1 + '" name="mapRarvest[]" form="formHarvesting">' +

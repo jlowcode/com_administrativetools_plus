@@ -37,7 +37,7 @@ class JFormFieldModifiedby extends \Joomla\CMS\Form\FormField
     {
 		// Initialize variables.
 		$html   = array();
-		$user   = JFactory::getUser();
+		$user   = Factory::getContainer()->get(UserFactoryInterface::class);
 		$html[] = '<input type="hidden" name="' . $this->name . '" value="' . $user->id . '" />';
 
 		if (!$this->hidden)
