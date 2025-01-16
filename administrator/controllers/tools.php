@@ -5376,8 +5376,8 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $listData->table = $this->exportCreateTable($listId);
         $listData->tables_repeat = $this->exportCreateTablesRepeat($listId);
         $listData->menu = $this->exportMenuFabrik($listId,$formModel->getTable());
-        $listData->auxRecord = $this->exportAuxRecord($listId);
-       
+        $listData->auxRecord = $addAuxRecord ? $this->exportAuxRecord($listId) : Array();
+
         if ($data == 1){
             $listData->table_data = $this->exportTableData($listId);
             $listData->groups_repeat_data = $this->exportGroupRepeatData($listData->groups_repeat);
@@ -6332,6 +6332,8 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
     protected function importCreateAuxRecord($listId, $auxRecord)
     {
         $db = Factory::getContainer()->get('DatabaseDriver');
+
+        if(empty($auxRecord)) return;
 
         $auxRecord = $auxRecord[0];
         $auxRecord->id_lista = $this->clones_info[$listId]->listId;
