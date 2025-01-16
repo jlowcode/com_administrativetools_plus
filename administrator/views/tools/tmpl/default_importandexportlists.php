@@ -27,18 +27,34 @@ defined('_JEXEC') or die('Restricted access');
             </div>
             <br/>
             <div class="form-group">
-        <label for="exampleInputEmail1"><strong><?php echo Text::_('COM_ADMINISTRATIVETOOLS_PACKAGES_CREATE_RECORD_FORM_LABEL'); ?></strong></label>
-        <fieldset class="btn-group radio">
-            <label class="btn active btn-danger" id="btnN">
-                <input form="formExportList" type="radio" name="record" id="opRecord0" value="0">
-                <?php echo Text::_('JNO'); ?>
-            </label>
+                <div>
+                    <label for="exampleInputEmail1"><strong><?php echo Text::_('COM_ADMINISTRATIVETOOLS_PACKAGES_CREATE_RECORD_FORM_LABEL'); ?></strong></label>
+                    <fieldset class="btn-group radio">
+                        <label class="btn" id="btnN">
+                            <input form="formExportList" type="radio" name="record" id="opRecord0" value="0">
+                            <?php echo Text::_('JNO'); ?>
+                        </label>
 
-            <label class="btn" id="btnS">
-                <input form="formExportList" type="radio" name="record" id="opRecord1" value="1">
-                <?php echo Text::_('JYES'); ?>
-            </label>
-        </fieldset>
+                        <label class="btn" id="btnS">
+                            <input form="formExportList" type="radio" name="record" id="opRecord1" value="1">
+                            <?php echo Text::_('JYES'); ?>
+                        </label>
+                    </fieldset>
+                </div>
+                <div>
+                    <label><strong><?php echo Text::_('COM_ADMINISTRATIVETOOLS_IMPORT_EXPORT_LISTS_ADM_LISTAS'); ?></strong></label>
+                    <fieldset class="btn-group radio">
+                        <label class="btn" id="btnN">
+                            <input form="formExportList" type="radio" name="add-aux-records" id="op-add-aux-record0" value="0">
+                            <?php echo Text::_('JNO'); ?>
+                        </label>
+
+                        <label class="btn" id="btnS">
+                            <input form="formExportList" type="radio" name="add-aux-records" id="op-add-aux-record1" value="1">
+                            <?php echo Text::_('JYES'); ?>
+                        </label>
+                    </fieldset>
+                </div>
     </div>
 
     <input type="hidden" value="0" form="formExportList" id="recordDB" name="recordDB">

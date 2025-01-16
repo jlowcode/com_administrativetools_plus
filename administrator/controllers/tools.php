@@ -5315,9 +5315,10 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $app = JFactory::getApplication();
         $listIds = $app->input->get('lists');
         $data = $app->input->getInt('record');
+        $addAuxRecord = $app->input->getInt('add-aux-records');
 
         foreach ($listIds as $listId) {
-            $this->exportClone_process($listId,$data);
+            $this->exportClone_process($listId, $data, false, $addAuxRecord);
         }
 
         $jsonExport = json_encode($this->listsToExport);
@@ -5346,7 +5347,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $this->setRedirect(JRoute::_('index.php?option=com_administrativetools&view=tools&tab=4', false));
     }
 
-    protected function exportClone_process($listId, $data, $is_suggest = false)
+    protected function exportClone_process($listId, $data, $is_suggest = false, $addAuxRecord=false)
     {
         $listModel = JModelLegacy::getInstance('List', 'FabrikFEModel');
         $listModel->setId($listId);
@@ -5375,6 +5376,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $listData->table = $this->exportCreateTable($listId);
         $listData->tables_repeat = $this->exportCreateTablesRepeat($listId);
         $listData->menu = $this->exportMenuFabrik($listId,$formModel->getTable());
+        $listData->auxRecord = $this->exportAuxRecord($listId);
        
         if ($data == 1){
             $listData->table_data = $this->exportTableData($listId);
@@ -5713,7 +5715,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $forms['forms'] = $db->loadAssocList();
         $menu['forms'] = $forms;
 
-        
+
         $query = "SELECT * FROM `#__menu` WHERE link = 'index.php?option=com_fabrik&view=details&formid=". (int)$data->id."'";
         $db->setQuery($query);
         $details['details'] = $db->loadAssocList();
@@ -5730,6 +5732,19 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $menu['visualizations'] = $visualization;
         
         return $menu;
+    }
+
+    protected function exportAuxRecord($listId)
+    {
+        $db = Factory::getContainer()->get('DatabaseDriver');
+        $query = $db->getQuery(true);
+
+        $query->select('*')
+            ->from($db->qn('adm_cloner_listas'))
+            ->where($db->qn('id_lista') . ' = ' . $db->q($listId));
+        $db->setQuery($query);
+        
+        return $db->loadAssocList();
     }
 
     public function importList()
@@ -5778,6 +5793,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $this->importCreateTableData($list->oldListId, $list->table_data);
         $this->importCreateTablesRepeatData($list->oldListId, $list->tables_repeat_data);
         $this->importCreateMenuFabrik($list->oldListId,$list->menu);
+        $this->importCreateAuxRecord($list->oldListId, $list->auxRecord);
 
         $this->replaceElementsIdFormParams($list->oldListId);
         $this->replaceElementsIdListParams($list->oldListId);
@@ -6310,6 +6326,35 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                 }
             }
         }
+        return true;
+    }
+
+    protected function importCreateAuxRecord($listId, $auxRecord)
+    {
+        $db = Factory::getContainer()->get('DatabaseDriver');
+
+        $auxRecord = $auxRecord[0];
+        $auxRecord->id_lista = $this->clones_info[$listId]->listId;
+        $auxRecord->id_lista_principal = $this->clones_info[$listId]->listId;
+
+        $query = $db->getQuery(true);
+        $query = "SELECT id FROM `adm_cloner_listas` WHERE `name` = '$auxRecord->name'";
+        $db->setQuery($query);
+        $existId = $db->loadResult();
+
+        if($existId) {
+            $auxRecord->id = $existId;
+            $insert = $db->updateObject('#__fabrik_lists', $auxRecord, 'id');
+        } else {
+            $insert = $db->insertObject('#__fabrik_lists', $auxRecord, 'id');
+        }
+
+        if (!$insert) {
+            return false;
+        }
+
+        $existId ? $this->clones_info[$listId]->listId = $existId : $this->clones_info[$listId]->listId = $db->insertid();
+
         return true;
     }
 

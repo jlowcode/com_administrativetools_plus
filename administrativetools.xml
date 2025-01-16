@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <extension type="component" version="4.0.0" method="upgrade">
     <name>com_administrativetools</name>
-    <author>Hirlei Carlos UFG</author>
-	<creationDate>August 2021</creationDate>
-	<copyright>Copyright (C) 2005-2021 Media A-Team, Inc. - All rights reserved.</copyright>
+    <author>Jlowcode Organization</author>
+	<creationDate>March 2024</creationDate>
+	<copyright>Copyright (C) 2024 Jlowcode Org - All rights reserved.</copyright>
 	<license>GNU/GPL http://www.gnu.org/copyleft/gpl.html</license>
-	<authorEmail>prof.hirleicarlos@gmail.com</authorEmail>
-	<authorUrl>ufg.br</authorUrl>
-	<version>4.0.0</version>
+	<authorEmail>contact@jlowcode.org</authorEmail>
+	<authorUrl>www.jlowcode.org</authorUrl>
+	<version>4.0.1</version>
     <description>COM_ADMINISTRATIVETOOLS_XML_DESCRIPTION</description>   
     
     <install> <!-- Runs on install -->
