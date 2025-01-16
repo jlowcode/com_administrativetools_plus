@@ -6346,9 +6346,9 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
 
         if($existId) {
             $auxRecord->id = $existId;
-            $insert = $db->updateObject('#__fabrik_lists', $auxRecord, 'id');
+            $insert = $db->updateObject('adm_cloner_listas', $auxRecord, 'id');
         } else {
-            $insert = $db->insertObject('#__fabrik_lists', $auxRecord, 'id');
+            $insert = $db->insertObject('adm_cloner_listas', $auxRecord, 'id');
         }
 
         if (!$insert) {
