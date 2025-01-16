@@ -13,7 +13,7 @@ defined('_JEXEC') or die;
 jimport('joomla.application.component.controlleradmin');
 
 //BEGIN - Solved problem with menu
-use Joomla\Component\Menus\Administrator\Model\MenuModel;
+use Joomla\Component\Menus\Administrator\Model\ItemModel;
 //END - Solved problem with menu
 
 use \Joomla\Utilities\ArrayHelper;
@@ -6266,7 +6266,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
         $db = Factory::getContainer()->get('DatabaseDriver');
         
         // BEGIN - Solved problem with menu
-        $menuItem = new MenuModel();
+        $menuItem = new ItemModel();
         // END - Solved problem with menu
 
         foreach ($menus as $menu){
@@ -6282,7 +6282,7 @@ class AdministrativetoolsControllerTools extends \Joomla\CMS\MVC\Controller\Admi
                     $list->id = 0;
                     $new_link = explode("listid=",$list->link)[0];
                     $list->link = $new_link . 'listid='.$list_id;
-
+                    
                     // BEGIN - Solved problem with menu
                     //$insert = $db->insertObject('#__menu', $list, 'id');
                     $menuItem->save((array) $list);
